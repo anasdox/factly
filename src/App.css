@@ -1,0 +1,65 @@
+
+/* App.css */
+.discovery-grid {
+  display: flex;
+  justify-content: space-between;
+}
+
+.discovery-header {
+  display: block;
+  background-color: #000000;
+  color: #ffffff;
+  font-weight: bold;
+  padding: 1em;
+  margin-bottom: 1em;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* or flex-end depending on the direction of lines */
+  padding-left: 2em;
+  padding-right: 2em;
+}
+
+/* Adjust the .line class based on actual layout and measurements */
+.line {
+  position: absolute;
+  height: 1px;
+  background: #575757;
+}
+
+/* Use TypeScript to calculate the positions of items and create lines between them */
+.item {
+  margin: 0.5em;
+  padding: 0.5em;
+  background-color: #c7c7c7;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.8em;
+} 
+
+.fact-item {
+  background-color: #ffe881;
+}
+
+.insight-item {
+  background-color: #b0f3ff;
+}
+
+.recommendation-item {
+  background-color: #b0ffba;
+}
+
+.add-button {
+  margin-top: 1em;
+  background-color: #c7c7c7;
+  padding: 0.7em;
+  border-style: none;
+  border-radius: 2em;
+}
+
+.add-button:hover{
+  background-color: #f1f086;
+  cursor: pointer;
+}

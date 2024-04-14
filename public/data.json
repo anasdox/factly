@@ -1,0 +1,95 @@
+{
+    "discovery_id": "dsc_123456",
+    "title": "Impact of AI on Industry",
+    "goal": "Exploration of the Impact of AI on various industries", 
+    "date": "2024-04-07",
+    "inputs": [
+      {
+        "input_id": "res_001",
+        "type": "PDF Document",
+        "title": "Artificial Intelligence in Manufacturing",
+        "url": "https://example.com/ai-manufacturing.pdf"
+      },
+      {
+        "input_id": "res_002",
+        "type": "CSV Dataset",
+        "title": "AI Investment Statistics",
+        "url": "https://example.com/ai-investments.csv"
+      },
+      {
+        "input_id": "res_003",
+        "type": "Web Page",
+        "title": "The Future of AI in Healthcare",
+        "url": "https://example.com/ai-healthcare"
+      },
+      {
+        "input_id": "res_004",
+        "type": "Journal Article",
+        "title": "AI and Its Impact on Climate Change",
+        "url": "https://example.com/ai-climate-change"
+      }
+    ],
+    "facts": [
+      {
+        "fact_id": "fct_101",
+        "related_inputs": ["res_001"],
+        "text": "AI applications can reduce production downtime by up to 20%."
+      },
+      {
+        "fact_id": "fct_102",
+        "related_inputs": ["res_002"],
+        "text": "Investment in AI has grown by 300% over the last two years in the tech industry."
+      },
+      {
+        "fact_id": "fct_103",
+        "related_inputs": ["res_003"],
+        "text": "AI can predict patient health risks with over 90% accuracy."
+      },
+      {
+        "fact_id": "fct_104",
+        "related_inputs": [ "res_003", "res_002", "res_004"],
+        "text": "Machine learning algorithms have helped increase the efficiency of renewable energy sources by 35%."
+      }
+    ],
+    "insights": [
+      {
+        "insight_id": "ins_201",
+        "related_facts": ["fct_101", "fct_102"],
+        "text": "Rapid growth in AI investment is closely correlated with significant improvements in production efficiency."
+      },
+      {
+        "insight_id": "ins_202",
+        "related_facts": ["fct_103"],
+        "text": "AI's predictive capabilities can revolutionize patient care and preventative medicine."
+      },
+      {
+        "insight_id": "ins_203",
+        "related_facts": ["fct_104"],
+        "text": "Implementing AI in environmental sectors plays a critical role in enhancing the sustainability of energy resources."
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation_id": "rec_301",
+        "related_insights": ["ins_201"],
+        "text": "Invest in AI-driven analytics tools to improve operational efficiency and reduce downtime in manufacturing."
+      },
+      {
+        "recommendation_id": "rec_302",
+        "related_insights": ["ins_202"],
+        "text": "Utilize AI for advanced health risk assessments to tailor patient treatment plans and reduce hospital readmissions."
+      },
+      {
+        "recommendation_id": "rec_303",
+        "related_insights": ["ins_203", "ins_202"],
+        "text": "Adopt AI optimization for renewable energy projects to maximize output and efficiency."
+      }
+    ],
+    "outputs": [
+      { 
+        "output_id": "out_101", 
+        "related_recommendations": ["rec_301", "rec_302", "rec_303"],
+        "text" : "Analysis Report"
+      }
+    ]
+  }
