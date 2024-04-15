@@ -55,6 +55,30 @@ const App: React.FC = () => {
   const [recommendationRefs, setRecommendationRefs] = useState<React.RefObject<HTMLDivElement>[] | null>(null);
   const [outputRefs, setOutputRefs] = useState<React.RefObject<HTMLDivElement>[] | null>(null);
 
+  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fileReader = new FileReader();
+    
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      
+      fileReader.readAsText(file, "UTF-8");
+      fileReader.onload = e => {
+        try {
+          const jsonData = JSON.parse(e.target?.result as string);
+          setData(jsonData as DiscoveryData);
+        } catch (error) {
+          console.error("Error parsing JSON:", error);
+          // Handle errors here
+        }
+      };
+      
+      fileReader.onerror = (error) => {
+        console.error("Error reading file:", error);
+        // Handle errors here
+      };
+    }
+  };
+
   const calculateAndDrawLines = (
         data: DiscoveryData,
         inputRefs:React.RefObject<HTMLDivElement>[],
@@ -236,6 +260,14 @@ const App: React.FC = () => {
         <span>{data.date}</span>
         <h1>{data.title}</h1>
         <span>{data.goal}</span>
+              {/* Button to load a new data file */}
+      <div className="file-input-container">
+        <input
+          type="file"
+          accept=".json"
+          onChange={handleFileInputChange}
+        />
+      </div>
       </header>
       <main className="discovery-grid">
       { inputRefs ?

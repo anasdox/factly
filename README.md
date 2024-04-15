@@ -1,46 +1,58 @@
-# Getting Started with Create React App
+# factly
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Vision
 
-## Available Scripts
+factly aims to hamonize the way organizations and individuals conduct discoveries. factly provides a dynamic platform for extracting actionable insights from multiples types of data sets. Our vision is to create a tool that not only simplifies data analysis but also empowers users to make informed decisions based on reliable, real-time insights.
 
-In the project directory, you can run:
+## Features
 
-### `npm start`
+- **User-Friendly Interface:** A clean, intuitive interface that lowers the learning curve and allows users to begin analyzing facts and insigh quickly.
+- **Data Integration:** Seamlessly import data from multiple sources, including documents, datasets, and real-time feeds.
+- **Fact Extract Phase:** Automatically extract facts specifically related to the discovery goals, ensuring that all insights are directly applicable and aligned with user objectives.
+- **Insight Discovery:** Utilize advanced algorithms to discover hidden patterns and correlations in the data.
+- **Recommendation Engine:** Get actionable recommendations based on analytical findings.
+- **Reporting Tools:** Generate comprehensive reports to visualize data trends and insights.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Getting Started
 
-### `npm test`
+### Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Before you begin, ensure you have the following installed:
+- Node.js (v14.x or later)
+- npm (v6.x or later)
 
-### `npm run build`
+### Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Clone the repository and install its dependencies:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+git clone https://github.com/anasdox/factly.git
+cd factly
+npm install
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Running the Application
 
-### `npm run eject`
+To start the application, run the following command in the terminal:
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```bash
+npm start
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+This will launch the factly web application on `http://localhost:3000`.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Contributing
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+We welcome contributions from the community! Whether you're fixing a bug, adding a feature, or improving the documentation, your help is appreciated. Here’s how you can contribute:
 
-## Learn More
+1. **Fork the Repository:** Click the fork button on the top right corner of the factly GitHub page.
+2. **Clone Your Fork:** Get a copy of your fork on your machine.
+3. **Create a Branch:** Create a branch for your modifications.
+4. **Make Changes:** Add your changes to your branch.
+5. **Test Your Changes:** Ensure your changes do not break any existing functionality.
+6. **Submit a Pull Request:** Push your changes to your fork and then submit a pull request to the factly repository.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## License
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+factly is open source software [licensed as MIT](https://github.com/anasdox/factly/LICENSE).
