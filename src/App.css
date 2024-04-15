@@ -17,20 +17,18 @@
 .column {
   display: flex;
   flex-direction: column;
-  align-items: center; /* or flex-end depending on the direction of lines */
+  align-items: center; 
   padding-left: 2em;
   padding-right: 2em;
-  border-top: #575757 solid 1px;
 }
 
-/* Adjust the .line class based on actual layout and measurements */
+
 .line {
   position: absolute;
   height: 1px;
   background: #575757;
 }
 
-/* Use TypeScript to calculate the positions of items and create lines between them */
 .item {
   margin: 0.5em;
   padding: 0.5em;
@@ -64,3 +62,28 @@
   background-color: #f1f086;
   cursor: pointer;
 }
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px;
+}
+
+.toolbar-button {
+  padding: 8px 16px;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  display: inline-flex;
+  background-color: #000000;
+  align-items: center;
+  gap: 8px; /* Space between the icon and text */
+  border: none;
+  text-decoration: none; /* In case it's a label or link */
+}
+
+.toolbar-button:hover {
+  background-color: #fffc3f;
+  color: rgb(0, 0, 0);
+}
+

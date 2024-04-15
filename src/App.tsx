@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faFileDownload } from '@fortawesome/free-solid-svg-icons';
+
 import './App.css';
 
 // Define types for the data structure
@@ -78,6 +82,21 @@ const App: React.FC = () => {
       };
     }
   };
+
+  const handleExport = () => {
+    if (!data) return; 
+  
+    const jsonString = JSON.stringify(data, null, 2); 
+    const blob = new Blob([jsonString], { type: 'application/json' });
+  
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${data.title.replace(/\s+/g, '_')}_export.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
 
   const calculateAndDrawLines = (
         data: DiscoveryData,
@@ -257,17 +276,23 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <header className='discovery-header'>
-        <span>{data.date}</span>
         <h1>{data.title}</h1>
-        <span>{data.goal}</span>
-              {/* Button to load a new data file */}
-      <div className="file-input-container">
-        <input
-          type="file"
-          accept=".json"
-          onChange={handleFileInputChange}
-        />
-      </div>
+        <div><span>{data.date} {'>'} {data.goal}</span></div>
+        <div className="toolbar">
+          <label htmlFor="file-input" className="toolbar-button">
+            <FontAwesomeIcon icon={faUpload} />
+          </label>
+          <input
+            id="file-input"
+            type="file"
+            accept=".json"
+            onChange={handleFileInputChange}
+            style={{ display: 'none' }} // Hide the actual file input
+          />
+          <button onClick={handleExport} className="toolbar-button">
+            <FontAwesomeIcon icon={faFileDownload} />
+          </button>
+        </div>
       </header>
       <main className="discovery-grid">
       { inputRefs ?
