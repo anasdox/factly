@@ -20,6 +20,7 @@
   align-items: center; /* or flex-end depending on the direction of lines */
   padding-left: 2em;
   padding-right: 2em;
+  border-top: #575757 solid 1px;
 }
 
 /* Adjust the .line class based on actual layout and measurements */
