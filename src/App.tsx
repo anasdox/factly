@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
 import { faFileDownload } from '@fortawesome/free-solid-svg-icons';
@@ -53,11 +53,11 @@ type InputType = {
 // Main App Component
 const App: React.FC = () => {
   const [data, setData] = useState<DiscoveryData | null>(null);
-  const [inputRefs, setInputRefs] = useState<React.RefObject<HTMLDivElement>[] | null>(null);
-  const [factRefs, setFactRefs] = useState<React.RefObject<HTMLDivElement>[] | null>(null);
-  const [insightRefs, setInsightRefs] = useState<React.RefObject<HTMLDivElement>[] | null>(null);
-  const [recommendationRefs, setRecommendationRefs] = useState<React.RefObject<HTMLDivElement>[] | null>(null);
-  const [outputRefs, setOutputRefs] = useState<React.RefObject<HTMLDivElement>[] | null>(null);
+  const inputRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
+  const factRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
+  const insightRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
+  const recommendationRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
+  const outputRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
 
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
@@ -98,7 +98,7 @@ const App: React.FC = () => {
   };
   
 
-  const calculateAndDrawLines = (
+  const calculateAndDrawLines = useCallback((
         data: DiscoveryData,
         inputRefs:React.RefObject<HTMLDivElement>[],
         factRefs:React.RefObject<HTMLDivElement>[],
@@ -113,13 +113,14 @@ const App: React.FC = () => {
   
     // Create lines from inputs to their related facts
     data.facts.forEach((fact, factIndex) => {
-      if (factRefs[factIndex].current) {
+      if (factRefs[factIndex]) {
         // Get the bounding rectangle of the current fact element.
         // This provides information such as the size of the element and its position relative to the viewport.
         const factRect = factRefs[factIndex].current!.getBoundingClientRect();
         
         
         fact.related_inputs.forEach(relatedInputId => {
+          
             const inputIndex = data.inputs.findIndex(input => input.input_id === relatedInputId);
             const inputRef = inputRefs[inputIndex];
             
@@ -169,7 +170,7 @@ const App: React.FC = () => {
             const recommendationRect = recommendationRefs[recommendationIndex].current!.getBoundingClientRect();
             
             recommendation.related_insights.forEach(relatedInsightId => {
-            // Find the related fact for this recommendation
+            // Find the related insight for this recommendation
                 const insightIndex = data.insights.findIndex(insight => insight.insight_id === relatedInsightId);
                 const insightRef = insightRefs[insightIndex];
                 
@@ -213,7 +214,7 @@ const App: React.FC = () => {
             });
         }
     });
-  };
+  }, []);
   
  const createLine = (startX: number, startY: number, endX: number, endY: number) => {
     const line = document.createElement('div');
@@ -237,28 +238,46 @@ const App: React.FC = () => {
     // Load the data from the public folder
     fetch('/data.json')
       .then((response) => response.json())
-      .then((data: DiscoveryData) => setData(data));
+      .then((data: DiscoveryData) => {
+        setData(data);
+        inputRefs.current = data.inputs.map(() => React.createRef<HTMLDivElement>());
+        factRefs.current = data.facts.map(() => React.createRef<HTMLDivElement>());
+        insightRefs.current = data.insights.map(() => React.createRef<HTMLDivElement>());
+        recommendationRefs.current = data.recommendations.map(() => React.createRef<HTMLDivElement>());
+        outputRefs.current = data.outputs.map(() => React.createRef<HTMLDivElement>());
+      });
   }, []);
 
-  useEffect(() => {
+  useLayoutEffect (() => {
     // This effect runs after the component mounts and whenever data changes
     if (data) {
-        setInputRefs(data.inputs.map(() => React.createRef<HTMLDivElement>()));
-        setFactRefs(data.facts.map(() => React.createRef<HTMLDivElement>()));
-        setInsightRefs(data.insights.map(() => React.createRef<HTMLDivElement>()));
-        setRecommendationRefs(data.recommendations.map(() => React.createRef<HTMLDivElement>()));
-        setOutputRefs(data.outputs.map(() => React.createRef<HTMLDivElement>()));
-        if ( inputRefs && factRefs && insightRefs && recommendationRefs && outputRefs) {
-            calculateAndDrawLines(data, inputRefs, factRefs, insightRefs, recommendationRefs, outputRefs);
-            const handleResize = () => {
-                // Re-calculate and draw lines
-                calculateAndDrawLines(data, inputRefs, factRefs, insightRefs, recommendationRefs, outputRefs);
-            };
 
-            window.addEventListener('resize', handleResize);
-            return() => {
-                window.removeEventListener('resize', handleResize);
-            }
+      const allRefs = [...inputRefs.current, ...factRefs.current, ...insightRefs.current, ...recommendationRefs.current, ...outputRefs.current];
+
+      if (allRefs.every(ref => ref !== null)) {
+        calculateAndDrawLines(
+          data, 
+          inputRefs.current, 
+          factRefs.current,
+          insightRefs.current,
+          recommendationRefs.current, 
+          outputRefs.current
+        );
+        const handleResize = () => {
+          calculateAndDrawLines(
+            data, 
+            inputRefs.current, 
+            factRefs.current,
+            insightRefs.current,
+            recommendationRefs.current, 
+            outputRefs.current
+          );
+        };
+
+        window.addEventListener('resize', handleResize);
+      return() => {
+        window.removeEventListener('resize', handleResize);
+      }
         }
     }
 
@@ -268,7 +287,7 @@ const App: React.FC = () => {
       const existingLines = document.querySelectorAll('.line');
       existingLines.forEach(line => line.remove());
     };
-  }, [data, factRefs, inputRefs, insightRefs, outputRefs, recommendationRefs]); // Depend on data changing
+  }, [data, calculateAndDrawLines]); // Depend on data changing
 
   // Render the app components only if data is loaded
   if (!data) return <div>Loading...</div>;
@@ -300,7 +319,7 @@ const App: React.FC = () => {
           <h2>Inputs</h2>
           {data.inputs.map((input, index) => (
             <div 
-                ref={inputRefs[index]} 
+                ref={inputRefs.current[index]}
                 key={input.input_id} 
                 className="input-item item" 
                 onClick={() => window.open(input.url, '_blank', 'noopener')}>
@@ -314,7 +333,7 @@ const App: React.FC = () => {
         <div className="column facts">
             <h2>Facts</h2>
           {data.facts.map((fact, index) => (
-            <div ref={factRefs[index]} key={fact.fact_id} className="fact-item item">
+            <div ref={factRefs.current[index]} key={fact.fact_id} className="fact-item item">
               {fact.text}
             </div>
           ))}
@@ -325,7 +344,7 @@ const App: React.FC = () => {
         <div className="column insights">
             <h2>Insights</h2>
           {data.insights.map((insight, index) => (
-            <div ref={insightRefs[index]} key={insight.insight_id} className="insight-item item">
+            <div ref={insightRefs.current[index]} key={insight.insight_id} className="insight-item item">
               {insight.text}
             </div>
           ))}
@@ -336,7 +355,7 @@ const App: React.FC = () => {
         <div className="column recommendations">
             <h2>Recommendations</h2>
           {data.recommendations.map((recommendation, index) => (
-            <div ref={recommendationRefs[index]} key={recommendation.recommendation_id} className="recommendation-item item">
+            <div ref={recommendationRefs.current[index]} key={recommendation.recommendation_id} className="recommendation-item item">
               {recommendation.text}
             </div>
           ))}
@@ -347,7 +366,7 @@ const App: React.FC = () => {
         <div className="column outputs">
             <h2>Outputs</h2>
           {data.outputs.map((output, index) => (
-            <div ref={outputRefs[index]} key={output.output_id} className="output-item item">
+            <div ref={outputRefs.current[index]} key={output.output_id} className="output-item item">
               {output.text}
             </div>
           ))}
