@@ -192,7 +192,9 @@ const App: React.FC = () => {
         const outputRect = outputRefs[outputIndex]!.getBoundingClientRect();
 
         output.related_recommendations.forEach(relatedRecommendationId => {
-          const recommendationIndex = data.recommendations.findIndex(recommendation => recommendation.recommendation_id === relatedRecommendationId);
+          const recommendationIndex = data.recommendations.findIndex(
+            recommendation => recommendation.recommendation_id === relatedRecommendationId
+          );
           const recommendationRef = recommendationRefs[recommendationIndex];
 
           if (recommendationRef) {
@@ -246,8 +248,6 @@ const App: React.FC = () => {
         ...recommendationRefs.current,
         ...outputRefs.current
       ];
-
-      console.log(data, inputRefs.current, factRefs.current, insightRefs.current, recommendationRefs.current, outputRefs.current);
 
       if (allRefs.every(ref => ref !== null)) {
         calculateAndDrawLines(
