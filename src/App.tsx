@@ -6,72 +6,88 @@ import { faFileDownload } from '@fortawesome/free-solid-svg-icons';
 import './App.css';
 
 type InputType = {
-    input_id: string;
-    type: string;
-    title: string;
-    url: string;
-  };
-  
-  type FactType = {
-    fact_id: string;
-    related_inputs: string[];
-    text: string;
-  };
-  
-  type InsightType = {
-    insight_id: string;
-    related_facts: string[];
-    text: string;
-  };
-  
-  type RecommendationType = {
-    recommendation_id: string;
-    related_insights: string[];
-    text: string;
-  };
-  
-  type OutputType = {
-    output_id: string;
-    related_recommendations: string[];
-    text: string;
-  };
-  
-  type DiscoveryData = {
-    discovery_id: string;
-    title: string;
-    goal:string;
-    date: string;
-    inputs: InputType[];
-    facts: FactType[];
-    insights: InsightType[];
-    recommendations: RecommendationType[];
-    outputs: OutputType[];
-  };
-  
+  input_id: string;
+  type: string;
+  title: string;
+  url: string;
+};
+
+type FactType = {
+  fact_id: string;
+  related_inputs: string[];
+  text: string;
+};
+
+type InsightType = {
+  insight_id: string;
+  related_facts: string[];
+  text: string;
+};
+
+type RecommendationType = {
+  recommendation_id: string;
+  related_insights: string[];
+  text: string;
+};
+
+type OutputType = {
+  output_id: string;
+  related_recommendations: string[];
+  text: string;
+};
+
+type DiscoveryData = {
+  discovery_id: string;
+  title: string;
+  goal: string;
+  date: string;
+  inputs: InputType[];
+  facts: FactType[];
+  insights: InsightType[];
+  recommendations: RecommendationType[];
+  outputs: OutputType[];
+};
+
 const App: React.FC = () => {
   const [data, setData] = useState<DiscoveryData | null>(null);
-  const inputRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
-  const factRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
-  const insightRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
-  const recommendationRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
-  const outputRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
+  const inputRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const factRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const insightRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const recommendationRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const outputRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  const setInputRef = useCallback((element: HTMLDivElement, index: number) => {
+    inputRefs.current[index] = element;
+  }, []);
+  const setFactRef = useCallback((element: HTMLDivElement, index: number) => {
+    factRefs.current[index] = element;
+  }, []);
+  const setInsightRef = useCallback((element: HTMLDivElement, index: number) => {
+    insightRefs.current[index] = element;
+  }, []);
+  const setRecommendationRef = useCallback((element: HTMLDivElement, index: number) => {
+    recommendationRefs.current[index] = element;
+  }, []);
+  const setOutputRef = useCallback((element: HTMLDivElement, index: number) => {
+    outputRefs.current[index] = element;
+  }, []);
 
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
-    
+
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
-      
+
       fileReader.readAsText(file, "UTF-8");
       fileReader.onload = e => {
         try {
-          const jsonData = JSON.parse(e.target?.result as string);
-          setData(jsonData as DiscoveryData);
+          const data = JSON.parse(e.target?.result as string);
+          setData(data as DiscoveryData);
         } catch (error) {
           console.error("Error parsing JSON:", error);
         }
       };
-      
+
       fileReader.onerror = (error) => {
         console.error("Error reading file:", error);
       };
@@ -79,11 +95,10 @@ const App: React.FC = () => {
   };
 
   const handleExport = () => {
-    if (!data) return; 
-  
-    const jsonString = JSON.stringify(data, null, 2); 
+    if (!data) return;
+
+    const jsonString = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonString], { type: 'application/json' });
-  
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `${data.title.replace(/\s+/g, '_')}_export.json`;
@@ -91,112 +106,111 @@ const App: React.FC = () => {
     link.click();
     document.body.removeChild(link);
   };
-  
+
 
   const calculateAndDrawLines = useCallback((
-        data: DiscoveryData,
-        inputRefs:React.RefObject<HTMLDivElement>[],
-        factRefs:React.RefObject<HTMLDivElement>[],
-        insightRefs:React.RefObject<HTMLDivElement>[],
-        recommendationRefs:React.RefObject<HTMLDivElement>[],
-        outputRefs:React.RefObject<HTMLDivElement>[]
+    data: DiscoveryData,
+    inputRefs: Array<HTMLDivElement | null>,
+    factRefs: Array<HTMLDivElement | null>,
+    insightRefs: Array<HTMLDivElement | null>,
+    recommendationRefs: Array<HTMLDivElement | null>,
+    outputRefs: Array<HTMLDivElement | null>
 
-    ) => {
+  ) => {
     const existingLines = document.querySelectorAll('.line');
     existingLines.forEach(line => line.remove());
 
     data.facts.forEach((fact, factIndex) => {
-      if (factRefs[factIndex]) {
-        const factRect = factRefs[factIndex].current!.getBoundingClientRect();
-        
-        
-        fact.related_inputs.forEach(relatedInputId => {
-          
-            const inputIndex = data.inputs.findIndex(input => input.input_id === relatedInputId);
-            const inputRef = inputRefs[inputIndex];
-            
-            if (inputRef.current) {
-              const inputRect = inputRef.current.getBoundingClientRect();
+      if (factRefs && factRefs[factIndex]) {
+        const factRect = factRefs[factIndex]!.getBoundingClientRect();
 
-              const startX = inputRect.right;
-              const startY = inputRect.top + inputRect.height / 2;
-              const endX = factRect.left;
-              const endY = factRect.top + factRect.height / 2;
-      
-              createLine(startX, startY, endX, endY);
-            }
+        fact.related_inputs.forEach(relatedInputId => {
+
+          const inputIndex = data.inputs.findIndex(input => input.input_id === relatedInputId);
+          const inputRef = inputRefs[inputIndex];
+
+          if (inputRef) {
+            const inputRect = inputRef.getBoundingClientRect();
+
+            const startX = inputRect.right;
+            const startY = inputRect.top + inputRect.height / 2;
+            const endX = factRect.left;
+            const endY = factRect.top + factRect.height / 2;
+
+            createLine(startX, startY, endX, endY);
+          }
         });
       }
     });
 
     data.insights.forEach((insight, insightIndex) => {
-        if (insightRefs[insightIndex].current) {
-          const insightRect = insightRefs[insightIndex].current!.getBoundingClientRect();
-          
-          insight.related_facts.forEach(relatedFactId => {
-            const factIndex = data.facts.findIndex(fact => fact.fact_id === relatedFactId);
-            const factRef = factRefs[factIndex];
-            
-            if (factRef.current) {
-                const factRect = factRef.current.getBoundingClientRect();
-          
-                const startX = factRect.right;
-                const startY = factRect.top + factRect.height / 2;
-                const endX = insightRect.left;
-                const endY = insightRect.top + insightRect.height / 2;
-        
-                createLine(startX, startY, endX, endY);
-            }
-          });
-        }
+      if (insightRefs[insightIndex]) {
+        const insightRect = insightRefs[insightIndex]!.getBoundingClientRect();
+
+        insight.related_facts.forEach(relatedFactId => {
+          const factIndex = data.facts.findIndex(fact => fact.fact_id === relatedFactId);
+          const factRef = factRefs[factIndex];
+
+          if (factRef) {
+            const factRect = factRef.getBoundingClientRect();
+
+            const startX = factRect.right;
+            const startY = factRect.top + factRect.height / 2;
+            const endX = insightRect.left;
+            const endY = insightRect.top + insightRect.height / 2;
+
+            createLine(startX, startY, endX, endY);
+          }
+        });
+      }
     });
-    
+
     data.recommendations.forEach((recommendation, recommendationIndex) => {
-        if (recommendationRefs[recommendationIndex].current) {
-            const recommendationRect = recommendationRefs[recommendationIndex].current!.getBoundingClientRect();
-            
-            recommendation.related_insights.forEach(relatedInsightId => {
-                const insightIndex = data.insights.findIndex(insight => insight.insight_id === relatedInsightId);
-                const insightRef = insightRefs[insightIndex];
-                
-                if (insightRef.current) {
-                const insightRect = insightRef.current.getBoundingClientRect();
-                
-                const startX = insightRect.right;
-                const startY = insightRect.top + insightRect.height / 2;
-                const endX = recommendationRect.left;
-                const endY = recommendationRect.top + recommendationRect.height / 2;
-        
-                createLine(startX, startY, endX, endY);
-                }
-            });
-        }
+      if (recommendationRefs[recommendationIndex]) {
+        const recommendationRect = recommendationRefs[recommendationIndex]!.getBoundingClientRect();
+
+        recommendation.related_insights.forEach(relatedInsightId => {
+          const insightIndex = data.insights.findIndex(insight => insight.insight_id === relatedInsightId);
+          const insightRef = insightRefs[insightIndex];
+
+          if (insightRef) {
+            const insightRect = insightRef.getBoundingClientRect();
+
+            const startX = insightRect.right;
+            const startY = insightRect.top + insightRect.height / 2;
+            const endX = recommendationRect.left;
+            const endY = recommendationRect.top + recommendationRect.height / 2;
+
+            createLine(startX, startY, endX, endY);
+          }
+        });
+      }
     });
 
     data.outputs.forEach((output, outputIndex) => {
-        if (outputRefs[outputIndex].current) {
-            const outputRect = outputRefs[outputIndex].current!.getBoundingClientRect();
-            
-            output.related_recommendations.forEach(relatedRecommendationId => {
-                const recommendationIndex = data.recommendations.findIndex(recommendation => recommendation.recommendation_id === relatedRecommendationId);
-                const recommendationRef = recommendationRefs[recommendationIndex];
-                
-                if (recommendationRef.current) {
-                const recommendationRect = recommendationRef.current.getBoundingClientRect();
-                
-                const startX = recommendationRect.right;
-                const startY = recommendationRect.top + recommendationRect.height / 2;
-                const endX = outputRect.left;
-                const endY = outputRect.top + outputRect.height / 2;
-        
-                createLine(startX, startY, endX, endY);
-                }
-            });
-        }
+      if (outputRefs[outputIndex]) {
+        const outputRect = outputRefs[outputIndex]!.getBoundingClientRect();
+
+        output.related_recommendations.forEach(relatedRecommendationId => {
+          const recommendationIndex = data.recommendations.findIndex(recommendation => recommendation.recommendation_id === relatedRecommendationId);
+          const recommendationRef = recommendationRefs[recommendationIndex];
+
+          if (recommendationRef) {
+            const recommendationRect = recommendationRef.getBoundingClientRect();
+
+            const startX = recommendationRect.right;
+            const startY = recommendationRect.top + recommendationRect.height / 2;
+            const endX = outputRect.left;
+            const endY = outputRect.top + outputRect.height / 2;
+
+            createLine(startX, startY, endX, endY);
+          }
+        });
+      }
     });
   }, []);
-  
- const createLine = (startX: number, startY: number, endX: number, endY: number) => {
+
+  const createLine = (startX: number, startY: number, endX: number, endY: number) => {
     const line = document.createElement('div');
     line.classList.add('line');
 
@@ -210,7 +224,6 @@ const App: React.FC = () => {
     line.style.transform = `rotate(${angle}deg)`;
     line.style.transformOrigin = '0 0';
 
-
     document.body.appendChild(line);
   };
 
@@ -223,53 +236,48 @@ const App: React.FC = () => {
   }, []);
 
 
-  useEffect (() => {
+
+  useEffect(() => {
     if (data) {
-
-      inputRefs.current = data.inputs.map(() => React.createRef<HTMLDivElement>());
-      factRefs.current = data.facts.map(() => React.createRef<HTMLDivElement>());
-      insightRefs.current = data.insights.map(() => React.createRef<HTMLDivElement>());
-      recommendationRefs.current = data.recommendations.map(() => React.createRef<HTMLDivElement>());
-      outputRefs.current = data.outputs.map(() => React.createRef<HTMLDivElement>());
-
       const allRefs = [
-        ...inputRefs.current, 
-        ...factRefs.current, 
-        ...insightRefs.current, 
-        ...recommendationRefs.current, 
+        ...inputRefs.current,
+        ...factRefs.current,
+        ...insightRefs.current,
+        ...recommendationRefs.current,
         ...outputRefs.current
       ];
 
+      console.log(data, inputRefs.current, factRefs.current, insightRefs.current, recommendationRefs.current, outputRefs.current);
 
-      if (allRefs.every(ref => ref.current !== null)) {
+      if (allRefs.every(ref => ref !== null)) {
         calculateAndDrawLines(
-          data, 
-          inputRefs.current, 
+          data,
+          inputRefs.current,
           factRefs.current,
           insightRefs.current,
-          recommendationRefs.current, 
+          recommendationRefs.current,
           outputRefs.current
         );
         const handleResize = () => {
           calculateAndDrawLines(
-            data, 
-            inputRefs.current, 
+            data,
+            inputRefs.current,
             factRefs.current,
             insightRefs.current,
-            recommendationRefs.current, 
+            recommendationRefs.current,
             outputRefs.current
           );
         };
 
         window.addEventListener('resize', handleResize);
-        return() => {
+        return () => {
           window.removeEventListener('resize', handleResize);
           const existingLines = document.querySelectorAll('.line');
           existingLines.forEach(line => line.remove());
         }
       }
     }
-  }, [data, calculateAndDrawLines]); 
+  }, [data, calculateAndDrawLines]);
 
   if (!data) return <div>Loading...</div>;
 
@@ -287,7 +295,7 @@ const App: React.FC = () => {
             type="file"
             accept=".json"
             onChange={handleFileInputChange}
-            style={{ display: 'none' }} 
+            style={{ display: 'none' }}
           />
           <button onClick={handleExport} className="toolbar-button">
             <FontAwesomeIcon icon={faFileDownload} />
@@ -295,79 +303,100 @@ const App: React.FC = () => {
         </div>
       </header>
       <main className="discovery-grid">
-      { inputRefs && inputRefs.current ?
-        <div className="column inputs">
-          <h2>Inputs</h2>
-          {data.inputs.map((input, index) => (
-            <div 
-              ref={inputRefs.current[index]}
-              key={input.input_id} 
-              className="input-item item" 
-              onClick={() => window.open(input.url, '_blank', 'noopener')}>
-              {input.title} (Type: {input.type})
+        {inputRefs ?
+          <div className="column inputs">
+            <h2>Inputs</h2>
+            {data.inputs.map((input, index) => (
+              <div
+                ref={el => el ? setInputRef(el, index) : null}
+                key={input.input_id}
+                className="input-item item"
+                onClick={() => window.open(input.url, '_blank', 'noopener')}>
+                {input.title} (Type: {input.type})
+              </div>
+            ))}
+            <button className="add-button" onClick={
+              () => {
+                const newInput: InputType = {
+                  input_id: data.inputs[data.inputs.length - 1].input_id + 1,
+                  title: 'New Input',
+                  type: 'text',
+                  url: ''
+                };
+
+                setData((prevState) => prevState ? ({
+                  ...prevState,
+                  inputs: [...prevState.inputs, newInput]
+                }) : prevState);
+              }}> +</button >
+          </div >
+          : ""}
+        {
+          factRefs ?
+            <div className="column facts">
+              <h2>Facts</h2>
+              {data.facts.map((fact, index) => (
+                <div
+                  ref={el => el ? setFactRef(el, index) : null}
+                  key={fact.fact_id}
+                  className="fact-item item">
+                  {fact.text}
+                </div>
+              ))}
+              <button className="add-button" onClick={() => {/* Handle add input */ }}>+</button>
             </div>
-          ))}
-          <button className="add-button" onClick={() => {/* Handle add input */}}>+</button>
-        </div>
-        : ""} 
-        { factRefs && factRefs.current ?
-        <div className="column facts">
-            <h2>Facts</h2>
-          {data.facts.map((fact, index) => (
-            <div 
-              ref={factRefs.current[index]} 
-              key={fact.fact_id} 
-              className="fact-item item">
-              {fact.text}
+            : ""
+        }
+        {
+          insightRefs ?
+            <div className="column insights">
+              <h2>Insights</h2>
+              {data.insights.map((insight, index) => (
+                <div
+                  ref={el => el ? setInsightRef(el, index) : null}
+                  key={insight.insight_id}
+                  className="insight-item item">
+                  {insight.text}
+                </div>
+              ))}
+              <button className="add-button" onClick={() => {/* Handle add input */ }}>+</button>
             </div>
-          ))}
-          <button className="add-button" onClick={() => {/* Handle add input */}}>+</button>
-        </div>
-        : ""}
-        { insightRefs && insightRefs.current ? 
-        <div className="column insights">
-            <h2>Insights</h2>
-          {data.insights.map((insight, index) => (
-            <div 
-              ref={insightRefs.current[index]} 
-              key={insight.insight_id} 
-              className="insight-item item">
-              {insight.text}
+            : ""
+        }
+        {
+          recommendationRefs ?
+            <div className="column recommendations">
+              <h2>Recommendations</h2>
+              {data.recommendations.map((recommendation, index) => (
+                <div
+                  ref={el => el ? setRecommendationRef(el, index) : null}
+                  key={recommendation.recommendation_id}
+                  className="recommendation-item item">
+                  {recommendation.text}
+                </div>
+              ))}
+              <button className="add-button" onClick={() => {/* Handle add input */ }}>+</button>
             </div>
-          ))}
-          <button className="add-button" onClick={() => {/* Handle add input */}}>+</button>
-        </div>
-        : ""}
-        { recommendationRefs && recommendationRefs.current ?           
-        <div className="column recommendations">
-            <h2>Recommendations</h2>
-          {data.recommendations.map((recommendation, index) => (
-            <div 
-              ref={recommendationRefs.current[index]} 
-              key={recommendation.recommendation_id} 
-              className="recommendation-item item">
-              {recommendation.text}
+            : ""
+        }
+        {
+          outputRefs ?
+            <div className="column outputs">
+              <h2>Outputs</h2>
+              {data.outputs.map((output, index) => (
+                <div
+                  ref={el => el ? setOutputRef(el, index) : null}
+                  key={output.output_id}
+                  className="output-item item">
+                  {output.text}
+                </div>
+              ))}
+              <button className="add-button" onClick={() => {/* Handle add input */ }}>+</button>
             </div>
-          ))}
-          <button className="add-button" onClick={() => {/* Handle add input */}}>+</button>
-        </div>
-        : ""}
-        { outputRefs && outputRefs.current ?
-        <div className="column outputs">
-            <h2>Outputs</h2>
-          {data.outputs.map((output, index) => (
-            <div 
-              ref={outputRefs.current[index]} 
-              key={output.output_id} 
-              className="output-item item">
-              {output.text}
-            </div>
-          ))}
-          <button className="add-button" onClick={() => {/* Handle add input */}}>+</button>
-        </div>
-        : ""}
-      </main>
-    </div>
+            : ""
+        }
+      </main >
+    </div >
   );
 };
 
