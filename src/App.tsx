@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload } from '@fortawesome/free-solid-svg-icons';
 import { faFileDownload } from '@fortawesome/free-solid-svg-icons';
+import ModalDialog from "react-basic-modal-dialog";
 
 import './App.css';
 
@@ -51,6 +52,22 @@ type DiscoveryData = {
 const App: React.FC = () => {
   const [data, setData] = useState<DiscoveryData | null>(null);
   const inputRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [isInputDialogVisible, setIsInputDialogVisible] = useState(false);
+  const [currentInputTitle, setCurrentInputTitle] = useState("");
+  const handleCurrentInputTitleChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+    setCurrentInputTitle(event.target.value);
+  };
+  const [currentInputType, setCurrentInputType] = useState("");
+  const handleCurrentInputTypeChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+    setCurrentInputType(event.target.value);
+  }
+  const [currentInputUrl, setCurrentInputUrl] = useState("");
+  const handleCurrentInputUrlChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+    setCurrentInputUrl(event.target.value);
+  }
+
+
+
   const factRefs = useRef<(HTMLDivElement | null)[]>([]);
   const insightRefs = useRef<(HTMLDivElement | null)[]>([]);
   const recommendationRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -317,19 +334,42 @@ const App: React.FC = () => {
             ))}
             <button className="add-button" onClick={
               () => {
-                const newInput: InputType = {
-                  input_id: data.inputs[data.inputs.length - 1].input_id + 1,
-                  title: 'New Input',
-                  type: 'text',
-                  url: ''
-                };
-
-                setData((prevState) => prevState ? ({
-                  ...prevState,
-                  inputs: [...prevState.inputs, newInput]
-                }) : prevState);
+                setIsInputDialogVisible(true)
               }}> +</button >
+              <ModalDialog isDialogVisible={isInputDialogVisible} closeDialog={() => setIsInputDialogVisible(false)}>
+                <form>
+                  <label htmlFor="input-title">Title</label>
+                  <input id="input-title" type="text" value={currentInputTitle} onChange={ handleCurrentInputTitleChange}/>
+                  <label htmlFor="input-url">URL</label>
+                  <input id="input-url" type="text" value={currentInputUrl} onChange={ handleCurrentInputUrlChange}/>
+                  <label htmlFor="input-type">Type</label>
+                  <select id="input-type" value={currentInputType} onChange={ handleCurrentInputTypeChange}>
+                    <option value="text">Text</option>
+                    <option value="image">Image</option>
+                    <option value="video">Video</option>
+                    <option value="audio">Audio</option>
+                    <option value="document">Document</option>
+                    <option value="other">Other</option>
+                  </select>
+                </form>
+                <button onClick={() => setIsInputDialogVisible(false)}>Close</button>
+                <button onClick={() => {
+                  const newInput: InputType = {
+                    input_id: data.inputs[data.inputs.length - 1].input_id + 1,
+                    title: currentInputTitle,
+                    type: currentInputType,
+                    url: currentInputUrl
+                  };
+
+                  setData((prevState) => prevState ? ({
+                    ...prevState,
+                    inputs: [...prevState.inputs, newInput]
+                  }) : prevState);
+                }}>Add</button>
+
+              </ModalDialog>
           </div >
+
           : ""}
         {
           factRefs ?
