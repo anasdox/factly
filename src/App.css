@@ -102,3 +102,13 @@ input[type=text], select, textarea {
   margin-bottom: 16px;
   resize: vertical;
 }
+
+.highlighted {
+  box-shadow: 0 0 0 2px #000000;
+  filter: contrast(1.5);
+  
+}
+
+.link-highlighted {
+  stroke: red; /* or any highlight color, assuming links are SVG lines */
+}

@@ -198,7 +198,7 @@ const App: React.FC = () => {
             const endX = factRect.left;
             const endY = factRect.top + factRect.height / 2;
 
-            createLine(startX, startY, endX, endY);
+            createLine(startX, startY, endX, endY, 'input', relatedInputId, 'fact', fact.fact_id);
           }
         });
       }
@@ -220,7 +220,7 @@ const App: React.FC = () => {
             const endX = insightRect.left;
             const endY = insightRect.top + insightRect.height / 2;
 
-            createLine(startX, startY, endX, endY);
+            createLine(startX, startY, endX, endY, 'fact', relatedFactId, 'insight', insight.insight_id);
           }
         });
       }
@@ -242,7 +242,7 @@ const App: React.FC = () => {
             const endX = recommendationRect.left;
             const endY = recommendationRect.top + recommendationRect.height / 2;
 
-            createLine(startX, startY, endX, endY);
+            createLine(startX, startY, endX, endY, 'insight', relatedInsightId, 'recommendation', recommendation.recommendation_id);
           }
         });
       }
@@ -266,29 +266,133 @@ const App: React.FC = () => {
             const endX = outputRect.left;
             const endY = outputRect.top + outputRect.height / 2;
 
-            createLine(startX, startY, endX, endY);
+            createLine(startX, startY, endX, endY, 'recommendation', relatedRecommendationId, 'output', output.output_id);
           }
         });
       }
     });
   }, []);
 
-  const createLine = (startX: number, startY: number, endX: number, endY: number) => {
+  const createLine = (
+    startX: number, 
+    startY: number, 
+    endX: number, 
+    endY: number, 
+    sourceEntityType: string, 
+    sourceEntityId: string, 
+    targetEntityType: string, 
+    targetEntityId: string
+  ) => {
     const line = document.createElement('div');
     line.classList.add('line');
-
+    // Assign an ID to the line based on the entities it connects
+    line.id = `link-${sourceEntityType}-${sourceEntityId}-to-${targetEntityType}-${targetEntityId}`;
+  
     const length = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
     const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
-
+  
     line.style.position = 'absolute';
     line.style.left = `${startX}px`;
     line.style.top = `${startY}px`;
     line.style.width = `${length}px`;
     line.style.transform = `rotate(${angle}deg)`;
     line.style.transformOrigin = '0 0';
-
+  
     document.body.appendChild(line);
   };
+
+  function handleMouseEnter(entityType:string, entityId:string, data:DiscoveryData) {
+    // Highlight the current entity
+    const entityElement = document.getElementById(`${entityType}-${entityId}`);
+    entityElement?.classList.add('highlighted');
+  
+    // Highlight all related entities and their links
+    const relatedEntities = getRelatedEntities(entityType, entityId, data);
+    relatedEntities.forEach((relatedEntity) => {
+      const relatedElement = document.getElementById(`${relatedEntity.type}-${relatedEntity.id}`);
+      relatedElement?.classList.add('highlighted');
+      highlightLinks(entityType, entityId, relatedEntity.type, relatedEntity.id);
+    });
+  }
+  
+  function handleMouseLeave(entityType:string, entityId:string, data:DiscoveryData) {
+    // Remove highlighting from the current entity
+    const entityElement = document.getElementById(`${entityType}-${entityId}`);
+    entityElement?.classList.remove('highlighted');
+  
+    // Remove highlighting from all related entities and their links
+    const relatedEntities = getRelatedEntities(entityType, entityId, data);
+    relatedEntities.forEach((relatedEntity) => {
+      const relatedElement = document.getElementById(`${relatedEntity.type}-${relatedEntity.id}`);
+      relatedElement?.classList.remove('highlighted');
+      removeLinkHighlight(entityType, entityId, relatedEntity.type, relatedEntity.id);
+    });
+  }
+
+  function getRelatedEntities(entityType: string, entityId: string, data: DiscoveryData) {
+    let relatedEntities: { type: string; id: string; }[] = [];
+  
+    const addRelatedEntities = (type: string, id: string) => {
+      if (!relatedEntities.some(entity => entity.type === type && entity.id === id)) {
+        relatedEntities.push({ type, id });
+  
+        // Depending on the type, find and add indirect related entities
+        switch (type) {
+          case 'input':
+            data.facts.forEach((fact) => {
+              if (fact.related_inputs.includes(id)) {
+                addRelatedEntities('fact', fact.fact_id);
+              }
+            });
+            break;
+          case 'fact':
+            data.insights.forEach((insight) => {
+              if (insight.related_facts.includes(id)) {
+                addRelatedEntities('insight', insight.insight_id);
+              }
+            });
+            break;
+          case 'insight':
+            data.recommendations.forEach((recommendation) => {
+              if (recommendation.related_insights.includes(id)) {
+                addRelatedEntities('recommendation', recommendation.recommendation_id);
+              }
+            });
+            break;
+          case 'recommendation':
+            data.outputs.forEach((output) => {
+              if (output.related_recommendations.includes(id)) {
+                addRelatedEntities('output', output.output_id);
+              }
+            });
+            break;
+          default:
+            // Handle other entity types or errors
+            break;
+        }
+      }
+    };
+  
+    // Start the recursive search with the initial entity
+    addRelatedEntities(entityType, entityId);
+  
+    return relatedEntities;
+  }
+
+
+  function highlightLinks(entityType:string, entityId:string, relatedEntityType:string, relatedEntityId:string) {
+    // Assuming we have a way to get the link element between two entities
+    const linkElementId = `link-${entityType}-${entityId}-to-${relatedEntityType}-${relatedEntityId}`;
+    const linkElement = document.getElementById(linkElementId);
+    linkElement?.classList.add('link-highlighted');
+  }
+  
+  function removeLinkHighlight(entityType: string, entityId: string, relatedEntityType: string, relatedEntityId: string) {
+    const linkElementId = `link-${entityType}-${entityId}-to-${relatedEntityType}-${relatedEntityId}`;
+    const linkElement = document.getElementById(linkElementId);
+    linkElement?.classList.remove('link-highlighted');
+  }
+  
 
   useEffect(() => {
     fetch('/data.json')
@@ -369,11 +473,15 @@ const App: React.FC = () => {
             <h2>Inputs</h2>
             {data.inputs.map((input, index) => (
               <div
+                id={ "input-" + input.input_id }
                 ref={el => el ? setInputRef(el, index) : null}
                 key={input.input_id}
                 className="input-item item"
-                onClick={() => window.open(input.url, '_blank', 'noopener')}>
-                {input.title} (Type: {input.type})
+                onClick={() => window.open(input.url, '_blank', 'noopener')}
+                onMouseEnter={() => handleMouseEnter("input", input.input_id, data)}
+                onMouseLeave={() => handleMouseLeave("input", input.input_id, data)}
+              >
+                {input.title}:{input.type}
               </div>
             ))}
             <button className="add-button" onClick={() => { setIsInputDialogVisible(true) }}>+</button >
@@ -392,8 +500,6 @@ const App: React.FC = () => {
                   <option value="document">Document</option>
                   <option value="other">Other</option>
                 </select>
-
-
               </form>
               <button onClick={() => setIsInputDialogVisible(false)}>Close</button>
               <button onClick={() => {
@@ -420,10 +526,15 @@ const App: React.FC = () => {
               <h2>Facts</h2>
               {data.facts.map((fact, index) => (
                 <div
+                  id={ "fact-" + fact.fact_id }
                   ref={el => el ? setFactRef(el, index) : null}
                   key={fact.fact_id}
-                  className="fact-item item">
+                  className="fact-item item"
+                  onMouseEnter={() => handleMouseEnter("fact", fact.fact_id, data)}
+                  onMouseLeave={() => handleMouseLeave("fact", fact.fact_id, data)}
+                >
                   {fact.text}
+                  
                 </div>
               ))}
               <button className="add-button" onClick={() => { setIsFactDialogVisible(true) }}>+</button>
@@ -456,9 +567,13 @@ const App: React.FC = () => {
               <h2>Insights</h2>
               {data.insights.map((insight, index) => (
                 <div
+                  id={ "insight-" + insight.insight_id }
                   ref={el => el ? setInsightRef(el, index) : null}
                   key={insight.insight_id}
-                  className="insight-item item">
+                  className="insight-item item"
+                  onMouseEnter={() => handleMouseEnter("insight", insight.insight_id, data)}
+                  onMouseLeave={() => handleMouseLeave("insight", insight.insight_id, data)}
+                >
                   {insight.text}
                 </div>
               ))}
@@ -493,9 +608,13 @@ const App: React.FC = () => {
               <h2>Recommendations</h2>
               {data.recommendations.map((recommendation, index) => (
                 <div
+                  id={ "recommendation-" + recommendation.recommendation_id }
                   ref={el => el ? setRecommendationRef(el, index) : null}
                   key={recommendation.recommendation_id}
-                  className="recommendation-item item">
+                  className="recommendation-item item"
+                  onMouseEnter={() => handleMouseEnter("recommendation", recommendation.recommendation_id, data)}
+                  onMouseLeave={() => handleMouseLeave("recommendation", recommendation.recommendation_id, data)}
+                >
                   {recommendation.text}
                 </div>
               ))}
