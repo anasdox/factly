@@ -51,6 +51,8 @@ type DiscoveryData = {
 
 const App: React.FC = () => {
   const [data, setData] = useState<DiscoveryData | null>(null);
+
+  // Inputs
   const inputRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [isInputDialogVisible, setIsInputDialogVisible] = useState(false);
   const [currentInputTitle, setCurrentInputTitle] = useState("");
@@ -66,12 +68,54 @@ const App: React.FC = () => {
     setCurrentInputUrl(event.target.value);
   }
 
-
-
+  // Facts
   const factRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [isFactDialogVisible, setIsFactDialogVisible] = useState(false);
+  const [currentFactText, setCurrentFactText] = useState("");
+  const handleCurrentFactTextChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+    setCurrentFactText(event.target.value);
+  };
+
+  const [currentFactRelatedInputs, setCurrentRelatedInputs] = useState<string[]>([]);
+  const handleCurrentRelatedInputsChange = (event: { target: { value: string }; }) => {
+    setCurrentRelatedInputs(event.target.value.split(',').map(el => el.trim()));
+  };
+
+  // Insights
   const insightRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [isInsightDialogVisible, setIsInsightDialogVisible] = useState(false);
+  const [currentInsightText, setCurrentInsightText] = useState("");
+  const handleCurrentInsightTextChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+    setCurrentInsightText(event.target.value);
+  };
+  const [currentInsightRelatedFacts, setCurrentInsightRelatedFacts] = useState<string[]>([]);
+  const handleCurrentInsightRelatedFactsChange = (event: { target: { value: string }; }) => {
+    setCurrentInsightRelatedFacts(event.target.value.split(',').map(el => el.trim()));
+  };
+
+  // Recommendations
   const recommendationRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [isRecommendationDialogVisible, setIsRecommendationDialogVisible] = useState(false);
+  const [currentRecommendationText, setCurrentRecommendationText] = useState("");
+  const handleCurrentRecommendationTextChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+    setCurrentRecommendationText(event.target.value);
+  };
+  const [currentRecommendationRelatedInsights, setCurrentRecommendationRelatedInsights] = useState<string[]>([]);
+  const handleCurrentRecommendationRelatedInsightsChange = (event: { target: { value: string }; }) => {
+    setCurrentRecommendationRelatedInsights(event.target.value.split(',').map(el => el.trim()));
+  };
+
+  // Output
   const outputRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [isOutputDialogVisible, setIsOutputDialogVisible] = useState(false);
+  const [currentOutputText, setCurrentOutputText] = useState("");
+  const handleCurrentOutputTextChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
+    setCurrentOutputText(event.target.value);
+  };
+  const [currentOutputRelatedRecommendations, setCurrentOutputRelatedRecommendations] = useState<string[]>([]);
+  const handleCurrentOutputRelatedRecommendationsChange = (event: { target: { value: string; }; }) => {
+    setCurrentOutputRelatedRecommendations(event.target.value.split(',').map(el => el.trim()));
+  };
 
   const setInputRef = useCallback((element: HTMLDivElement, index: number) => {
     inputRefs.current[index] = element;
@@ -332,42 +376,41 @@ const App: React.FC = () => {
                 {input.title} (Type: {input.type})
               </div>
             ))}
-            <button className="add-button" onClick={
-              () => {
-                setIsInputDialogVisible(true)
-              }}> +</button >
-              <ModalDialog isDialogVisible={isInputDialogVisible} closeDialog={() => setIsInputDialogVisible(false)}>
-                <form>
-                  <label htmlFor="input-title">Title</label>
-                  <input id="input-title" type="text" value={currentInputTitle} onChange={ handleCurrentInputTitleChange}/>
-                  <label htmlFor="input-url">URL</label>
-                  <input id="input-url" type="text" value={currentInputUrl} onChange={ handleCurrentInputUrlChange}/>
-                  <label htmlFor="input-type">Type</label>
-                  <select id="input-type" value={currentInputType} onChange={ handleCurrentInputTypeChange}>
-                    <option value="text">Text</option>
-                    <option value="image">Image</option>
-                    <option value="video">Video</option>
-                    <option value="audio">Audio</option>
-                    <option value="document">Document</option>
-                    <option value="other">Other</option>
-                  </select>
-                </form>
-                <button onClick={() => setIsInputDialogVisible(false)}>Close</button>
-                <button onClick={() => {
-                  const newInput: InputType = {
-                    input_id: data.inputs[data.inputs.length - 1].input_id + 1,
-                    title: currentInputTitle,
-                    type: currentInputType,
-                    url: currentInputUrl
-                  };
+            <button className="add-button" onClick={() => { setIsInputDialogVisible(true) }}>+</button >
+            <ModalDialog isDialogVisible={isInputDialogVisible} closeDialog={() => setIsInputDialogVisible(false)}>
+              <form>
+                <label htmlFor="input-title">Title</label>
+                <input id="input-title" type="text" value={currentInputTitle} onChange={handleCurrentInputTitleChange} />
+                <label htmlFor="input-url">URL</label>
+                <input id="input-url" type="text" value={currentInputUrl} onChange={handleCurrentInputUrlChange} />
+                <label htmlFor="input-type">Type</label>
+                <select id="input-type" value={currentInputType} onChange={handleCurrentInputTypeChange}>
+                  <option value="text">Text</option>
+                  <option value="image">Image</option>
+                  <option value="video">Video</option>
+                  <option value="audio">Audio</option>
+                  <option value="document">Document</option>
+                  <option value="other">Other</option>
+                </select>
 
-                  setData((prevState) => prevState ? ({
-                    ...prevState,
-                    inputs: [...prevState.inputs, newInput]
-                  }) : prevState);
-                }}>Add</button>
 
-              </ModalDialog>
+              </form>
+              <button onClick={() => setIsInputDialogVisible(false)}>Close</button>
+              <button onClick={() => {
+                const newInput: InputType = {
+                  input_id: data.inputs[data.inputs.length - 1].input_id + 1,
+                  title: currentInputTitle,
+                  type: currentInputType,
+                  url: currentInputUrl
+                };
+
+                setData((prevState) => prevState ? ({
+                  ...prevState,
+                  inputs: [...prevState.inputs, newInput]
+                }) : prevState);
+              }}>Save</button>
+
+            </ModalDialog>
           </div >
 
           : ""}
@@ -383,7 +426,27 @@ const App: React.FC = () => {
                   {fact.text}
                 </div>
               ))}
-              <button className="add-button" onClick={() => {/* Handle add input */ }}>+</button>
+              <button className="add-button" onClick={() => { setIsFactDialogVisible(true) }}>+</button>
+              <ModalDialog isDialogVisible={isFactDialogVisible} closeDialog={() => setIsFactDialogVisible(false)}>
+                <form>
+                  <label htmlFor="fact-text">Text</label>
+                  <input id="fact-text" type="text" value={currentFactText} onChange={handleCurrentFactTextChange} />
+                  <select id="fact-related-inputs" value={currentFactRelatedInputs} onChange={handleCurrentRelatedInputsChange} multiple>
+                    {data.inputs ? data.inputs.map((input) => (<option key={input.input_id} value={input.input_id}>{input.title}</option>)) : ""}
+                  </select>
+
+                </form>
+                <button onClick={() => setIsFactDialogVisible(false)}>Close</button>
+                <button onClick={() => {
+                  const newFact: FactType = {
+                    fact_id: data.facts[data.facts.length - 1].fact_id + 1,
+                    text: currentFactText,
+                    related_inputs: currentFactRelatedInputs
+                  };
+                  setData((prevState) => prevState ? ({ ...prevState, facts: [...prevState.facts, newFact] }) : prevState);
+                }}>Save</button>
+
+              </ModalDialog>
             </div>
             : ""
         }
@@ -399,7 +462,28 @@ const App: React.FC = () => {
                   {insight.text}
                 </div>
               ))}
-              <button className="add-button" onClick={() => {/* Handle add input */ }}>+</button>
+              <button className="add-button" onClick={() => { setIsInsightDialogVisible(true) }}>+</button>
+              <ModalDialog isDialogVisible={isInsightDialogVisible} closeDialog={() => setIsInsightDialogVisible(false)}>
+                <form>
+                  <label htmlFor="insight-text">Text</label>
+                  <input id="insight-text" type="text" value={currentInsightText} onChange={handleCurrentInsightTextChange} />
+                  <label htmlFor="insight-related-facts">Related Facts</label>
+                  <select id="insight-related-facts" value={currentInsightRelatedFacts} onChange={handleCurrentInsightRelatedFactsChange} multiple>
+                    {data.facts.map(fact => (<option key={fact.fact_id} value={fact.fact_id}>{fact.text}</option>))}
+                  </select>
+
+                </form>
+                <button onClick={() => setIsInsightDialogVisible(false)}>Close</button>
+                <button onClick={() => {
+                  const newInsight: InsightType = {
+                    insight_id: data.insights[data.insights.length - 1].insight_id + 1,
+                    text: currentInsightText,
+                    related_facts: currentInsightRelatedFacts
+                  };
+                  setData((prevState) => prevState ? ({ ...prevState, insights: [...prevState.insights, newInsight] }) : prevState);
+                }}>Save</button>
+              </ModalDialog>
+
             </div>
             : ""
         }
@@ -415,7 +499,26 @@ const App: React.FC = () => {
                   {recommendation.text}
                 </div>
               ))}
-              <button className="add-button" onClick={() => {/* Handle add input */ }}>+</button>
+              <button className="add-button" onClick={() => { setIsRecommendationDialogVisible(true) }}>+</button>
+              <ModalDialog isDialogVisible={isRecommendationDialogVisible} onClose={() => setIsRecommendationDialogVisible(false)}>
+                <form onSubmit={(e) => { e.preventDefault(); }}>
+                  <label htmlFor="recommendation-input">Text</label>
+                  <input id="recommendation-input" type="text" value={currentRecommendationText} onChange={handleCurrentRecommendationTextChange} />
+                  <label htmlFor="recommendation-related-insights">Related Insights</label>
+                  <select id="recommendation-related-insights" value={currentRecommendationRelatedInsights} onChange={handleCurrentRecommendationRelatedInsightsChange} multiple>
+                    {data.insights.map(insight => (<option key={insight.insight_id} value={insight.insight_id}>{insight.text}</option>))}
+                  </select>
+                </form>
+                <button onClick={() => setIsRecommendationDialogVisible(false)}>Close</button>
+                <button onClick={() => {
+                  const newRecommendation: RecommendationType = {
+                    recommendation_id: data.recommendations[data.recommendations.length - 1].recommendation_id + 1,
+                    text: currentRecommendationText,
+                    related_insights: currentRecommendationRelatedInsights
+                  };
+                  setData((prevState) => prevState ? ({ ...prevState, recommendations: [...prevState.recommendations, newRecommendation] }) : prevState);
+                }}>Save</button>
+              </ModalDialog>
             </div>
             : ""
         }
@@ -431,7 +534,30 @@ const App: React.FC = () => {
                   {output.text}
                 </div>
               ))}
-              <button className="add-button" onClick={() => {/* Handle add input */ }}>+</button>
+              <button className="add-button" onClick={() => { setIsOutputDialogVisible(true) }}>+</button>
+              <ModalDialog isDialogVisible={isOutputDialogVisible} onClose={() => setIsOutputDialogVisible(false)}>
+                <h2>Add Output</h2>
+                <form>
+                  <label htmlFor="output-text">Text:</label>
+                  <input type="text" id="output-text" value={currentOutputText} onChange={(e) => setCurrentOutputText(e.target.value)} />
+                  <label htmlFor="related-recommendations">Related Recommendations:</label>
+                  <select id="related-recommendations" multiple value={currentOutputRelatedRecommendations} onChange={handleCurrentOutputRelatedRecommendationsChange}>
+                    {data.recommendations.map((recommendation, index) => (
+                      <option key={index} value={recommendation.recommendation_id}>{recommendation.text}</option>
+                    ))}
+                  </select>
+                </form>
+                <button onClick={() => setIsOutputDialogVisible(false)}>Close</button>
+                <button onClick={() => {
+                  const newOutput: OutputType = {
+                    output_id: data.outputs[data.outputs.length - 1].output_id + 1,
+                    text: currentOutputText,
+                    related_recommendations: currentOutputRelatedRecommendations
+                  };
+                  setData((prevState) => prevState ? ({ ...prevState, outputs: [...prevState.outputs, newOutput] }) : prevState);
+                }}>Save</button>
+              </ModalDialog>
+
             </div>
             : ""
         }
