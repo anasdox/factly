@@ -274,55 +274,59 @@ const App: React.FC = () => {
   }, []);
 
   const createLine = (
-    startX: number, 
-    startY: number, 
-    endX: number, 
-    endY: number, 
-    sourceEntityType: string, 
-    sourceEntityId: string, 
-    targetEntityType: string, 
+    startX: number,
+    startY: number,
+    endX: number,
+    endY: number,
+    sourceEntityType: string,
+    sourceEntityId: string,
+    targetEntityType: string,
     targetEntityId: string
   ) => {
     const line = document.createElement('div');
     line.classList.add('line');
     // Assign an ID to the line based on the entities it connects
     line.id = `link-${sourceEntityType}-${sourceEntityId}-to-${targetEntityType}-${targetEntityId}`;
-  
+
     const length = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
     const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
-  
+
     line.style.position = 'absolute';
     line.style.left = `${startX}px`;
     line.style.top = `${startY}px`;
     line.style.width = `${length}px`;
     line.style.transform = `rotate(${angle}deg)`;
     line.style.transformOrigin = '0 0';
-  
+
     document.body.appendChild(line);
   };
 
-  function handleMouseEnter(entityType:string, entityId:string, data:DiscoveryData) {
+  function handleMouseEnter(entityType: string, entityId: string, data: DiscoveryData) {
     // Highlight the current entity
     const entityElement = document.getElementById(`${entityType}-${entityId}`);
     entityElement?.classList.add('highlighted');
-  
+
     // Highlight all related entities and their links
     const relatedEntities = getRelatedEntities(entityType, entityId, data);
-    relatedEntities.forEach((relatedEntity) => {
+    const parentRelatedEntities = getParentRelatedEntities(entityType, entityId, data);
+
+    [...relatedEntities, ...parentRelatedEntities].forEach((relatedEntity) => {
       const relatedElement = document.getElementById(`${relatedEntity.type}-${relatedEntity.id}`);
       relatedElement?.classList.add('highlighted');
       highlightLinks(entityType, entityId, relatedEntity.type, relatedEntity.id);
     });
   }
-  
-  function handleMouseLeave(entityType:string, entityId:string, data:DiscoveryData) {
+
+  function handleMouseLeave(entityType: string, entityId: string, data: DiscoveryData) {
     // Remove highlighting from the current entity
     const entityElement = document.getElementById(`${entityType}-${entityId}`);
     entityElement?.classList.remove('highlighted');
-  
+
     // Remove highlighting from all related entities and their links
     const relatedEntities = getRelatedEntities(entityType, entityId, data);
-    relatedEntities.forEach((relatedEntity) => {
+    const parentRelatedEntities = getParentRelatedEntities(entityType, entityId, data);
+
+    [...relatedEntities, ...parentRelatedEntities].forEach((relatedEntity) => {
       const relatedElement = document.getElementById(`${relatedEntity.type}-${relatedEntity.id}`);
       relatedElement?.classList.remove('highlighted');
       removeLinkHighlight(entityType, entityId, relatedEntity.type, relatedEntity.id);
@@ -331,11 +335,11 @@ const App: React.FC = () => {
 
   function getRelatedEntities(entityType: string, entityId: string, data: DiscoveryData) {
     let relatedEntities: { type: string; id: string; }[] = [];
-  
+
     const addRelatedEntities = (type: string, id: string) => {
       if (!relatedEntities.some(entity => entity.type === type && entity.id === id)) {
         relatedEntities.push({ type, id });
-  
+
         // Depending on the type, find and add indirect related entities
         switch (type) {
           case 'input':
@@ -367,32 +371,69 @@ const App: React.FC = () => {
             });
             break;
           default:
-            // Handle other entity types or errors
             break;
         }
       }
     };
-  
-    // Start the recursive search with the initial entity
+
     addRelatedEntities(entityType, entityId);
-  
+
     return relatedEntities;
   }
 
+  function getParentRelatedEntities(entityType: string, entityId: string, data: DiscoveryData) {
+    let parentRelatedEntities: { type: string; id: string; }[] = [];
 
-  function highlightLinks(entityType:string, entityId:string, relatedEntityType:string, relatedEntityId:string) {
-    // Assuming we have a way to get the link element between two entities
+    const addParentRelatedEntities = (type: string, id: string) => {
+      if (!parentRelatedEntities.some(entity => entity.type === type && entity.id === id)) {
+        parentRelatedEntities.push({ type, id });
+
+        switch (type) {
+          case 'fact':
+            data.facts.findLast((fact) => fact.fact_id === id)?.related_inputs.forEach((input_id) => {
+              addParentRelatedEntities('input', input_id)
+            });
+            break;
+          case 'insight':
+            data.insights.findLast((insight) => insight.insight_id === id)?.related_facts.forEach((fact_id) => {
+              addParentRelatedEntities('fact', fact_id)
+            });
+            break;
+
+          case 'recommendation':
+            data.recommendations.findLast((recommendation) => recommendation.recommendation_id === id)?.related_insights.forEach((insight_id) => {
+              addParentRelatedEntities('insight', insight_id)
+            });
+            break;
+
+          case 'output':
+            data.outputs.findLast((output) => output.output_id === id)?.related_recommendations.forEach((recommendation_id) => {
+              addParentRelatedEntities('recommendation', recommendation_id)
+            });
+            break;
+          default:
+            break;
+        }
+      }
+    }
+    addParentRelatedEntities(entityType, entityId);
+
+    return parentRelatedEntities;
+  }
+
+
+  function highlightLinks(entityType: string, entityId: string, relatedEntityType: string, relatedEntityId: string) {
     const linkElementId = `link-${entityType}-${entityId}-to-${relatedEntityType}-${relatedEntityId}`;
     const linkElement = document.getElementById(linkElementId);
     linkElement?.classList.add('link-highlighted');
   }
-  
+
   function removeLinkHighlight(entityType: string, entityId: string, relatedEntityType: string, relatedEntityId: string) {
     const linkElementId = `link-${entityType}-${entityId}-to-${relatedEntityType}-${relatedEntityId}`;
     const linkElement = document.getElementById(linkElementId);
     linkElement?.classList.remove('link-highlighted');
   }
-  
+
 
   useEffect(() => {
     fetch('/data.json')
@@ -473,7 +514,7 @@ const App: React.FC = () => {
             <h2>Inputs</h2>
             {data.inputs.map((input, index) => (
               <div
-                id={ "input-" + input.input_id }
+                id={"input-" + input.input_id}
                 ref={el => el ? setInputRef(el, index) : null}
                 key={input.input_id}
                 className="input-item item"
@@ -526,7 +567,7 @@ const App: React.FC = () => {
               <h2>Facts</h2>
               {data.facts.map((fact, index) => (
                 <div
-                  id={ "fact-" + fact.fact_id }
+                  id={"fact-" + fact.fact_id}
                   ref={el => el ? setFactRef(el, index) : null}
                   key={fact.fact_id}
                   className="fact-item item"
@@ -534,7 +575,7 @@ const App: React.FC = () => {
                   onMouseLeave={() => handleMouseLeave("fact", fact.fact_id, data)}
                 >
                   {fact.text}
-                  
+
                 </div>
               ))}
               <button className="add-button" onClick={() => { setIsFactDialogVisible(true) }}>+</button>
@@ -567,7 +608,7 @@ const App: React.FC = () => {
               <h2>Insights</h2>
               {data.insights.map((insight, index) => (
                 <div
-                  id={ "insight-" + insight.insight_id }
+                  id={"insight-" + insight.insight_id}
                   ref={el => el ? setInsightRef(el, index) : null}
                   key={insight.insight_id}
                   className="insight-item item"
@@ -608,7 +649,7 @@ const App: React.FC = () => {
               <h2>Recommendations</h2>
               {data.recommendations.map((recommendation, index) => (
                 <div
-                  id={ "recommendation-" + recommendation.recommendation_id }
+                  id={"recommendation-" + recommendation.recommendation_id}
                   ref={el => el ? setRecommendationRef(el, index) : null}
                   key={recommendation.recommendation_id}
                   className="recommendation-item item"
@@ -647,9 +688,13 @@ const App: React.FC = () => {
               <h2>Outputs</h2>
               {data.outputs.map((output, index) => (
                 <div
+                  id={"output-" + output.output_id}
                   ref={el => el ? setOutputRef(el, index) : null}
                   key={output.output_id}
-                  className="output-item item">
+                  className="output-item item"
+                  onMouseEnter={() => handleMouseEnter("output", output.output_id, data)}
+                  onMouseLeave={() => handleMouseLeave("output", output.output_id, data)}
+                >
                   {output.text}
                 </div>
               ))}

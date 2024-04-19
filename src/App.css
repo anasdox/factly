@@ -110,5 +110,5 @@ input[type=text], select, textarea {
 }
 
 .link-highlighted {
-  stroke: red; /* or any highlight color, assuming links are SVG lines */
+  /*box-shadow: 0 0 0 1px #000000;*/
 }
