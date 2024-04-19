@@ -42,9 +42,20 @@
   width: 100%;
 } 
 
+.input-item {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.input-item > div {
+  margin: 0.5em;
+  align-self: center;
+}
+
 .fact-item {
   background-color: #ffe881;
 }
+
 
 .insight-item {
   background-color: #b0f3ff;
@@ -65,7 +76,7 @@
 }
 
 .add-button:hover{
-  background-color: #f1f086;
+  filter: contrast(1.5);
   cursor: pointer;
 }
 
@@ -104,7 +115,7 @@ input[type=text], select, textarea {
 }
 
 .highlighted {
-  box-shadow: 0 0 0 2px #000000;
+  box-shadow: 0 0 0 2px #4e4e4e;
   filter: contrast(1.5);
   
 }

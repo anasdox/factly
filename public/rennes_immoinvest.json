@@ -1,0 +1,178 @@
+{
+    "discovery_id": "dsc_789012",
+    "title": "Tendances des investissements immobiliers à Rennes",
+    "goal": "Analyse approfondie des tendances actuelles et des opportunités futures dans les investissements immobiliers à Rennes",
+    "date": "2024-04-17",
+    "inputs": [
+      {
+        "input_id": "res_101",
+        "type": "pdf",
+        "title": "Analyse du marché immobilier de Rennes 2024",
+        "url": "https://example.com/rennes-market-analysis.pdf"
+      },
+      {
+        "input_id": "res_102",
+        "type": "csv",
+        "title": "Prix des propriétés à Rennes 2023",
+        "url": "https://example.com/rennes-prices.csv"
+      },
+      {
+        "input_id": "res_103",
+        "type": "web",
+        "title": "Plans de développement urbain de Rennes",
+        "url": "https://example.com/rennes-development"
+      },
+      {
+        "input_id": "res_104",
+        "type": "web",
+        "title": "Stratégies d'investissement dans les marchés urbains dynamiques",
+        "url": "https://example.com/investment-strategies"
+      },
+      {
+        "input_id": "res_105",
+        "type": "web",
+        "title": "Valeurs immobilières historiques à Rennes",
+        "url": "https://example.com/historical-values"
+      },
+      {
+        "input_id": "res_106",
+        "type": "pdf",
+        "title": "Prévisions sur le marché immobilier de Rennes",
+        "url": "https://example.com/forecast-report"
+      },
+      {
+        "input_id": "res_107",
+        "type": "csv",
+        "title": "Changements démographiques à Rennes",
+        "url": "https://example.com/demographic-data"
+      },
+      {
+        "input_id": "res_108",
+        "type": "web",
+        "title": "Indicateurs économiques affectant l'immobilier à Rennes",
+        "url": "https://example.com/economic-indicators"
+      },
+      {
+        "input_id": "res_109",
+        "type": "web",
+        "title": "Impact des politiques locales sur l'immobilier à Rennes",
+        "url": "https://example.com/local-policies"
+      },
+      {
+        "input_id": "res_110",
+        "type": "pdf",
+        "title": "Opportunités de développement immobilier à Rennes",
+        "url": "https://example.com/development-opportunities"
+      },
+      {
+        "input_id": "res_111",
+        "type": "csv",
+        "title": "Rendements des investissements immobiliers à Rennes",
+        "url": "https://example.com/investment-returns"
+      }
+    ],
+    "facts": [
+      {
+        "fact_id": "fct_201",
+        "related_inputs": ["res_101"],
+        "text": "Rennes a connu une augmentation de 15% des investissements immobiliers l'année passée."
+      },
+      {
+        "fact_id": "fct_202",
+        "related_inputs": ["res_102"],
+        "text": "Les prix moyens des propriétés à Rennes ont augmenté de 5% en 2023."
+      },
+      {
+        "fact_id": "fct_203",
+        "related_inputs": ["res_103"],
+        "text": "Les projets de développement urbain à venir devraient augmenter la demande de propriétés résidentielles de 25%."
+      },
+      {
+        "fact_id": "fct_204",
+        "related_inputs": ["res_104", "res_105"],
+        "text": "Les emplacements stratégiques près des nouvelles liaisons de transport sont prévus pour offrir le meilleur retour sur investissement."
+      },
+      {
+        "fact_id": "fct_205",
+        "related_inputs": ["res_106"],
+        "text": "Le rapport de prévision suggère une augmentation stable de la valeur du marché pour les propriétés résidentielles au cours des cinq prochaines années."
+      },
+      {
+        "fact_id": "fct_206",
+        "related_inputs": ["res_107"],
+        "text": "Les changements démographiques à Rennes indiquent une demande croissante pour les propriétés locatives."
+      },
+      {
+        "fact_id": "fct_207",
+        "related_inputs": ["res_108"],
+        "text": "La croissance économique à Rennes est étroitement liée à la santé du marché immobilier."
+      },
+      {
+        "fact_id": "fct_208",
+        "related_inputs": ["res_109"],
+        "text": "Les politiques locales sont de plus en plus favorables aux promoteurs immobiliers."
+      },
+      {
+        "fact_id": "fct_209",
+        "related_inputs": ["res_110"],
+        "text": "De nouvelles opportunités de développement s'ouvrent à mesure que Rennes étend son empreinte urbaine."
+      },
+      {
+        "fact_id": "fct_210",
+        "related_inputs": ["res_111"],
+        "text": "Les investisseurs dans l'immobilier à Rennes ont bénéficié d'un retour sur investissement moyen de 8% par an."
+      }
+    ],
+    "insights": [
+      {
+        "insight_id": "ins_301",
+        "related_facts": ["fct_201", "fct_202", "fct_204"],
+        "text": "La croissance rapide des investissements immobiliers et la hausse des prix indiquent un marché immobilier robuste à Rennes."
+      },
+      {
+        "insight_id": "ins_302",
+        "related_facts": ["fct_203", "fct_205"],
+        "text": "Un développement urbain important est prêt à transformer Rennes en une destination d'investissement plus attrayante."
+      },
+      {
+        "insight_id": "ins_303",
+        "related_facts": ["fct_206", "fct_207", "fct_208"],
+        "text": "Les facteurs démographiques et économiques créent des conditions favorables pour les investissements immobiliers à Rennes."
+      },
+      {
+        "insight_id": "ins_304",
+        "related_facts": ["fct_209", "fct_210"],
+        "text": "Les quartiers émergents et les nouveaux développements présentent un potentiel élevé pour des retours sur investissement."
+      }
+    ],
+    "recommendations": [
+      {
+        "recommendation_id": "rec_401",
+        "related_insights": ["ins_301", "ins_302"],
+        "text": "Concentrez les stratégies d'investissement sur les zones à forte croissance de Rennes, notamment les secteurs en développement."
+      },
+      {
+        "recommendation_id": "rec_402",
+        "related_insights": ["ins_303"],
+        "text": "Exploitez les tendances démographiques et économiques pour sécuriser des investissements à long terme dans des marchés stables."
+      },
+      {
+        "recommendation_id": "rec_403",
+        "related_insights": ["ins_304"],
+        "text": "Investissez dans les quartiers émergents qui devraient bénéficier de l'expansion urbaine et des améliorations des infrastructures."
+      },
+      {
+        "recommendation_id": "rec_404",
+        "related_insights": ["ins_301", "ins_302", "ins_303"],
+        "text": "Développez un portefeuille immobilier diversifié pour atténuer les risques et maximiser les gains dans différents secteurs à Rennes."
+      }
+    ],
+    "outputs": [
+      {
+        "output_id": "out_201",
+        "related_recommendations": ["rec_401", "rec_402", "rec_403", "rec_404"],
+        "text": "Rapport complet de stratégie d'investissement pour l'immobilier à Rennes"
+      }
+    ]
+  }
+  

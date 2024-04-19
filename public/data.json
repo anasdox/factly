@@ -6,25 +6,25 @@
     "inputs": [
       {
         "input_id": "res_001",
-        "type": "PDF Document",
+        "type": "pdf",
         "title": "Artificial Intelligence in Manufacturing",
         "url": "https://example.com/ai-manufacturing.pdf"
       },
       {
         "input_id": "res_002",
-        "type": "CSV Dataset",
+        "type": "csv",
         "title": "AI Investment Statistics",
         "url": "https://example.com/ai-investments.csv"
       },
       {
         "input_id": "res_003",
-        "type": "Web Page",
+        "type": "web",
         "title": "The Future of AI in Healthcare",
         "url": "https://example.com/ai-healthcare"
       },
       {
         "input_id": "res_004",
-        "type": "Journal Article",
+        "type": "web",
         "title": "AI and Its Impact on Climate Change",
         "url": "https://example.com/ai-climate-change"
       }

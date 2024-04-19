@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUpload } from '@fortawesome/free-solid-svg-icons';
-import { faFileDownload } from '@fortawesome/free-solid-svg-icons';
+import { faUpload, faFileDownload} from '@fortawesome/free-solid-svg-icons';
+import { faFileAlt, faImage, faVideo, faFileAudio, faFilePdf, faGlobe, faFileCsv, faQuestionCircle, faAdd } from '@fortawesome/free-solid-svg-icons';
+
 import ModalDialog from "react-basic-modal-dialog";
 
 import './App.css';
@@ -522,10 +523,19 @@ const App: React.FC = () => {
                 onMouseEnter={() => handleMouseEnter("input", input.input_id, data)}
                 onMouseLeave={() => handleMouseLeave("input", input.input_id, data)}
               >
-                {input.title}:{input.type}
+                <div><FontAwesomeIcon color="#555" size={'2xl'}  icon={
+                  input.type === "text" ? faFileAlt :
+                  input.type === "image" ? faImage :
+                  input.type === "video" ? faVideo :
+                  input.type === "audio" ? faFileAudio :
+                  input.type === "pdf" ? faFilePdf :
+                  input.type === "web" ? faGlobe :
+                  input.type === "csv" ? faFileCsv :
+                  faQuestionCircle // 'other' or unknown type
+                } /> </div><div>{input.title}</div>
               </div>
             ))}
-            <button className="add-button" onClick={() => { setIsInputDialogVisible(true) }}>+</button >
+            <button className="add-button" onClick={() => { setIsInputDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button >
             <ModalDialog isDialogVisible={isInputDialogVisible} closeDialog={() => setIsInputDialogVisible(false)}>
               <form>
                 <label htmlFor="input-title">Title</label>
@@ -535,11 +545,11 @@ const App: React.FC = () => {
                 <label htmlFor="input-type">Type</label>
                 <select id="input-type" value={currentInputType} onChange={handleCurrentInputTypeChange}>
                   <option value="text">Text</option>
+                  <option value="web">Web</option>
                   <option value="image">Image</option>
                   <option value="video">Video</option>
                   <option value="audio">Audio</option>
-                  <option value="document">Document</option>
-                  <option value="other">Other</option>
+                  <option value="pdf">Pdf</option>
                 </select>
               </form>
               <button onClick={() => setIsInputDialogVisible(false)}>Close</button>
@@ -578,7 +588,7 @@ const App: React.FC = () => {
 
                 </div>
               ))}
-              <button className="add-button" onClick={() => { setIsFactDialogVisible(true) }}>+</button>
+              <button className="add-button" onClick={() => { setIsFactDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
               <ModalDialog isDialogVisible={isFactDialogVisible} closeDialog={() => setIsFactDialogVisible(false)}>
                 <form>
                   <label htmlFor="fact-text">Text</label>
@@ -618,7 +628,7 @@ const App: React.FC = () => {
                   {insight.text}
                 </div>
               ))}
-              <button className="add-button" onClick={() => { setIsInsightDialogVisible(true) }}>+</button>
+              <button className="add-button" onClick={() => { setIsInsightDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
               <ModalDialog isDialogVisible={isInsightDialogVisible} closeDialog={() => setIsInsightDialogVisible(false)}>
                 <form>
                   <label htmlFor="insight-text">Text</label>
@@ -659,7 +669,7 @@ const App: React.FC = () => {
                   {recommendation.text}
                 </div>
               ))}
-              <button className="add-button" onClick={() => { setIsRecommendationDialogVisible(true) }}>+</button>
+              <button className="add-button" onClick={() => { setIsRecommendationDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
               <ModalDialog isDialogVisible={isRecommendationDialogVisible} onClose={() => setIsRecommendationDialogVisible(false)}>
                 <form onSubmit={(e) => { e.preventDefault(); }}>
                   <label htmlFor="recommendation-input">Text</label>
@@ -698,7 +708,7 @@ const App: React.FC = () => {
                   {output.text}
                 </div>
               ))}
-              <button className="add-button" onClick={() => { setIsOutputDialogVisible(true) }}>+</button>
+              <button className="add-button" onClick={() => { setIsOutputDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
               <ModalDialog isDialogVisible={isOutputDialogVisible} onClose={() => setIsOutputDialogVisible(false)}>
                 <h2>Add Output</h2>
                 <form>
