@@ -19,6 +19,11 @@
   width: 712px;
 }
 
+.discovery-details h5 {
+  font-size: 0.8em;
+  font-weight: normal;
+}
+
 .column {
   display: flex;
   flex-direction: column;
@@ -27,7 +32,9 @@
   padding-right: 2em;
 }
 .column > h2 {
-  font-size: 1.1em;
+  font-size: 1.2em;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 
@@ -73,6 +80,10 @@
 
 .output-item {
   font-size: 0.7em;
+}
+
+.output {
+  display: flex;
 }
 
 .add-button {

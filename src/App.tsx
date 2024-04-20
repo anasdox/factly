@@ -497,13 +497,13 @@ const App: React.FC = () => {
       <header className='discovery-header'>
         
         <div className='discovery-details'>
-          <div><h1>{data.title}</h1></div>
-          <div><h5>Goal : {data.goal}</h5></div>
+          <div><h1>🔍{data.title}</h1></div>
+          <div><h5>🎯{data.goal}</h5></div>
         </div>
         <div className="toolbar">
           <div>
             <label htmlFor="file-input">
-              <FontAwesomeIcon icon={faUpload} size='lg'/>
+              <FontAwesomeIcon icon={faUpload} size='1x' />
             </label>
             <input
               id="file-input"
@@ -515,7 +515,7 @@ const App: React.FC = () => {
           </div>
           <div>
             <button onClick={handleExport} style={{ border: 'none', background: 'none' }}>
-              <FontAwesomeIcon icon={faFileDownload} size='xl' />
+              <FontAwesomeIcon icon={faFileDownload} size='lg' />
             </button>
           </div>
         </div>
@@ -523,7 +523,7 @@ const App: React.FC = () => {
       <main className="discovery-grid">
         {inputRefs ?
           <div className="column inputs">
-            <h2>Inputs</h2>
+            <h2>📥Inputs</h2>
             {data.inputs.map((input, index) => (
               <div
                 id={"input-" + input.input_id}
@@ -585,7 +585,7 @@ const App: React.FC = () => {
         {
           factRefs ?
             <div className="column facts">
-              <h2>Facts</h2>
+              <h2>📊Facts</h2>
               {data.facts.map((fact, index) => (
                 <div
                   id={"fact-" + fact.fact_id}
@@ -626,7 +626,7 @@ const App: React.FC = () => {
         {
           insightRefs ?
             <div className="column insights">
-              <h2>Insights</h2>
+              <h2>💡Insights</h2>
               {data.insights.map((insight, index) => (
                 <div
                   id={"insight-" + insight.insight_id}
@@ -667,7 +667,7 @@ const App: React.FC = () => {
         {
           recommendationRefs ?
             <div className="column recommendations">
-              <h2>Recommendations</h2>
+              <h2>👍Recommendations</h2>
               {data.recommendations.map((recommendation, index) => (
                 <div
                   id={"recommendation-" + recommendation.recommendation_id}
@@ -706,7 +706,7 @@ const App: React.FC = () => {
         {
           outputRefs ?
             <div className="column outputs">
-              <h2>Outputs</h2>
+              <h2>📤Outputs</h2>
               {data.outputs.map((output, index) => (
                 <div
                   id={"output-" + output.output_id}
