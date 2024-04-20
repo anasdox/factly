@@ -4,6 +4,16 @@
 
 factly aims to hamonize the way organizations and individuals conduct discoveries. factly provides a dynamic platform for extracting actionable insights from multiples types of data sets. Our vision is to create a tool that not only simplifies data analysis but also empowers users to make informed decisions based on reliable, real-time insights.
 
+## Sneak Peek into factly
+
+Take a look at the initial sketches and captures of our main UI:
+
+![UI Sketch](./public/ui-sketch.png)
+*The conceptual sketch of the factly UI.*
+
+![UI Capture](./public/ui-capture.png)
+*An early capture of the factly UI in action.*
+
 ## Features
 
 - **User-Friendly Interface:** A clean, intuitive interface that lowers the learning curve and allows users to begin analyzing facts and insigh quickly.
@@ -12,16 +22,6 @@ factly aims to hamonize the way organizations and individuals conduct discoverie
 - **Insight Discovery:** Utilize advanced algorithms to discover hidden patterns and correlations in the data.
 - **Recommendation Engine:** Get actionable recommendations based on analytical findings.
 - **Reporting Tools:** Generate comprehensive reports to visualize data trends and insights.
-
-## Sneak Peek into factly
-
-Take a look at the initial sketches and captures of our main UI:
-
-![UI Sketch](./public/ui-sketch.png)
-*The conceptual sketch of the factly interface.*
-
-![UI Capture](./public/ui-capture.png)
-*An early capture of the factly UI in action.*
 
 ## Getting Started
 
@@ -51,7 +51,10 @@ npm start
 
 This will launch the factly web application on `http://localhost:3000`.
 
-## My Programming Journey
+## Note on MVP Status
+As of now, the MVP of factly is a work in progress. It's not functional yet, but Iam getting there. So, stay tuned for updates, and feel free to contribute if you're up for a bit of a challenge!
+
+### Journey
 Ah, the joys of programming! When I first started working on factly, I had this brilliant idea to use React. Little did I know that my useRef hook would become my best friend and my weard nightmare, as I tried to track the positions of cards like a detective on a stakeout.
 
 Then there were the lines, oh the lines! Not the poetic kind, but divs stretched out across the screen, which turned out to be quite the ordeal to manage.
@@ -73,4 +76,4 @@ We welcome contributions from the community! Whether you're fixing a bug, adding
 
 ## License
 
-factly is open source software [licensed as MIT](https://github.com/anasdox/factly/LICENSE).
+factly is open source software [licensed as MIT](./LICENCE).
