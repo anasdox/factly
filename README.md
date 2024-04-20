@@ -5,7 +5,7 @@
 
 The FIR approach (Facts => Insights => Recommendations) is crucial in my daily work, it provides a structured approach to analyzing data, identifying key insights, and formulating actionable recommendations. This systematic method helps me navigate complex problems more efficiently, ensuring that decisions are grounded in evidence and data-driven insights.
 
-While Excalidraw is a useful tool for visualizing concepts and ideas, it not be adapted for accelerating the execution of the FIR approach. Excalidraw focuses more on visual representation and lacks the specialized features needed to streamline the FIR process. In contrast, a dedicated tool like factly is designed specifically for data analysis and insight extraction, making it more effective for accelerating the execution of the FIR approach and enhancing overall productivity.
+While Excalidraw is a useful tool for visualizing concepts and ideas, It's not adapted for accelerating the execution of the FIR approach. Excalidraw focuses more on visual representation and lacks the specialized features needed to streamline the FIR process. In contrast, a dedicated tool like factly is designed specifically for data analysis and insight extraction, making it more effective for accelerating the execution of the FIR approach and enhancing overall productivity.
 
 ## Vision
 
@@ -24,12 +24,6 @@ factly aims to hamonize the way organizations and individuals conduct discoverie
 - **Reporting Tools:** Generate comprehensive reports to visualize data trends and insights.
 
 ## Getting Started
-
-### Prerequisites
-
-Before you begin, ensure you have the following installed:
-- Node.js (v14.x or later)
-- npm (v6.x or later)
 
 ### Installation
 
@@ -62,6 +56,31 @@ Then there were the lines, oh the lines! Not the poetic kind, but divs stretched
 And let's not forget my decision to put all the code into a single file, App.tsx. Some call it madness; I call it focused chaos. Maintenability? Pfft, that's a problem for Future Me. For now, I relish in the simplicity of a single-file symphony, a cacophony of code that somehow harmonizes into a working application.
 
 So, come join me in this quirky quest, and let's make factly not just functional, but fun!
+
+### TODO
+- [x] Create UI skeleton
+- [x] Manage Links
+- [x] Load Discovery in json format
+- [x] Save Discovery in json format
+- [x] Add Entities :Input, Facts, Insights, Recommendations, Outputs
+- [x] Add Facts
+- [x] Add Insights
+- [x] Add Outputs
+- [ ] Edit entities
+- [ ] Remove entities
+- [ ] Darg and Drop feature to create a new link between entites
+- [ ] Darg and Drop feature to remove a link between entites
+- [ ] Create New discovery
+- [ ] Auto Facts extracttion from Text
+- [ ] Auto Insights extraction
+- [ ] Auto Recomendations extraction
+- [ ] Auto Outputs Formulation
+- [ ] Auto Facts extracttion from WEB
+- [ ] Auto Facts extracttion from PDF
+- [ ] Auto Facts extracttion from CSV
+- [ ] Auto Facts extracttion from Image
+- [ ] Auto Facts extracttion from Video
+- [ ] Auto Facts extracttion from Audio
 
 ## Contributing
 
