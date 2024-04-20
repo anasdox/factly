@@ -6,12 +6,17 @@
 }
 
 .discovery-header {
-  display: block;
-  background-color: #000000;
-  color: #ffffff;
+  display: flex;
   font-weight: bold;
+  justify-content: space-between;
   padding: 1em;
   margin-bottom: 1em;
+  border-bottom: #c7c7c7 1px dashed;
+}
+
+.discovery-details {
+  display: block;
+  width: 712px;
 }
 
 .column {
@@ -72,12 +77,22 @@
 
 .add-button {
   margin-top: 1em;
-  background-color: #c7c7c7;
-  border: 1px solid rgb(192, 192, 192);
+  border: none;
   border-radius: 50%;
   font-weight: bolder;
+  background-color: #c7c7c7;
   height: 42px;
   width: 42px;
+}
+
+.fact-add-button {
+  background-color: #ffe881;
+}
+.insight-add-button {
+  background-color: #b0f3ff;
+}
+.recommendation-add-button {
+  background-color: #b0ffba;
 }
 
 .add-button:hover{
@@ -91,21 +106,20 @@
   justify-content: flex-end;
 }
 
-.toolbar-button {
+.toolbar > div {
   padding: 8px 16px;
-  color: white;
   border-radius: 5px;
   cursor: pointer;
   display: inline-flex;
-  background-color: #000000;
+  background-color: #ffffff;
   align-items: center;
-  gap: 8px; /* Space between the icon and text */
   border: none;
-  text-decoration: none; /* In case it's a label or link */
+  text-decoration: none;
+  height: 32px;
 }
 
-.toolbar-button:hover {
-  background-color: #fffc3f;
+.toolbar > div:hover {
+  background-color: #ebebeb;
   color: rgb(0, 0, 0);
 }
 

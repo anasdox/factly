@@ -1,8 +1,15 @@
 # factly
 
+## Why ?
+
+
+The FIR (Facts, Insights, and Recommendations) framework is crucial in my daily work, it provides a structured approach to analyzing data, identifying key insights, and formulating actionable recommendations. This systematic method helps me navigate complex problems more efficiently, ensuring that decisions are grounded in evidence and data-driven insights.
+
+While Excalidraw is a useful tool for visualizing concepts and ideas, it not be adapted for accelerating the execution of the FIR framework. Excalidraw focuses more on visual representation and lacks the specialized features needed to streamline the FIR process. In contrast, a dedicated tool like factly is designed specifically for data analysis and insight extraction, making it more effective for accelerating the execution of the FIR framework and enhancing overall productivity.
+
 ## Vision
 
-factly aims to hamonize the way organizations and individuals conduct discoveries. factly provides a dynamic platform for extracting actionable insights from multiples types of data sets. Our vision is to create a tool that not only simplifies data analysis but also empowers users to make informed decisions based on reliable, real-time insights.
+factly aims to hamonize the way organizations and individuals conduct discoveries. factly provides a dynamic platform for extracting actionable insights from multiples types of data sets using The FIR (Facts, Insights, and Recommendations) framework. Our vision is to create a tool that not only simplifies data analysis but also empowers users to make informed decisions based on reliable insights.
 
 ## Sneak Peek into factly
 
