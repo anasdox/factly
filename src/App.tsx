@@ -78,8 +78,9 @@ const App: React.FC = () => {
   };
 
   const [currentFactRelatedInputs, setCurrentRelatedInputs] = useState<string[]>([]);
-  const handleCurrentRelatedInputsChange = (event: { target: { value: string }; }) => {
-    setCurrentRelatedInputs(event.target.value.split(',').map(el => el.trim()));
+  const handleCurrentRelatedInputsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
+    setCurrentRelatedInputs(selectedOptions);
   };
 
   // Insights
@@ -90,8 +91,9 @@ const App: React.FC = () => {
     setCurrentInsightText(event.target.value);
   };
   const [currentInsightRelatedFacts, setCurrentInsightRelatedFacts] = useState<string[]>([]);
-  const handleCurrentInsightRelatedFactsChange = (event: { target: { value: string }; }) => {
-    setCurrentInsightRelatedFacts(event.target.value.split(',').map(el => el.trim()));
+  const handleCurrentInsightRelatedFactsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
+    setCurrentInsightRelatedFacts(selectedOptions);
   };
 
   // Recommendations
@@ -102,8 +104,9 @@ const App: React.FC = () => {
     setCurrentRecommendationText(event.target.value);
   };
   const [currentRecommendationRelatedInsights, setCurrentRecommendationRelatedInsights] = useState<string[]>([]);
-  const handleCurrentRecommendationRelatedInsightsChange = (event: { target: { value: string }; }) => {
-    setCurrentRecommendationRelatedInsights(event.target.value.split(',').map(el => el.trim()));
+  const handleCurrentRecommendationRelatedInsightsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
+    setCurrentRecommendationRelatedInsights(selectedOptions);
   };
 
   // Output
@@ -114,8 +117,9 @@ const App: React.FC = () => {
     setCurrentOutputText(event.target.value);
   };
   const [currentOutputRelatedRecommendations, setCurrentOutputRelatedRecommendations] = useState<string[]>([]);
-  const handleCurrentOutputRelatedRecommendationsChange = (event: { target: { value: string; }; }) => {
-    setCurrentOutputRelatedRecommendations(event.target.value.split(',').map(el => el.trim()));
+  const handleCurrentOutputRelatedRecommendationsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
+    setCurrentOutputRelatedRecommendations(selectedOptions);
   };
 
   const setInputRef = useCallback((element: HTMLDivElement, index: number) => {
@@ -713,7 +717,7 @@ const App: React.FC = () => {
                 <h2>Add Output</h2>
                 <form>
                   <label htmlFor="output-text">Text:</label>
-                  <input type="text" id="output-text" onChange={(e) => setCurrentOutputText(e.target.value)} />
+                  <input type="text" id="output-text" onChange={handleCurrentOutputTextChange} />
                   <label htmlFor="related-recommendations">Related Recommendations:</label>
                   <select id="related-recommendations" multiple onChange={handleCurrentOutputRelatedRecommendationsChange}>
                     {data.recommendations.map((recommendation, index) => (
