@@ -13,6 +13,15 @@ factly aims to hamonize the way organizations and individuals conduct discoverie
 - **Recommendation Engine:** Get actionable recommendations based on analytical findings.
 - **Reporting Tools:** Generate comprehensive reports to visualize data trends and insights.
 
+## Sneak Peek into factly
+
+Take a look at the initial sketches and captures of our main UI:
+
+![UI Sketch](./public/ui-sketch.png)
+*The conceptual sketch of the factly interface.*
+
+![UI Capture](./public/ui-capture.png)
+*An early capture of the factly UI in action.*
 
 ## Getting Started
 
@@ -41,6 +50,15 @@ npm start
 ```
 
 This will launch the factly web application on `http://localhost:3000`.
+
+## My Programming Journey
+Ah, the joys of programming! When I first started working on factly, I had this brilliant idea to use React. Little did I know that my useRef hook would become my best friend and my weard nightmare, as I tried to track the positions of cards like a detective on a stakeout.
+
+Then there were the lines, oh the lines! Not the poetic kind, but divs stretched out across the screen, which turned out to be quite the ordeal to manage.
+
+And let's not forget my decision to put all the code into a single file, App.tsx. Some call it madness; I call it focused chaos. Maintenability? Pfft, that's a problem for Future Me. For now, I relish in the simplicity of a single-file symphony, a cacophony of code that somehow harmonizes into a working application.
+
+So, come join me in this quirky quest, and let's make factly not just functional, but fun!
 
 ## Contributing
 

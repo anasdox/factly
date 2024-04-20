@@ -45,6 +45,7 @@
 .input-item {
   display: flex;
   justify-content: flex-start;
+  font-size: 0.7em;
 }
 
 .input-item > div {
@@ -65,6 +66,10 @@
   background-color: #b0ffba;
 }
 
+.output-item {
+  font-size: 0.7em;
+}
+
 .add-button {
   margin-top: 1em;
   background-color: #c7c7c7;
@@ -76,8 +81,9 @@
 }
 
 .add-button:hover{
-  filter: contrast(1.5);
+  filter: contrast(1.4);
   cursor: pointer;
+  box-shadow: 0 0 0 2px #4e4e4e;
 }
 
 .toolbar {
@@ -116,7 +122,7 @@ input[type=text], select, textarea {
 
 .highlighted {
   box-shadow: 0 0 0 2px #4e4e4e;
-  filter: contrast(1.5);
+  filter: contrast(1.4);
   
 }
 

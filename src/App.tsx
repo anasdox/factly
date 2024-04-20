@@ -539,11 +539,11 @@ const App: React.FC = () => {
             <ModalDialog isDialogVisible={isInputDialogVisible} closeDialog={() => setIsInputDialogVisible(false)}>
               <form>
                 <label htmlFor="input-title">Title</label>
-                <input id="input-title" type="text" value={currentInputTitle} onChange={handleCurrentInputTitleChange} />
+                <input id="input-title" type="text" onChange={handleCurrentInputTitleChange} />
                 <label htmlFor="input-url">URL</label>
-                <input id="input-url" type="text" value={currentInputUrl} onChange={handleCurrentInputUrlChange} />
+                <input id="input-url" type="text" onChange={handleCurrentInputUrlChange} />
                 <label htmlFor="input-type">Type</label>
-                <select id="input-type" value={currentInputType} onChange={handleCurrentInputTypeChange}>
+                <select id="input-type" onChange={handleCurrentInputTypeChange}>
                   <option value="text">Text</option>
                   <option value="web">Web</option>
                   <option value="image">Image</option>
@@ -592,8 +592,8 @@ const App: React.FC = () => {
               <ModalDialog isDialogVisible={isFactDialogVisible} closeDialog={() => setIsFactDialogVisible(false)}>
                 <form>
                   <label htmlFor="fact-text">Text</label>
-                  <input id="fact-text" type="text" value={currentFactText} onChange={handleCurrentFactTextChange} />
-                  <select id="fact-related-inputs" value={currentFactRelatedInputs} onChange={handleCurrentRelatedInputsChange} multiple>
+                  <input id="fact-text" type="text" onChange={handleCurrentFactTextChange} />
+                  <select id="fact-related-inputs" onChange={handleCurrentRelatedInputsChange} multiple>
                     {data.inputs ? data.inputs.map((input) => (<option key={input.input_id} value={input.input_id}>{input.title}</option>)) : ""}
                   </select>
 
@@ -632,9 +632,9 @@ const App: React.FC = () => {
               <ModalDialog isDialogVisible={isInsightDialogVisible} closeDialog={() => setIsInsightDialogVisible(false)}>
                 <form>
                   <label htmlFor="insight-text">Text</label>
-                  <input id="insight-text" type="text" value={currentInsightText} onChange={handleCurrentInsightTextChange} />
+                  <input id="insight-text" type="text" onChange={handleCurrentInsightTextChange} />
                   <label htmlFor="insight-related-facts">Related Facts</label>
-                  <select id="insight-related-facts" value={currentInsightRelatedFacts} onChange={handleCurrentInsightRelatedFactsChange} multiple>
+                  <select id="insight-related-facts" onChange={handleCurrentInsightRelatedFactsChange} multiple>
                     {data.facts.map(fact => (<option key={fact.fact_id} value={fact.fact_id}>{fact.text}</option>))}
                   </select>
 
@@ -673,9 +673,9 @@ const App: React.FC = () => {
               <ModalDialog isDialogVisible={isRecommendationDialogVisible} onClose={() => setIsRecommendationDialogVisible(false)}>
                 <form onSubmit={(e) => { e.preventDefault(); }}>
                   <label htmlFor="recommendation-input">Text</label>
-                  <input id="recommendation-input" type="text" value={currentRecommendationText} onChange={handleCurrentRecommendationTextChange} />
+                  <input id="recommendation-input" type="text" onChange={handleCurrentRecommendationTextChange} />
                   <label htmlFor="recommendation-related-insights">Related Insights</label>
-                  <select id="recommendation-related-insights" value={currentRecommendationRelatedInsights} onChange={handleCurrentRecommendationRelatedInsightsChange} multiple>
+                  <select id="recommendation-related-insights" onChange={handleCurrentRecommendationRelatedInsightsChange} multiple>
                     {data.insights.map(insight => (<option key={insight.insight_id} value={insight.insight_id}>{insight.text}</option>))}
                   </select>
                 </form>
@@ -713,9 +713,9 @@ const App: React.FC = () => {
                 <h2>Add Output</h2>
                 <form>
                   <label htmlFor="output-text">Text:</label>
-                  <input type="text" id="output-text" value={currentOutputText} onChange={(e) => setCurrentOutputText(e.target.value)} />
+                  <input type="text" id="output-text" onChange={(e) => setCurrentOutputText(e.target.value)} />
                   <label htmlFor="related-recommendations">Related Recommendations:</label>
-                  <select id="related-recommendations" multiple value={currentOutputRelatedRecommendations} onChange={handleCurrentOutputRelatedRecommendationsChange}>
+                  <select id="related-recommendations" multiple onChange={handleCurrentOutputRelatedRecommendationsChange}>
                     {data.recommendations.map((recommendation, index) => (
                       <option key={index} value={recommendation.recommendation_id}>{recommendation.text}</option>
                     ))}
