@@ -64,15 +64,12 @@ So, come join me in this quirky quest, and let's make factly not just functional
 - [x] Manage Links
 - [x] Load Discovery in json format
 - [x] Save Discovery in json format
-- [x] Add Entities :Input, Facts, Insights, Recommendations, Outputs
-- [x] Add Facts
-- [x] Add Insights
-- [x] Add Outputs
+- [x] Add Entities: Input, Facts, Insights, Recommendations, Outputs
 - [ ] Edit entities
 - [ ] Remove entities
-- [ ] Darg and Drop feature to create a new link between entites
-- [ ] Darg and Drop feature to remove a link between entites
 - [ ] Create New discovery
+- [ ] Create a new link between entites
+- [ ] Remove a link between entites
 - [ ] Auto Facts extracttion from Text
 - [ ] Auto Insights extraction
 - [ ] Auto Recomendations extraction

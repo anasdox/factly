@@ -548,6 +548,7 @@ const App: React.FC = () => {
             ))}
             <button className="add-button" onClick={() => { setIsInputDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button >
             <ModalDialog isDialogVisible={isInputDialogVisible} closeDialog={() => setIsInputDialogVisible(false)}>
+              <h2>Add Input</h2>
               <form>
                 <label htmlFor="input-title">Title</label>
                 <input id="input-title" type="text" onChange={handleCurrentInputTitleChange} />
@@ -576,6 +577,7 @@ const App: React.FC = () => {
                   ...prevState,
                   inputs: [...prevState.inputs, newInput]
                 }) : prevState);
+                setIsInputDialogVisible(false);
               }}>Save</button>
 
             </ModalDialog>
@@ -601,6 +603,7 @@ const App: React.FC = () => {
               ))}
               <button className="add-button fact-add-button" onClick={() => { setIsFactDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
               <ModalDialog isDialogVisible={isFactDialogVisible} closeDialog={() => setIsFactDialogVisible(false)}>
+                <h2>Add Fact</h2>
                 <form>
                   <label htmlFor="fact-text">Text</label>
                   <input id="fact-text" type="text" onChange={handleCurrentFactTextChange} />
@@ -617,6 +620,7 @@ const App: React.FC = () => {
                     related_inputs: currentFactRelatedInputs
                   };
                   setData((prevState) => prevState ? ({ ...prevState, facts: [...prevState.facts, newFact] }) : prevState);
+                  setIsFactDialogVisible(false);
                 }}>Save</button>
 
               </ModalDialog>
@@ -641,6 +645,7 @@ const App: React.FC = () => {
               ))}
               <button className="add-button insight-add-button" onClick={() => { setIsInsightDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
               <ModalDialog isDialogVisible={isInsightDialogVisible} closeDialog={() => setIsInsightDialogVisible(false)}>
+                <h2>Add Insight</h2>
                 <form>
                   <label htmlFor="insight-text">Text</label>
                   <input id="insight-text" type="text" onChange={handleCurrentInsightTextChange} />
@@ -658,6 +663,7 @@ const App: React.FC = () => {
                     related_facts: currentInsightRelatedFacts
                   };
                   setData((prevState) => prevState ? ({ ...prevState, insights: [...prevState.insights, newInsight] }) : prevState);
+                  setIsInsightDialogVisible(false);
                 }}>Save</button>
               </ModalDialog>
 
@@ -682,6 +688,7 @@ const App: React.FC = () => {
               ))}
               <button className="add-button recommendation-add-button" onClick={() => { setIsRecommendationDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
               <ModalDialog isDialogVisible={isRecommendationDialogVisible} onClose={() => setIsRecommendationDialogVisible(false)}>
+                <h2>Add Recommendation</h2>
                 <form onSubmit={(e) => { e.preventDefault(); }}>
                   <label htmlFor="recommendation-input">Text</label>
                   <input id="recommendation-input" type="text" onChange={handleCurrentRecommendationTextChange} />
@@ -698,6 +705,7 @@ const App: React.FC = () => {
                     related_insights: currentRecommendationRelatedInsights
                   };
                   setData((prevState) => prevState ? ({ ...prevState, recommendations: [...prevState.recommendations, newRecommendation] }) : prevState);
+                  setIsRecommendationDialogVisible(false);
                 }}>Save</button>
               </ModalDialog>
             </div>
@@ -740,6 +748,7 @@ const App: React.FC = () => {
                     related_recommendations: currentOutputRelatedRecommendations
                   };
                   setData((prevState) => prevState ? ({ ...prevState, outputs: [...prevState.outputs, newOutput] }) : prevState);
+                  setIsOutputDialogVisible(false);
                 }}>Save</button>
               </ModalDialog>
 
