@@ -606,7 +606,7 @@ const App: React.FC = () => {
                 <h2>Add Fact</h2>
                 <form>
                   <label htmlFor="fact-text">Text</label>
-                  <input id="fact-text" type="text" onChange={handleCurrentFactTextChange} />
+                  <textarea id="fact-text" rows={5} onChange={handleCurrentFactTextChange} />
                   <select id="fact-related-inputs" onChange={handleCurrentRelatedInputsChange} multiple>
                     {data.inputs ? data.inputs.map((input) => (<option key={input.input_id} value={input.input_id}>{input.title}</option>)) : ""}
                   </select>
@@ -648,7 +648,7 @@ const App: React.FC = () => {
                 <h2>Add Insight</h2>
                 <form>
                   <label htmlFor="insight-text">Text</label>
-                  <input id="insight-text" type="text" onChange={handleCurrentInsightTextChange} />
+                  <textarea id="insight-text" rows={5} onChange={handleCurrentInsightTextChange} />
                   <label htmlFor="insight-related-facts">Related Facts</label>
                   <select id="insight-related-facts" onChange={handleCurrentInsightRelatedFactsChange} multiple>
                     {data.facts.map(fact => (<option key={fact.fact_id} value={fact.fact_id}>{fact.text}</option>))}
@@ -691,7 +691,7 @@ const App: React.FC = () => {
                 <h2>Add Recommendation</h2>
                 <form onSubmit={(e) => { e.preventDefault(); }}>
                   <label htmlFor="recommendation-input">Text</label>
-                  <input id="recommendation-input" type="text" onChange={handleCurrentRecommendationTextChange} />
+                  <textarea id="recommendation-input" rows={5} onChange={handleCurrentRecommendationTextChange} />
                   <label htmlFor="recommendation-related-insights">Related Insights</label>
                   <select id="recommendation-related-insights" onChange={handleCurrentRecommendationRelatedInsightsChange} multiple>
                     {data.insights.map(insight => (<option key={insight.insight_id} value={insight.insight_id}>{insight.text}</option>))}
