@@ -3,13 +3,15 @@
 ## Why ?
 
 
-The FIR approach (Facts => Insights => Recommendations) is crucial in my daily work, it provides a structured approach to analyzing data, identifying key insights, and formulating actionable recommendations. This systematic method helps me navigate complex problems more efficiently, ensuring that decisions are grounded in evidence and data-driven insights.
+The FIR approach `Facts => Insights => Recommendations` is very helpful in my daily work, it provides a structured approach to analyzing data, identifying key insights, and formulating actionable recommendations. This systematic method helps me navigate complex problems more efficiently, ensuring that decisions are grounded in evidence and data-driven insights.
 
 While Excalidraw is a useful tool for visualizing concepts and ideas, It's not adapted for accelerating the execution of the FIR approach. Excalidraw focuses more on visual representation and lacks the specialized features needed to streamline the FIR process. In contrast, a dedicated tool like factly is designed specifically for data analysis and insight extraction, making it more effective for accelerating the execution of the FIR approach and enhancing overall productivity.
 
 ## Vision
 
-factly aims to hamonize the way organizations and individuals conduct discoveries. factly provides a dynamic platform for extracting actionable insights from multiples types of inputs using The FIR approach (Facts => Insights => Recommendations). My vision is to create a tool that not only simplifies data analysis but also empowers users to make informed decisions based on reliable insights.
+factly aims to hamonize the way organizations and individuals conduct discoveries. factly provides a web tool for extracting actionable insights from multiples types of inputs using The FIR approach `Facts => Insights => Recommendations`. 
+
+The vision is to create a tool that not only simplifies facts extractions but also empowers users to make informed decisions based on reliable insights.
 
 ![UI Capture](./public/ui-capture.png)
 *An early capture of the factly UI in action.*
@@ -75,6 +77,7 @@ So, come join me in this quirky quest, and let's make factly not just functional
 - [ ] Auto Insights extraction
 - [ ] Auto Recomendations extraction
 - [ ] Auto Outputs Formulation
+- [ ] Manage collaborative discovery live sessions
 - [ ] Auto Facts extracttion from WEB
 - [ ] Auto Facts extracttion from PDF
 - [ ] Auto Facts extracttion from CSV
