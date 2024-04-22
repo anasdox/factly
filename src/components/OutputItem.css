@@ -1,0 +1,7 @@
+.output-item {
+  font-size: 0.7em;
+}
+
+.output {
+  display: flex;
+}

@@ -37,7 +37,6 @@
   white-space: nowrap;
 }
 
-
 .line {
   position: absolute;
   height: 1px;
@@ -61,26 +60,6 @@
 }
 
 
-.fact-item {
-  background-color: #ffe881;
-}
-
-
-.insight-item {
-  background-color: #b0f3ff;
-}
-
-.recommendation-item {
-  background-color: #b0ffba;
-}
-
-.output-item {
-  font-size: 0.7em;
-}
-
-.output {
-  display: flex;
-}
 
 .add-button {
   margin-top: 1em;
@@ -90,16 +69,6 @@
   background-color: #c7c7c7;
   height: 42px;
   width: 42px;
-}
-
-.fact-add-button {
-  background-color: #ffe881;
-}
-.insight-add-button {
-  background-color: #b0f3ff;
-}
-.recommendation-add-button {
-  background-color: #b0ffba;
 }
 
 .add-button:hover{

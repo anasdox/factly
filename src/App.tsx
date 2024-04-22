@@ -1,49 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUpload, faFileDownload} from '@fortawesome/free-solid-svg-icons';
-import { faAdd } from '@fortawesome/free-solid-svg-icons';
-
-import ModalDialog from "react-basic-modal-dialog";
+import { faUpload, faFileDownload } from '@fortawesome/free-solid-svg-icons';
 
 import './App.css';
 import InputList from './components/InputList';
+import FactList from './components/FactList';
+import InsightList from './components/InsightList';
+import RecommendationList from './components/RecommendationList';
+import OutputList from './components/OutputList';
 
 const App: React.FC = () => {
   const [data, setData] = useState<DiscoveryData | null>(null);
-
-  // Inputs
   const inputRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-
-  // Facts
   const factRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [isFactDialogVisible, setIsFactDialogVisible] = useState(false);
-  const [currentFactText, setCurrentFactText] = useState("");
-  const [currentFactRelatedInputs, setCurrentRelatedInputs] = useState<string[]>([]);
-
-  // Insights
   const insightRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [isInsightDialogVisible, setIsInsightDialogVisible] = useState(false);
-  const [currentInsightText, setCurrentInsightText] = useState("");
-  const [currentInsightRelatedFacts, setCurrentInsightRelatedFacts] = useState<string[]>([]);
-
-  // Recommendations
   const recommendationRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [isRecommendationDialogVisible, setIsRecommendationDialogVisible] = useState(false);
-  const [currentRecommendationText, setCurrentRecommendationText] = useState("");
-  const [currentRecommendationRelatedInsights, setCurrentRecommendationRelatedInsights] = useState<string[]>([]);
-
-  // Output
   const outputRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [isOutputDialogVisible, setIsOutputDialogVisible] = useState(false);
-  const [currentOutputText, setCurrentOutputText] = useState("");
-  const [currentOutputRelatedRecommendations, setCurrentOutputRelatedRecommendations] = useState<string[]>([]);
-
-
-  const setFactRef = useCallback((element: HTMLDivElement, index: number) => {factRefs.current[index] = element;}, []);
-  const setInsightRef = useCallback((element: HTMLDivElement, index: number) => {insightRefs.current[index] = element;}, []);
-  const setRecommendationRef = useCallback((element: HTMLDivElement, index: number) => {recommendationRefs.current[index] = element;}, []);
-  const setOutputRef = useCallback((element: HTMLDivElement, index: number) => {outputRefs.current[index] = element;}, []);
 
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
@@ -402,7 +374,6 @@ const App: React.FC = () => {
   return (
     <div className="App">
       <header className='discovery-header'>
-        
         <div className='discovery-details'>
           <div><h1>🔍{data.title}</h1></div>
           <div><h5>🎯{data.goal}</h5></div>
@@ -429,222 +400,50 @@ const App: React.FC = () => {
       </header>
       <main className="discovery-grid">
         {inputRefs ?
-          <InputList 
-            inputs={data.inputs}
+          <InputList
             inputRefs={inputRefs}
             handleMouseEnter={handleMouseEnter}
             handleMouseLeave={handleMouseLeave}
-            setData={setData} 
+            setData={setData}
             data={data} />
           : ""}
         {
           factRefs ?
-            <div className="column facts">
-              <h2>📊Facts</h2>
-              {data.facts.map((fact, index) => (
-                <div
-                  id={"fact-" + fact.fact_id}
-                  ref={el => el ? setFactRef(el, index) : null}
-                  key={fact.fact_id}
-                  className="fact-item item"
-                  onMouseEnter={() => handleMouseEnter("fact", fact.fact_id, data)}
-                  onMouseLeave={() => handleMouseLeave("fact", fact.fact_id, data)}
-                >
-                  {fact.text}
-                </div>
-              ))}
-              <button className="add-button fact-add-button" onClick={() => { setIsFactDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
-              <ModalDialog isDialogVisible={isFactDialogVisible} closeDialog={() => setIsFactDialogVisible(false)}>
-                <h2>Add Fact</h2>
-                <form>
-                  <label htmlFor="fact-text">Text</label>
-                  <textarea 
-                    id="fact-text" 
-                    rows={5} 
-                    onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
-                      setCurrentFactText(event.target.value);
-                    }} />
-                  <select 
-                    id="fact-related-inputs" 
-                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                      const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
-                      setCurrentRelatedInputs(selectedOptions);
-                    }} multiple>
-                    {data.inputs ? data.inputs.map((input) => (<option key={input.input_id} value={input.input_id}>{input.title}</option>)) : ""}
-                  </select>
-
-                </form>
-                <button onClick={() => setIsFactDialogVisible(false)}>Close</button>
-                <button onClick={() => {
-                  const newFact: FactType = {
-                    fact_id: data.facts[data.facts.length - 1].fact_id + 1,
-                    text: currentFactText,
-                    related_inputs: currentFactRelatedInputs
-                  };
-                  setData((prevState) => prevState ? ({ ...prevState, facts: [...prevState.facts, newFact] }) : prevState);
-                  setIsFactDialogVisible(false);
-                }}>Save</button>
-
-              </ModalDialog>
-            </div>
-            : ""
-        }
+            <FactList
+              factRefs={factRefs}
+              handleMouseEnter={handleMouseEnter}
+              handleMouseLeave={handleMouseLeave}
+              setData={setData}
+              data={data} />
+            : ""}
         {
           insightRefs ?
-            <div className="column insights">
-              <h2>💡Insights</h2>
-              {data.insights.map((insight, index) => (
-                <div
-                  id={"insight-" + insight.insight_id}
-                  ref={el => el ? setInsightRef(el, index) : null}
-                  key={insight.insight_id}
-                  className="insight-item item"
-                  onMouseEnter={() => handleMouseEnter("insight", insight.insight_id, data)}
-                  onMouseLeave={() => handleMouseLeave("insight", insight.insight_id, data)}
-                >
-                  {insight.text}
-                </div>
-              ))}
-              <button className="add-button insight-add-button" onClick={() => { setIsInsightDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
-              <ModalDialog isDialogVisible={isInsightDialogVisible} closeDialog={() => setIsInsightDialogVisible(false)}>
-                <h2>Add Insight</h2>
-                <form>
-                  <label htmlFor="insight-text">Text</label>
-                  <textarea 
-                    id="insight-text" 
-                    rows={5} 
-                    onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
-                      setCurrentInsightText(event.target.value);
-                    }} />
-                  <label htmlFor="insight-related-facts">Related Facts</label>
-                  <select 
-                    id="insight-related-facts" 
-                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                      const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
-                      setCurrentInsightRelatedFacts(selectedOptions);
-                    }} multiple>
-                    {data.facts.map(fact => (<option key={fact.fact_id} value={fact.fact_id}>{fact.text}</option>))}
-                  </select>
-
-                </form>
-                <button onClick={() => setIsInsightDialogVisible(false)}>Close</button>
-                <button onClick={() => {
-                  const newInsight: InsightType = {
-                    insight_id: data.insights[data.insights.length - 1].insight_id + 1,
-                    text: currentInsightText,
-                    related_facts: currentInsightRelatedFacts
-                  };
-                  setData((prevState) => prevState ? ({ ...prevState, insights: [...prevState.insights, newInsight] }) : prevState);
-                  setIsInsightDialogVisible(false);
-                }}>Save</button>
-              </ModalDialog>
-
-            </div>
+            <InsightList
+              insightRefs={insightRefs}
+              handleMouseEnter={handleMouseEnter}
+              handleMouseLeave={handleMouseLeave}
+              setData={setData}
+              data={data} />
             : ""
         }
         {
           recommendationRefs ?
-            <div className="column recommendations">
-              <h2>👍Recommendations</h2>
-              {data.recommendations.map((recommendation, index) => (
-                <div
-                  id={"recommendation-" + recommendation.recommendation_id}
-                  ref={el => el ? setRecommendationRef(el, index) : null}
-                  key={recommendation.recommendation_id}
-                  className="recommendation-item item"
-                  onMouseEnter={() => handleMouseEnter("recommendation", recommendation.recommendation_id, data)}
-                  onMouseLeave={() => handleMouseLeave("recommendation", recommendation.recommendation_id, data)}
-                >
-                  {recommendation.text}
-                </div>
-              ))}
-              <button className="add-button recommendation-add-button" onClick={() => { setIsRecommendationDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
-              <ModalDialog isDialogVisible={isRecommendationDialogVisible} onClose={() => setIsRecommendationDialogVisible(false)}>
-                <h2>Add Recommendation</h2>
-                <form onSubmit={(e) => { e.preventDefault(); }}>
-                  <label htmlFor="recommendation-input">Text</label>
-                  <textarea 
-                    id="recommendation-input" 
-                    rows={5} 
-                    onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
-                      setCurrentRecommendationText(event.target.value);
-                    }} />
-                  <label htmlFor="recommendation-related-insights">Related Insights</label>
-                  <select 
-                    id="recommendation-related-insights" 
-                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                      const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
-                      setCurrentRecommendationRelatedInsights(selectedOptions);
-                    }} multiple>
-                    {data.insights.map(insight => (<option key={insight.insight_id} value={insight.insight_id}>{insight.text}</option>))}
-                  </select>
-                </form>
-                <button onClick={() => setIsRecommendationDialogVisible(false)}>Close</button>
-                <button onClick={() => {
-                  const newRecommendation: RecommendationType = {
-                    recommendation_id: data.recommendations[data.recommendations.length - 1].recommendation_id + 1,
-                    text: currentRecommendationText,
-                    related_insights: currentRecommendationRelatedInsights
-                  };
-                  setData((prevState) => prevState ? ({ ...prevState, recommendations: [...prevState.recommendations, newRecommendation] }) : prevState);
-                  setIsRecommendationDialogVisible(false);
-                }}>Save</button>
-              </ModalDialog>
-            </div>
+            <RecommendationList
+              recommendationRefs={recommendationRefs}
+              handleMouseEnter={handleMouseEnter}
+              handleMouseLeave={handleMouseLeave}
+              setData={setData}
+              data={data} />
             : ""
         }
         {
           outputRefs ?
-            <div className="column outputs">
-              <h2>📤Outputs</h2>
-              {data.outputs.map((output, index) => (
-                <div
-                  id={"output-" + output.output_id}
-                  ref={el => el ? setOutputRef(el, index) : null}
-                  key={output.output_id}
-                  className="output-item item"
-                  onMouseEnter={() => handleMouseEnter("output", output.output_id, data)}
-                  onMouseLeave={() => handleMouseLeave("output", output.output_id, data)}
-                >
-                  {output.text}
-                </div>
-              ))}
-              <button className="add-button" onClick={() => { setIsOutputDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
-              <ModalDialog isDialogVisible={isOutputDialogVisible} onClose={() => setIsOutputDialogVisible(false)}>
-                <h2>Add Output</h2>
-                <form>
-                  <label htmlFor="output-text">Text:</label>
-                  <input 
-                    type="text" 
-                    id="output-text" 
-                    onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
-                      setCurrentOutputText(event.target.value);
-                    }} />
-                  <label htmlFor="related-recommendations">Related Recommendations:</label>
-                  <select 
-                    id="related-recommendations" multiple 
-                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-                      const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
-                      setCurrentOutputRelatedRecommendations(selectedOptions);
-                    }}>
-                    {data.recommendations.map((recommendation, index) => (
-                      <option key={index} value={recommendation.recommendation_id}>{recommendation.text}</option>
-                    ))}
-                  </select>
-                </form>
-                <button onClick={() => setIsOutputDialogVisible(false)}>Close</button>
-                <button onClick={() => {
-                  const newOutput: OutputType = {
-                    output_id: data.outputs[data.outputs.length - 1].output_id + 1,
-                    text: currentOutputText,
-                    related_recommendations: currentOutputRelatedRecommendations
-                  };
-                  setData((prevState) => prevState ? ({ ...prevState, outputs: [...prevState.outputs, newOutput] }) : prevState);
-                  setIsOutputDialogVisible(false);
-                }}>Save</button>
-              </ModalDialog>
-
-            </div>
+            <OutputList
+              outputRefs={outputRefs}
+              handleMouseEnter={handleMouseEnter}
+              handleMouseLeave={handleMouseLeave}
+              setData={setData}
+              data={data} />
             : ""
         }
       </main >
