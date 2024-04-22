@@ -5,7 +5,7 @@
 
 The FIR approach `Facts => Insights => Recommendations` is very helpful in my daily work, it provides a structured approach to **extracting unbiased facts related to a problem**, **identifying key insights**, and **formulating actionable recommendations**. This systematic method helps me navigate complex problems more efficiently, ensuring that decisions are grounded in evidence and data-driven insights.
 
-While Excalidraw is a useful tool for visualizing concepts and ideas, It's not adapted for accelerating the execution of the FIR approach. Excalidraw focuses more on visual representation and lacks the specialized features needed to streamline the FIR process. In contrast, a dedicated tool like factly is designed specifically for data analysis and insight extraction, making it more effective for accelerating the execution of the FIR approach and enhancing overall productivity.
+While Excalidraw is a useful tool for visualizing concepts and ideas, It's not adapted for accelerating the execution of the FIR approach. Excalidraw focuses more on visual representation and lacks the specialized features needed to streamline the FIR process. In contrast, a dedicated tool like factly is designed specifically for that, making it more effective for accelerating the execution of the FIR approach and enhancing overall productivity.
 
 ## Vision
 
@@ -15,15 +15,6 @@ The vision is to create a tool that not only simplifies facts extractions but al
 
 ![UI Capture](./public/ui-capture.png)
 *An early capture of the factly UI in action.*
-
-## Features
-
-- **User-Friendly Interface:** A clean, intuitive interface that lowers the learning curve and allows users to begin analyzing facts and insigh quickly.
-- **Data Integration:** Seamlessly import data from multiple sources, including documents, datasets, and real-time feeds.
-- **Fact Extract Phase:** Automatically extract facts specifically related to the discovery goals, ensuring that all insights are directly applicable and aligned with user objectives.
-- **Insight Discovery:** Utilize advanced algorithms to discover hidden patterns and correlations in the data.
-- **Recommendation Engine:** Get actionable recommendations based on analytical findings.
-- **Reporting Tools:** Generate comprehensive reports to visualize data trends and insights.
 
 ## Getting Started
 
@@ -65,6 +56,8 @@ So, come join me in this quirky quest, and let's make factly not just functional
 - [x] Load Discovery in json format
 - [x] Save Discovery in json format
 - [x] Add Entities: Input, Facts, Insights, Recommendations, Outputs
+- [X] Time to make it look nice
+- [ ] Time for code refactoring (Component Breakdown, Use Custom Hooks)
 - [ ] Edit entities
 - [ ] Remove entities
 - [ ] Create New discovery

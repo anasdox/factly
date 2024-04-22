@@ -1,142 +1,49 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUpload, faFileDownload} from '@fortawesome/free-solid-svg-icons';
-import { faFileAlt, faImage, faVideo, faFileAudio, faFilePdf, faGlobe, faFileCsv, faQuestionCircle, faAdd } from '@fortawesome/free-solid-svg-icons';
+import { faAdd } from '@fortawesome/free-solid-svg-icons';
 
 import ModalDialog from "react-basic-modal-dialog";
 
 import './App.css';
-
-type InputType = {
-  input_id: string;
-  type: string;
-  title: string;
-  url: string;
-};
-
-type FactType = {
-  fact_id: string;
-  related_inputs: string[];
-  text: string;
-};
-
-type InsightType = {
-  insight_id: string;
-  related_facts: string[];
-  text: string;
-};
-
-type RecommendationType = {
-  recommendation_id: string;
-  related_insights: string[];
-  text: string;
-};
-
-type OutputType = {
-  output_id: string;
-  related_recommendations: string[];
-  text: string;
-};
-
-type DiscoveryData = {
-  discovery_id: string;
-  title: string;
-  goal: string;
-  date: string;
-  inputs: InputType[];
-  facts: FactType[];
-  insights: InsightType[];
-  recommendations: RecommendationType[];
-  outputs: OutputType[];
-};
+import InputList from './components/InputList';
 
 const App: React.FC = () => {
   const [data, setData] = useState<DiscoveryData | null>(null);
 
   // Inputs
   const inputRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [isInputDialogVisible, setIsInputDialogVisible] = useState(false);
-  const [currentInputTitle, setCurrentInputTitle] = useState("");
-  const handleCurrentInputTitleChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
-    setCurrentInputTitle(event.target.value);
-  };
-  const [currentInputType, setCurrentInputType] = useState("");
-  const handleCurrentInputTypeChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
-    setCurrentInputType(event.target.value);
-  }
-  const [currentInputUrl, setCurrentInputUrl] = useState("");
-  const handleCurrentInputUrlChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
-    setCurrentInputUrl(event.target.value);
-  }
+
 
   // Facts
   const factRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [isFactDialogVisible, setIsFactDialogVisible] = useState(false);
   const [currentFactText, setCurrentFactText] = useState("");
-  const handleCurrentFactTextChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
-    setCurrentFactText(event.target.value);
-  };
-
   const [currentFactRelatedInputs, setCurrentRelatedInputs] = useState<string[]>([]);
-  const handleCurrentRelatedInputsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
-    setCurrentRelatedInputs(selectedOptions);
-  };
 
   // Insights
   const insightRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [isInsightDialogVisible, setIsInsightDialogVisible] = useState(false);
   const [currentInsightText, setCurrentInsightText] = useState("");
-  const handleCurrentInsightTextChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
-    setCurrentInsightText(event.target.value);
-  };
   const [currentInsightRelatedFacts, setCurrentInsightRelatedFacts] = useState<string[]>([]);
-  const handleCurrentInsightRelatedFactsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
-    setCurrentInsightRelatedFacts(selectedOptions);
-  };
 
   // Recommendations
   const recommendationRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [isRecommendationDialogVisible, setIsRecommendationDialogVisible] = useState(false);
   const [currentRecommendationText, setCurrentRecommendationText] = useState("");
-  const handleCurrentRecommendationTextChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
-    setCurrentRecommendationText(event.target.value);
-  };
   const [currentRecommendationRelatedInsights, setCurrentRecommendationRelatedInsights] = useState<string[]>([]);
-  const handleCurrentRecommendationRelatedInsightsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
-    setCurrentRecommendationRelatedInsights(selectedOptions);
-  };
 
   // Output
   const outputRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [isOutputDialogVisible, setIsOutputDialogVisible] = useState(false);
   const [currentOutputText, setCurrentOutputText] = useState("");
-  const handleCurrentOutputTextChange = (event: { target: { value: React.SetStateAction<string>; }; }) => {
-    setCurrentOutputText(event.target.value);
-  };
   const [currentOutputRelatedRecommendations, setCurrentOutputRelatedRecommendations] = useState<string[]>([]);
-  const handleCurrentOutputRelatedRecommendationsChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
-    setCurrentOutputRelatedRecommendations(selectedOptions);
-  };
 
-  const setInputRef = useCallback((element: HTMLDivElement, index: number) => {
-    inputRefs.current[index] = element;
-  }, []);
-  const setFactRef = useCallback((element: HTMLDivElement, index: number) => {
-    factRefs.current[index] = element;
-  }, []);
-  const setInsightRef = useCallback((element: HTMLDivElement, index: number) => {
-    insightRefs.current[index] = element;
-  }, []);
-  const setRecommendationRef = useCallback((element: HTMLDivElement, index: number) => {
-    recommendationRefs.current[index] = element;
-  }, []);
-  const setOutputRef = useCallback((element: HTMLDivElement, index: number) => {
-    outputRefs.current[index] = element;
-  }, []);
+
+  const setFactRef = useCallback((element: HTMLDivElement, index: number) => {factRefs.current[index] = element;}, []);
+  const setInsightRef = useCallback((element: HTMLDivElement, index: number) => {insightRefs.current[index] = element;}, []);
+  const setRecommendationRef = useCallback((element: HTMLDivElement, index: number) => {recommendationRefs.current[index] = element;}, []);
+  const setOutputRef = useCallback((element: HTMLDivElement, index: number) => {outputRefs.current[index] = element;}, []);
 
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
@@ -522,67 +429,13 @@ const App: React.FC = () => {
       </header>
       <main className="discovery-grid">
         {inputRefs ?
-          <div className="column inputs">
-            <h2>📥Inputs</h2>
-            {data.inputs.map((input, index) => (
-              <div
-                id={"input-" + input.input_id}
-                ref={el => el ? setInputRef(el, index) : null}
-                key={input.input_id}
-                className="input-item item"
-                onClick={() => window.open(input.url, '_blank', 'noopener')}
-                onMouseEnter={() => handleMouseEnter("input", input.input_id, data)}
-                onMouseLeave={() => handleMouseLeave("input", input.input_id, data)}
-              >
-                <div><FontAwesomeIcon color="#555" size={'2xl'}  icon={
-                  input.type === "text" ? faFileAlt :
-                  input.type === "image" ? faImage :
-                  input.type === "video" ? faVideo :
-                  input.type === "audio" ? faFileAudio :
-                  input.type === "pdf" ? faFilePdf :
-                  input.type === "web" ? faGlobe :
-                  input.type === "csv" ? faFileCsv :
-                  faQuestionCircle // 'other' or unknown type
-                } /> </div><div>{input.title}</div>
-              </div>
-            ))}
-            <button className="add-button" onClick={() => { setIsInputDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button >
-            <ModalDialog isDialogVisible={isInputDialogVisible} closeDialog={() => setIsInputDialogVisible(false)}>
-              <h2>Add Input</h2>
-              <form>
-                <label htmlFor="input-title">Title</label>
-                <input id="input-title" type="text" onChange={handleCurrentInputTitleChange} />
-                <label htmlFor="input-url">URL</label>
-                <input id="input-url" type="text" onChange={handleCurrentInputUrlChange} />
-                <label htmlFor="input-type">Type</label>
-                <select id="input-type" onChange={handleCurrentInputTypeChange}>
-                  <option value="text">Text</option>
-                  <option value="web">Web</option>
-                  <option value="image">Image</option>
-                  <option value="video">Video</option>
-                  <option value="audio">Audio</option>
-                  <option value="pdf">Pdf</option>
-                </select>
-              </form>
-              <button onClick={() => setIsInputDialogVisible(false)}>Close</button>
-              <button onClick={() => {
-                const newInput: InputType = {
-                  input_id: data.inputs[data.inputs.length - 1].input_id + 1,
-                  title: currentInputTitle,
-                  type: currentInputType,
-                  url: currentInputUrl
-                };
-
-                setData((prevState) => prevState ? ({
-                  ...prevState,
-                  inputs: [...prevState.inputs, newInput]
-                }) : prevState);
-                setIsInputDialogVisible(false);
-              }}>Save</button>
-
-            </ModalDialog>
-          </div >
-
+          <InputList 
+            inputs={data.inputs}
+            inputRefs={inputRefs}
+            handleMouseEnter={handleMouseEnter}
+            handleMouseLeave={handleMouseLeave}
+            setData={setData} 
+            data={data} />
           : ""}
         {
           factRefs ?
@@ -598,7 +451,6 @@ const App: React.FC = () => {
                   onMouseLeave={() => handleMouseLeave("fact", fact.fact_id, data)}
                 >
                   {fact.text}
-
                 </div>
               ))}
               <button className="add-button fact-add-button" onClick={() => { setIsFactDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
@@ -606,8 +458,18 @@ const App: React.FC = () => {
                 <h2>Add Fact</h2>
                 <form>
                   <label htmlFor="fact-text">Text</label>
-                  <textarea id="fact-text" rows={5} onChange={handleCurrentFactTextChange} />
-                  <select id="fact-related-inputs" onChange={handleCurrentRelatedInputsChange} multiple>
+                  <textarea 
+                    id="fact-text" 
+                    rows={5} 
+                    onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
+                      setCurrentFactText(event.target.value);
+                    }} />
+                  <select 
+                    id="fact-related-inputs" 
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                      const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
+                      setCurrentRelatedInputs(selectedOptions);
+                    }} multiple>
                     {data.inputs ? data.inputs.map((input) => (<option key={input.input_id} value={input.input_id}>{input.title}</option>)) : ""}
                   </select>
 
@@ -648,9 +510,19 @@ const App: React.FC = () => {
                 <h2>Add Insight</h2>
                 <form>
                   <label htmlFor="insight-text">Text</label>
-                  <textarea id="insight-text" rows={5} onChange={handleCurrentInsightTextChange} />
+                  <textarea 
+                    id="insight-text" 
+                    rows={5} 
+                    onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
+                      setCurrentInsightText(event.target.value);
+                    }} />
                   <label htmlFor="insight-related-facts">Related Facts</label>
-                  <select id="insight-related-facts" onChange={handleCurrentInsightRelatedFactsChange} multiple>
+                  <select 
+                    id="insight-related-facts" 
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                      const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
+                      setCurrentInsightRelatedFacts(selectedOptions);
+                    }} multiple>
                     {data.facts.map(fact => (<option key={fact.fact_id} value={fact.fact_id}>{fact.text}</option>))}
                   </select>
 
@@ -691,9 +563,19 @@ const App: React.FC = () => {
                 <h2>Add Recommendation</h2>
                 <form onSubmit={(e) => { e.preventDefault(); }}>
                   <label htmlFor="recommendation-input">Text</label>
-                  <textarea id="recommendation-input" rows={5} onChange={handleCurrentRecommendationTextChange} />
+                  <textarea 
+                    id="recommendation-input" 
+                    rows={5} 
+                    onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
+                      setCurrentRecommendationText(event.target.value);
+                    }} />
                   <label htmlFor="recommendation-related-insights">Related Insights</label>
-                  <select id="recommendation-related-insights" onChange={handleCurrentRecommendationRelatedInsightsChange} multiple>
+                  <select 
+                    id="recommendation-related-insights" 
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                      const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
+                      setCurrentRecommendationRelatedInsights(selectedOptions);
+                    }} multiple>
                     {data.insights.map(insight => (<option key={insight.insight_id} value={insight.insight_id}>{insight.text}</option>))}
                   </select>
                 </form>
@@ -732,9 +614,19 @@ const App: React.FC = () => {
                 <h2>Add Output</h2>
                 <form>
                   <label htmlFor="output-text">Text:</label>
-                  <input type="text" id="output-text" onChange={handleCurrentOutputTextChange} />
+                  <input 
+                    type="text" 
+                    id="output-text" 
+                    onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
+                      setCurrentOutputText(event.target.value);
+                    }} />
                   <label htmlFor="related-recommendations">Related Recommendations:</label>
-                  <select id="related-recommendations" multiple onChange={handleCurrentOutputRelatedRecommendationsChange}>
+                  <select 
+                    id="related-recommendations" multiple 
+                    onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                      const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
+                      setCurrentOutputRelatedRecommendations(selectedOptions);
+                    }}>
                     {data.recommendations.map((recommendation, index) => (
                       <option key={index} value={recommendation.recommendation_id}>{recommendation.text}</option>
                     ))}
