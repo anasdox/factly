@@ -45,7 +45,6 @@
 }
 
 .item {
-  margin: 0.5em;
   padding: 0.5em;
   background-color: #c7c7c7;
   border-radius: 10px;
@@ -53,7 +52,6 @@
   font-size: 1em;
   width: 100%;
   z-index: 2;
-  
 } 
 .item:hover {
   box-shadow: 0 0 0 2px #d400ff;
@@ -90,4 +88,25 @@ input[type=text], select, textarea {
   box-shadow: 0 0 0 2px #4e4e4e;
   filter: contrast(1.4);
   
+}
+
+.wrapper {
+  display: flex;
+  justify-content: flex-start;
+  background-color: #303030;
+  border-radius: 10px;
+  margin: 5px;
+}
+
+.wrapper-item-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: column;
+    padding: 0.5em;
+    color: #ffffff;
+}
+
+.wrapper-item-toolbar > div {
+  cursor: pointer;
 }
