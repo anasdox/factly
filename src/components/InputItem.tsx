@@ -4,13 +4,13 @@ import { faFileAlt, faImage, faVideo, faFileAudio, faFilePdf, faGlobe, faFileCsv
 import './InputItem.css';
 type Props = {
   input: InputType;
-  setInputRef: (element: HTMLDivElement, index: number) => void
   index: number;
+  setInputRef: (element: HTMLDivElement, index: number) => void
   handleMouseEnter: () => void;
   handleMouseLeave: () => void;
 };
 
-const InputItem: React.FC<Props> = ({ input, setInputRef, index, handleMouseEnter, handleMouseLeave }) => {
+const InputItem: React.FC<Props> = ({ input, index, setInputRef, handleMouseEnter, handleMouseLeave }) => {
 
 
   return (
