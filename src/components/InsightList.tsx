@@ -3,6 +3,7 @@ import InsightItem from './InsightItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAdd } from '@fortawesome/free-solid-svg-icons';
 import ModalDialog from 'react-basic-modal-dialog';
+import ItemWrapper from './ItemWrapper';
 
 
 type Props = {
@@ -26,14 +27,17 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     <div className="column insights">
       <h2>💡Insights</h2>
       {data.insights.map((insight, index) => (
-        <InsightItem
+        <ItemWrapper
+          id={"insight-" + insight.insight_id}
           key={insight.insight_id}
-          insight={insight}
+          item={insight}
           index={index}
-          setInsightRef={setInsightRef}
+          setItemRef={setInsightRef}
           handleMouseEnter={() => handleMouseEnter("insight", insight.insight_id, data)}
           handleMouseLeave={() => handleMouseLeave("insight", insight.insight_id, data)}
-        />
+        >
+          <InsightItem insight={insight} />
+        </ItemWrapper>
       ))}
       <button className="add-button insight-add-button" onClick={() => { setIsInsightDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
       <ModalDialog isDialogVisible={isInsightDialogVisible} closeDialog={() => setIsInsightDialogVisible(false)}>

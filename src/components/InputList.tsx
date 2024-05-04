@@ -3,6 +3,7 @@ import InputItem from './InputItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAdd } from '@fortawesome/free-solid-svg-icons';
 import ModalDialog from 'react-basic-modal-dialog';
+import ItemWrapper from './ItemWrapper';
 
 
 type Props = {
@@ -27,14 +28,17 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
     <div className="column inputs">
       <h2>📥Inputs</h2>
       {data.inputs.map((input, index) => (
-        <InputItem
+        <ItemWrapper
+          id={"input-" + input.input_id}
           key={input.input_id}
-          input={input}
           index={index}
-          setInputRef={setInputRef}
+          item={input}
+          setItemRef={setInputRef}
           handleMouseEnter={() => handleMouseEnter("input", input.input_id, data)}
           handleMouseLeave={() => handleMouseLeave("input", input.input_id, data)}
-        />
+        >
+          <InputItem input={input} />
+        </ItemWrapper>
       ))}
       <button className="add-button" onClick={() => { setIsInputDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button >
       <ModalDialog isDialogVisible={isInputDialogVisible} closeDialog={() => setIsInputDialogVisible(false)}>

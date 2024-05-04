@@ -3,6 +3,7 @@ import RecommendationItem from './RecommendationItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAdd } from '@fortawesome/free-solid-svg-icons';
 import ModalDialog from 'react-basic-modal-dialog';
+import ItemWrapper from './ItemWrapper';
 
 
 type Props = {
@@ -26,14 +27,17 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
     <div className="column recommendations">
       <h2>👍Recommendations</h2>
       {data.recommendations.map((recommendation, index) => (
-        <RecommendationItem
+        <ItemWrapper
+          id={"recommendation-" + recommendation.recommendation_id}
           key={recommendation.recommendation_id}
-          recommendation={recommendation}
+          item={recommendation}
           index={index}
-          setRecommendationRef={setRecommendationRef}
+          setItemRef={setRecommendationRef}
           handleMouseEnter={() => handleMouseEnter("recommendation", recommendation.recommendation_id, data)}
           handleMouseLeave={() => handleMouseLeave("recommendation", recommendation.recommendation_id, data)}
-        />
+        >
+          <RecommendationItem recommendation={recommendation} />
+        </ItemWrapper>
       ))}
       <button className="add-button recommendation-add-button" onClick={() => { setIsRecommendationDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
       <ModalDialog isDialogVisible={isRecommendationDialogVisible} onClose={() => setIsRecommendationDialogVisible(false)}>

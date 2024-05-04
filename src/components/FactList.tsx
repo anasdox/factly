@@ -3,6 +3,7 @@ import FactItem from './FactItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAdd } from '@fortawesome/free-solid-svg-icons';
 import ModalDialog from 'react-basic-modal-dialog';
+import ItemWrapper from './ItemWrapper';
 
 
 type Props = {
@@ -26,14 +27,21 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     <div className="column facts">
       <h2>📊Facts</h2>
       {data.facts.map((fact, index) => (
-        <FactItem
+
+        <ItemWrapper
+          id={"fact-" + fact.fact_id}
           key={fact.fact_id}
-          fact={fact}
           index={index}
-          setFactRef={setFactRef}
+          item={fact}
+          setItemRef={setFactRef}
           handleMouseEnter={() => handleMouseEnter("fact", fact.fact_id, data)}
           handleMouseLeave={() => handleMouseLeave("fact", fact.fact_id, data)}
-        />
+        >
+          <FactItem
+            fact={fact}
+          />
+        </ItemWrapper>
+
       ))}
       <button className="add-button fact-add-button" onClick={() => { setIsFactDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
       <ModalDialog isDialogVisible={isFactDialogVisible} closeDialog={() => setIsFactDialogVisible(false)}>

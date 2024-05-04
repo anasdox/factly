@@ -104,6 +104,11 @@ export function handleMouseEnter(entityType: string, entityId: string, data: Dis
   const entityElement = document.getElementById(`${entityType}-${entityId}`);
   entityElement?.classList.add('highlighted');
 
+  const entityToolbarElement = document.getElementById(`${entityType}-${entityId}-toolbar`);
+  if (entityToolbarElement) {
+   entityToolbarElement.style.display = "flex";
+  }
+
   // Highlight all related entities and their links
   const relatedEntities = getRelatedEntities(entityType, entityId, data);
   const parentRelatedEntities = getParentRelatedEntities(entityType, entityId, data);
@@ -119,6 +124,12 @@ export function handleMouseLeave(entityType: string, entityId: string, data: Dis
   // Remove highlighting from the current entity
   const entityElement = document.getElementById(`${entityType}-${entityId}`);
   entityElement?.classList.remove('highlighted');
+
+  const entityToolbarElement = document.getElementById(`${entityType}-${entityId}-toolbar`);
+  if (entityToolbarElement) {
+   entityToolbarElement.style.display = "none";
+  }
+
 
   // Remove highlighting from all related entities and their links
   const relatedEntities = getRelatedEntities(entityType, entityId, data);
