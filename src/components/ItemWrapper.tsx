@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faPencil } from '@fortawesome/free-solid-svg-icons';
 
 
 type Props = {
@@ -9,11 +9,20 @@ type Props = {
   setItemRef: (element: HTMLDivElement, index: number) => void;
   handleMouseEnter: () => void;
   handleMouseLeave: () => void;
-  item: InputType | FactType | InsightType | RecommendationType | OutputType;
+  item: ItemType;
   index: number;
+  openEditModal: OpenEditModalFunction | null; 
 };
 
-const ItemWrapper: React.FC<Props> = ({ children, id, setItemRef, handleMouseEnter, handleMouseLeave, item, index }) => {
+const ItemWrapper: React.FC<Props> = ({ 
+  children, 
+  id, 
+  setItemRef, 
+  handleMouseEnter, 
+  handleMouseLeave, 
+  item, 
+  index, 
+  openEditModal}) => {
 
   return (
     <div
@@ -31,8 +40,8 @@ const ItemWrapper: React.FC<Props> = ({ children, id, setItemRef, handleMouseEnt
         <div>
           <FontAwesomeIcon size={'sm'} icon={faAdd} />
         </div>*/}
-        <div>
-          <FontAwesomeIcon size={'sm'} icon={faEdit} />
+        <div onClick={() => openEditModal ? openEditModal(item): null}>
+          <FontAwesomeIcon size={'sm'} icon={faPencil} />
         </div>
       </div>
     </div>

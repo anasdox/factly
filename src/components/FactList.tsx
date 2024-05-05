@@ -36,6 +36,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           setItemRef={setFactRef}
           handleMouseEnter={() => handleMouseEnter("fact", fact.fact_id, data)}
           handleMouseLeave={() => handleMouseLeave("fact", fact.fact_id, data)}
+          openEditModal={() => { setIsFactDialogVisible(true) }}
         >
           <FactItem
             fact={fact}

@@ -35,6 +35,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
           setItemRef={setInsightRef}
           handleMouseEnter={() => handleMouseEnter("insight", insight.insight_id, data)}
           handleMouseLeave={() => handleMouseLeave("insight", insight.insight_id, data)}
+          openEditModal={() => { setIsInsightDialogVisible(true)}}
         >
           <InsightItem insight={insight} />
         </ItemWrapper>

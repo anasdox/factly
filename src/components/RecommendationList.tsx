@@ -35,6 +35,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
           setItemRef={setRecommendationRef}
           handleMouseEnter={() => handleMouseEnter("recommendation", recommendation.recommendation_id, data)}
           handleMouseLeave={() => handleMouseLeave("recommendation", recommendation.recommendation_id, data)}
+          openEditModal={() => { setIsRecommendationDialogVisible(true)}}
         >
           <RecommendationItem recommendation={recommendation} />
         </ItemWrapper>

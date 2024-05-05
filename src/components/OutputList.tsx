@@ -36,6 +36,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
           setItemRef={setOutputRef}
           handleMouseEnter={() => handleMouseEnter("output", output.output_id, data)}
           handleMouseLeave={() => handleMouseLeave("output", output.output_id, data)}
+          openEditModal={() => { setIsOutputDialogVisible(true) }}
         >
           <OutputItem output={output} />
         </ItemWrapper>

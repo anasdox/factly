@@ -106,12 +106,13 @@ input[type=text], select, textarea {
   flex-direction: row;
   color: #000000;
   position: absolute;
-  background: rgba(255, 255, 255, 0.6);
+  background: #ffffff;
   z-index: 2;
   top: 2px;
   right: 2px;
   border-radius: 16px;
   border: none;
+  opacity: 0.5;
 }
 
 .wrapper-item-toolbar > div {
@@ -121,5 +122,5 @@ input[type=text], select, textarea {
 }
 
 .wrapper-item-toolbar:hover{
-  background: rgba(255, 255, 255, 0.8);
+  opacity: 1;
 }

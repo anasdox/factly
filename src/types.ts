@@ -40,3 +40,8 @@ type InputType = {
     recommendations: RecommendationType[];
     outputs: OutputType[];
   };
+
+
+type ItemType = InputType | FactType | InsightType | RecommendationType | OutputType;
+
+type OpenEditModalFunction = (item: ItemType) => void;
