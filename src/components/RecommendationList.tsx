@@ -2,9 +2,8 @@ import React, { useCallback, useState } from 'react';
 import RecommendationItem from './RecommendationItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAdd } from '@fortawesome/free-solid-svg-icons';
-import ModalDialog from 'react-basic-modal-dialog';
 import ItemWrapper from './ItemWrapper';
-
+import RecommendationModal from './RecommendationModal';
 
 type Props = {
   recommendationRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -12,69 +11,82 @@ type Props = {
   setData: React.Dispatch<React.SetStateAction<DiscoveryData | null>>;
   handleMouseEnter: (entityType: string, entityId: string, data: DiscoveryData) => void;
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
-
 };
 
 const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData, handleMouseEnter, handleMouseLeave }) => {
 
   const [isRecommendationDialogVisible, setIsRecommendationDialogVisible] = useState(false);
-  const [currentRecommendationText, setCurrentRecommendationText] = useState("");
-  const [currentRecommendationRelatedInsights, setCurrentRecommendationRelatedInsights] = useState<string[]>([]);
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+  const [editingRecommendation, setEditingRecommendation] = useState<ItemType | null>(null);
   const setRecommendationRef = useCallback((element: HTMLDivElement, index: number) => { recommendationRefs.current[index] = element; }, [recommendationRefs]);
 
+  const openAddModal = () => {
+    setModalMode('add');
+    setEditingRecommendation(null);
+    setIsRecommendationDialogVisible(true);
+  };
+
+  const openEditModal = (recommendation: ItemType) => {
+    setModalMode('edit');
+    setEditingRecommendation(recommendation);
+    setIsRecommendationDialogVisible(true);
+  };
+
+  const saveRecommendation = (recommendationData: RecommendationType) => {
+    if (modalMode === 'add') {
+      const newRecommendation: RecommendationType = {
+        recommendation_id: Math.random().toString(16).slice(2),
+        text: recommendationData.text,
+        related_insights: recommendationData.related_insights,
+      };
+      setData((prevState) => prevState ? ({
+        ...prevState,
+        recommendations: [...prevState.recommendations, newRecommendation]
+      }) : prevState);
+    } else if (modalMode === 'edit' && recommendationData.recommendation_id) {
+      const updatedRecommendations = data.recommendations.map((recommendation) =>
+        recommendation.recommendation_id === recommendationData.recommendation_id ? { ...recommendation, ...recommendationData } : recommendation
+      );
+      setData((prevState) => prevState ? ({
+        ...prevState,
+        recommendations: updatedRecommendations
+      }) : prevState);
+    }
+    setIsRecommendationDialogVisible(false);
+  };
 
   return (
     <div className="column recommendations">
-      <h2>👍Recommendations</h2>
+      <h2>📝Recommendations</h2>
       {data.recommendations.map((recommendation, index) => (
+
         <ItemWrapper
           id={"recommendation-" + recommendation.recommendation_id}
           key={recommendation.recommendation_id}
-          item={recommendation}
           index={index}
+          item={recommendation}
           setItemRef={setRecommendationRef}
           handleMouseEnter={() => handleMouseEnter("recommendation", recommendation.recommendation_id, data)}
           handleMouseLeave={() => handleMouseLeave("recommendation", recommendation.recommendation_id, data)}
-          openEditModal={() => { setIsRecommendationDialogVisible(true)}}
+          openEditModal={openEditModal}
         >
-          <RecommendationItem recommendation={recommendation} />
+          <RecommendationItem
+            recommendation={recommendation}
+          />
         </ItemWrapper>
+
       ))}
-      <button className="add-button recommendation-add-button" onClick={() => { setIsRecommendationDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
-      <ModalDialog isDialogVisible={isRecommendationDialogVisible} onClose={() => setIsRecommendationDialogVisible(false)}>
-        <h2>Add Recommendation</h2>
-        <form onSubmit={(e) => { e.preventDefault(); }}>
-          <label htmlFor="recommendation-input">Text</label>
-          <textarea
-            id="recommendation-input"
-            rows={5}
-            onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
-              setCurrentRecommendationText(event.target.value);
-            }} />
-          <label htmlFor="recommendation-related-insights">Related Insights</label>
-          <select
-            id="recommendation-related-insights"
-            onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-              const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
-              setCurrentRecommendationRelatedInsights(selectedOptions);
-            }} multiple>
-            {data.insights.map(insight => (<option key={insight.insight_id} value={insight.insight_id}>{insight.text}</option>))}
-          </select>
-        </form>
-        <button onClick={() => setIsRecommendationDialogVisible(false)}>Close</button>
-        <button onClick={() => {
-          const newRecommendation: RecommendationType = {
-            recommendation_id: data.recommendations[data.recommendations.length - 1].recommendation_id + 1,
-            text: currentRecommendationText,
-            related_insights: currentRecommendationRelatedInsights
-          };
-          setData((prevState) => prevState ? ({ ...prevState, recommendations: [...prevState.recommendations, newRecommendation] }) : prevState);
-          setIsRecommendationDialogVisible(false);
-        }}>Save</button>
-      </ModalDialog>
+      <button className="add-button recommendation-add-button" onClick={openAddModal}><FontAwesomeIcon icon={faAdd} /></button>
+      <RecommendationModal
+        mode={modalMode}
+        isDialogVisible={isRecommendationDialogVisible}
+        closeDialog={() => setIsRecommendationDialogVisible(false)}
+        saveRecommendation={saveRecommendation}
+        recommendationData={editingRecommendation as RecommendationType}
+        insights={data.insights}
+      />
     </div>
   );
 };
-
 
 export default RecommendationList;

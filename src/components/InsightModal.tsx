@@ -1,0 +1,74 @@
+import React, { useEffect, useState } from 'react';
+import ModalDialog from 'react-basic-modal-dialog';
+
+type Props = {
+  mode: 'add' | 'edit';
+  isDialogVisible: boolean;
+  closeDialog: () => void;
+  saveInsight: (insightData: InsightType) => void;
+  insightData: InsightType | null;
+  facts: FactType[] | null;
+};
+
+const InsightModal: React.FC<Props> = ({
+  mode,
+  isDialogVisible,
+  closeDialog,
+  saveInsight,
+  insightData,
+  facts
+}) => {
+  const [currentInsightText, setCurrentInsightText] = useState("");
+  const [currentInsightRelatedFacts, setCurrentRelatedFacts] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (mode === 'edit' && insightData) {
+      setCurrentInsightText(insightData.text);
+      setCurrentRelatedFacts(insightData.related_facts);
+    } else {
+      setCurrentInsightText('');
+      setCurrentRelatedFacts([]);
+    }
+  }, [mode, insightData]);
+
+  const handleSave = () => {
+    const newInsightData: InsightType = {
+      insight_id: insightData ? insightData.insight_id : Math.random().toString(16).slice(2),
+      text: currentInsightText,
+      related_facts: currentInsightRelatedFacts,
+    };
+    saveInsight(newInsightData);
+    closeDialog();
+  };
+
+  return (
+    <ModalDialog isDialogVisible={isDialogVisible} closeDialog={closeDialog}>
+        <h2>{mode === 'add' ? 'Add Insight' : 'Edit Insight'}</h2>
+        <form>
+          <label htmlFor="insight-text">Text</label>
+          <textarea
+            id="insight-text"
+            rows={5}
+            value={currentInsightText}
+            required
+            onChange={(event) => {
+              setCurrentInsightText(event.target.value);
+            }} />
+          <label htmlFor="insight-related-facts">Related Facts</label>
+          <select
+            id="insight-related-facts"
+            value={currentInsightRelatedFacts}
+            onChange={(event) => {
+              const selectedOptions = Array.from(event.target.selectedOptions, (option) => option.value);
+              setCurrentRelatedFacts(selectedOptions);
+            }} multiple>
+            {facts ? facts.map((fact) => (<option key={fact.fact_id} value={fact.fact_id}>{fact.text}</option>)) : ""}
+          </select>
+        </form>
+      <button onClick={closeDialog}>Close</button>
+      <button onClick={handleSave}>{mode === 'add' ? 'Add' : 'Save'}</button>
+    </ModalDialog>
+  );
+};
+
+export default InsightModal;

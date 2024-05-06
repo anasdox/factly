@@ -1,5 +1,6 @@
 import React from 'react';
 import './FactItem.css';
+import parse from 'html-react-parser';
 
 type Props = {
   fact: FactType;
@@ -10,7 +11,7 @@ const FactItem: React.FC<Props> = ({ fact }) => {
     <div
       className="fact-item item"
     >
-      {fact.text}
+      {parse(fact.text.replace(/([0-9]+)/, "<b>$1</b>"))}
     </div>
   );
 };

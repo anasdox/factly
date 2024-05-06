@@ -2,8 +2,8 @@ import React, { useCallback, useState } from 'react';
 import FactItem from './FactItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAdd } from '@fortawesome/free-solid-svg-icons';
-import ModalDialog from 'react-basic-modal-dialog';
 import ItemWrapper from './ItemWrapper';
+import FactModal from './FactModal';
 
 
 type Props = {
@@ -18,10 +18,44 @@ type Props = {
 const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, handleMouseLeave }) => {
 
   const [isFactDialogVisible, setIsFactDialogVisible] = useState(false);
-  const [currentFactText, setCurrentFactText] = useState("");
-  const [currentFactRelatedInputs, setCurrentRelatedInputs] = useState<string[]>([]);
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+  const [editingFact, setEditingFact] = useState<ItemType | null>(null);
   const setFactRef = useCallback((element: HTMLDivElement, index: number) => { factRefs.current[index] = element; }, [factRefs]);
 
+  const openAddModal = () => {
+    setModalMode('add');
+    setEditingFact(null);
+    setIsFactDialogVisible(true);
+  };
+
+  const openEditModal = (item: ItemType) => {
+    setModalMode('edit');
+    setEditingFact(item);
+    setIsFactDialogVisible(true);
+  };
+
+  const saveFact = (factData: FactType) => {
+    if (modalMode === 'add') {
+      const newFact: FactType = {
+        fact_id: Math.random().toString(16).slice(2),
+        text: factData.text,
+        related_inputs: factData.related_inputs,
+      };
+      setData((prevState) => prevState ? ({
+        ...prevState,
+        facts: [...prevState.facts, newFact]
+      }) : prevState);
+    } else if (modalMode === 'edit' && factData.fact_id) {
+      const updatedFacts = data.facts.map((fact) =>
+        fact.fact_id === factData.fact_id ? { ...fact, ...factData } : fact
+      );
+      setData((prevState) => prevState ? ({
+        ...prevState,
+        facts: updatedFacts
+      }) : prevState);
+    }
+    setIsFactDialogVisible(false);
+  };
 
   return (
     <div className="column facts">
@@ -36,7 +70,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           setItemRef={setFactRef}
           handleMouseEnter={() => handleMouseEnter("fact", fact.fact_id, data)}
           handleMouseLeave={() => handleMouseLeave("fact", fact.fact_id, data)}
-          openEditModal={() => { setIsFactDialogVisible(true) }}
+          openEditModal={openEditModal}
         >
           <FactItem
             fact={fact}
@@ -44,39 +78,15 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
         </ItemWrapper>
 
       ))}
-      <button className="add-button fact-add-button" onClick={() => { setIsFactDialogVisible(true) }}><FontAwesomeIcon icon={faAdd} /></button>
-      <ModalDialog isDialogVisible={isFactDialogVisible} closeDialog={() => setIsFactDialogVisible(false)}>
-        <h2>Add Fact</h2>
-        <form>
-          <label htmlFor="fact-text">Text</label>
-          <textarea
-            id="fact-text"
-            rows={5}
-            onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
-              setCurrentFactText(event.target.value);
-            }} />
-          <select
-            id="fact-related-inputs"
-            onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-              const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
-              setCurrentRelatedInputs(selectedOptions);
-            }} multiple>
-            {data.inputs ? data.inputs.map((input) => (<option key={input.input_id} value={input.input_id}>{input.title}</option>)) : ""}
-          </select>
-
-        </form>
-        <button onClick={() => setIsFactDialogVisible(false)}>Close</button>
-        <button onClick={() => {
-          const newFact: FactType = {
-            fact_id: data.facts[data.facts.length - 1].fact_id + 1,
-            text: currentFactText,
-            related_inputs: currentFactRelatedInputs
-          };
-          setData((prevState) => prevState ? ({ ...prevState, facts: [...prevState.facts, newFact] }) : prevState);
-          setIsFactDialogVisible(false);
-        }}>Save</button>
-
-      </ModalDialog>
+      <button className="add-button fact-add-button" onClick={openAddModal}><FontAwesomeIcon icon={faAdd} /></button>
+      <FactModal
+        mode={modalMode}
+        isDialogVisible={isFactDialogVisible}
+        closeDialog={() => setIsFactDialogVisible(false)}
+        saveFact={saveFact}
+        factData={editingFact as FactType}
+        inputs={data.inputs}
+      />
     </div>
   );
 };
