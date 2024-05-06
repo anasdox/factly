@@ -3,7 +3,7 @@
 ## Why ?
 
 
-The FIR approach `Facts => Insights => Recommendations` is very helpful in my daily work, it provides a structured approach to **extracting unbiased facts related to a problem**, **identifying key insights**, and **formulating actionable recommendations**. This systematic method helps me navigate complex problems more efficiently, ensuring that decisions are grounded in evidence and data-driven insights.
+The FIR approach `Facts => Insights => Recommendations` is very helpful in my daily **decision making**, it provides a structured approach to **extracting unbiased facts related to a problem**, **identifying key insights**, and **formulating actionable recommendations**. This systematic method helps me navigate complex problems more efficiently, ensuring that decisions are grounded in evidence and data-driven insights.
 
 While Excalidraw is a useful tool for visualizing concepts and ideas, It's not adapted for accelerating the execution of the FIR approach. Excalidraw focuses more on visual representation and lacks the specialized features needed to streamline the FIR process. In contrast, a dedicated tool like factly is designed specifically for that, making it more effective for accelerating the execution of the FIR approach and enhancing overall productivity.
 
@@ -60,7 +60,7 @@ So, come join me in this quirky quest, and let's make factly not just functional
 - [x] Time for code refactoring (Component Breakdown, Use Custom Hooks)
 - [x] Edit entities
 - [x] Remove entities
-- [ ] Create New discovery
+- [x] Create New discovery
 - [x] Create a new link between entites
 - [x] Remove a link between entites
 

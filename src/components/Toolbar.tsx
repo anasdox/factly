@@ -1,6 +1,8 @@
-import { faFileDownload, faUpload } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faFileDownload, faPlus, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./Toolbar.css";
+import { useState } from "react";
+import DiscoveryModal from "./DiscoveryModal";
 
 type Props = {
   data: DiscoveryData;
@@ -8,6 +10,9 @@ type Props = {
 };
 
 const Toolbar = ({ data, setData }: Props) => {
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+  
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
 
@@ -41,11 +46,39 @@ const Toolbar = ({ data, setData }: Props) => {
     document.body.removeChild(link);
   };
 
+  const handleEditDiscovery = () => {
+    if (!data) {
+      console.error('No discovery data to edit.');
+      return;
+    }
+    setModalMode('edit');
+    setIsModalVisible(true);
+  };
+
+  const handleNewDiscovery = () => {
+    if (window.confirm('Are you sure you want to start a new discovery?')) {
+      const newDiscoveryData: DiscoveryData = {
+        discovery_id: '', // Generate a new ID or keep it empty to be set later
+        title: '',
+        goal: '',
+        date: '', // Set to current date or keep it empty to be set later
+        inputs: [],
+        facts: [],
+        insights: [],
+        recommendations: [],
+        outputs: [],
+      };
+      setData(newDiscoveryData);
+      setModalMode('add');
+      setIsModalVisible(true);
+    }
+  };
+
   return (
     <div className="toolbar">
       <div>
         <label htmlFor="file-input">
-          <FontAwesomeIcon icon={faUpload} size='1x' />
+          <FontAwesomeIcon icon={faUpload} size='lg' />
         </label>
         <input
           id="file-input"
@@ -55,11 +88,22 @@ const Toolbar = ({ data, setData }: Props) => {
           style={{ display: 'none' }}
         />
       </div>
-      <div>
-        <button onClick={handleExport} style={{ border: 'none', background: 'none' }}>
+      <div onClick={handleExport}>
           <FontAwesomeIcon icon={faFileDownload} size='lg' />
-        </button>
       </div>
+      <div onClick={handleEditDiscovery}>
+          <FontAwesomeIcon icon={faEdit} size='lg' />
+      </div>
+      <div onClick={handleNewDiscovery}>
+          <FontAwesomeIcon icon={faPlus} size='lg' />
+      </div>
+      <DiscoveryModal
+        mode={modalMode}
+        isDialogVisible={isModalVisible}
+        discoveryData={data}
+        setDiscoveryData={setData}
+        closeDialog={() => setIsModalVisible(false)}
+      />
     </div>);
 }
 
