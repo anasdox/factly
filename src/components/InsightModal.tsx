@@ -6,6 +6,7 @@ type Props = {
   isDialogVisible: boolean;
   closeDialog: () => void;
   saveInsight: (insightData: InsightType) => void;
+  deleteInsight: (insightId: string) => void;
   insightData: InsightType | null;
   facts: FactType[] | null;
 };
@@ -15,6 +16,7 @@ const InsightModal: React.FC<Props> = ({
   isDialogVisible,
   closeDialog,
   saveInsight,
+  deleteInsight,
   insightData,
   facts
 }) => {
@@ -39,6 +41,13 @@ const InsightModal: React.FC<Props> = ({
     };
     saveInsight(newInsightData);
     closeDialog();
+  };
+
+  const handleDelete = () => {
+    if (insightData && insightData.insight_id ) {
+      deleteInsight(insightData.insight_id);
+      closeDialog();
+    }
   };
 
   return (
@@ -67,6 +76,9 @@ const InsightModal: React.FC<Props> = ({
         </form>
       <button onClick={closeDialog}>Close</button>
       <button onClick={handleSave}>{mode === 'add' ? 'Add' : 'Save'}</button>
+      {mode === 'edit' &&
+        <button onClick={handleDelete}>Delete</button>
+      }
     </ModalDialog>
   );
 };

@@ -58,6 +58,14 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
     }
     setIsInputDialogVisible(false);
   };
+  
+  const deleteInput = (inputId: string) => {
+    const updatedInputs = data.inputs.filter((input) => input.input_id!== inputId);
+    setData((prevState) => prevState ? ({
+      ...prevState,
+        inputs: updatedInputs
+      }) : prevState);
+  };
 
   return (
     <div className="column inputs">
@@ -82,6 +90,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
         isDialogVisible={isInputDialogVisible}
         closeDialog={() => setIsInputDialogVisible(false)}
         saveInput={saveInput}
+        deleteInput={deleteInput}
         inputData={editingInput as InputType}
       />
     </div>

@@ -6,6 +6,7 @@ type Props = {
   isDialogVisible: boolean;
   closeDialog: () => void;
   saveInput: (inputData: InputType) => void;
+  deleteInput: (inputId: string) => void;
   inputData: InputType | null;
 };
 
@@ -14,6 +15,7 @@ const InputModal: React.FC<Props> = ({
   isDialogVisible,
   closeDialog,
   saveInput,
+  deleteInput,
   inputData,
 }) => {
   const [currentInputTitle, setCurrentInputTitle] = useState('');
@@ -41,6 +43,14 @@ const InputModal: React.FC<Props> = ({
     };
     saveInput(newInputData);
     closeDialog();
+  };
+
+  
+  const handleDelete = () => {
+    if (inputData && inputData.input_id && deleteInput) {
+      deleteInput(inputData.input_id);
+      closeDialog();
+    }
   };
 
   return (
@@ -81,6 +91,9 @@ const InputModal: React.FC<Props> = ({
         </form>
       <button onClick={closeDialog}>Close</button>
       <button onClick={handleSave}>{mode === 'add' ? 'Add' : 'Save'}</button>
+      {mode === 'edit' &&
+        <button onClick={handleDelete}>Delete</button>
+      }
     </ModalDialog>
   );
 };

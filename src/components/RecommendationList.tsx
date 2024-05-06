@@ -55,9 +55,17 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
     setIsRecommendationDialogVisible(false);
   };
 
+  const deleteRecommendation = (recommendationId: string) => {
+    const updatedRecommendations = data.recommendations.filter((recommendation) => recommendation.recommendation_id!== recommendationId);
+    setData((prevState) => prevState ? ({
+      ...prevState,
+        recommendations: updatedRecommendations
+      }) : prevState);
+  };
+
   return (
     <div className="column recommendations">
-      <h2>📝Recommendations</h2>
+      <h2>👍Recommendations</h2>
       {data.recommendations.map((recommendation, index) => (
 
         <ItemWrapper
@@ -82,6 +90,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
         isDialogVisible={isRecommendationDialogVisible}
         closeDialog={() => setIsRecommendationDialogVisible(false)}
         saveRecommendation={saveRecommendation}
+        deleteRecommendation={deleteRecommendation}
         recommendationData={editingRecommendation as RecommendationType}
         insights={data.insights}
       />

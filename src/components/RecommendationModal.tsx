@@ -6,6 +6,7 @@ type Props = {
   isDialogVisible: boolean;
   closeDialog: () => void;
   saveRecommendation: (recommendationData: RecommendationType) => void;
+  deleteRecommendation: (recommendationId: string) => void;
   recommendationData: RecommendationType | null;
   insights: InsightType[] | null;
 };
@@ -15,6 +16,7 @@ const RecommendationModal: React.FC<Props> = ({
   isDialogVisible,
   closeDialog,
   saveRecommendation,
+  deleteRecommendation,
   recommendationData,
   insights
 }) => {
@@ -39,6 +41,13 @@ const RecommendationModal: React.FC<Props> = ({
     };
     saveRecommendation(newRecommendationData);
     closeDialog();
+  };
+
+  const handleDelete = () => {
+    if (recommendationData && recommendationData.recommendation_id ) {
+      deleteRecommendation(recommendationData.recommendation_id);
+      closeDialog();
+    }
   };
 
   return (
@@ -67,6 +76,9 @@ const RecommendationModal: React.FC<Props> = ({
       </form>
       <button onClick={closeDialog}>Close</button>
       <button onClick={handleSave}>{mode === 'add' ? 'Add' : 'Save'}</button>
+      {mode === 'edit' &&
+        <button onClick={handleDelete}>Delete</button>
+      }
     </ModalDialog>
   );
 };

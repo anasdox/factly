@@ -6,6 +6,7 @@ type Props = {
   isDialogVisible: boolean;
   closeDialog: () => void;
   saveFact: (factData: FactType) => void;
+  deleteFact: (factId: string) => void;
   factData: FactType | null;
   inputs: InputType[] | null;
 };
@@ -15,6 +16,7 @@ const FactModal: React.FC<Props> = ({
   isDialogVisible,
   closeDialog,
   saveFact,
+  deleteFact,
   factData,
   inputs
 }) => {
@@ -39,6 +41,13 @@ const FactModal: React.FC<Props> = ({
     };
     saveFact(newFactData);
     closeDialog();
+  };
+
+  const handleDelete = () => {
+    if (factData && factData.fact_id) {
+      deleteFact(factData.fact_id);
+      closeDialog();
+    }
   };
 
   return (
@@ -67,6 +76,7 @@ const FactModal: React.FC<Props> = ({
         </form>
       <button onClick={closeDialog}>Close</button>
       <button onClick={handleSave}>{mode === 'add' ? 'Add' : 'Save'}</button>
+      {mode === 'edit' && <button onClick={handleDelete}>Delete</button>}
     </ModalDialog>
   );
 };

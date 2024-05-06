@@ -6,6 +6,7 @@ type Props = {
   isDialogVisible: boolean;
   closeDialog: () => void;
   saveOutput: (outputData: OutputType) => void;
+  deleteOutput: (outputId: string) => void;
   outputData: OutputType | null;
   recommendations: RecommendationType[] | null;
 };
@@ -15,6 +16,7 @@ const OutputModal: React.FC<Props> = ({
   isDialogVisible,
   closeDialog,
   saveOutput,
+  deleteOutput,
   outputData,
   recommendations
 }) => {
@@ -39,6 +41,12 @@ const OutputModal: React.FC<Props> = ({
     };
     saveOutput(newOutputData);
     closeDialog();
+  };
+  const handleDelete = () => {
+    if (outputData && outputData.output_id ) {
+      deleteOutput(outputData.output_id);
+      closeDialog();
+    }
   };
 
   return (
@@ -71,6 +79,9 @@ const OutputModal: React.FC<Props> = ({
       </form>
       <button onClick={closeDialog}>Close</button>
       <button onClick={handleSave}>{mode === 'add' ? 'Add' : 'Save'}</button>
+      {mode === 'edit' &&
+        <button onClick={handleDelete}>Delete</button>
+      }
     </ModalDialog>
   );
 };

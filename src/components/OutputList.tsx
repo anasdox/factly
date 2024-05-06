@@ -55,6 +55,14 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
     setIsOutputDialogVisible(false);
   };
 
+  const deleteOutput = (outputId: string) => {
+    const updatedOutputs = data.outputs.filter((output) => output.output_id!== outputId);
+    setData((prevState) => prevState ? ({
+        ...prevState,
+        outputs: updatedOutputs
+      }) : prevState);
+  };
+
   return (
     <div className="column outputs">
       <h2>📤Outputs</h2>
@@ -82,6 +90,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
         isDialogVisible={isOutputDialogVisible}
         closeDialog={() => setIsOutputDialogVisible(false)}
         saveOutput={saveOutput}
+        deleteOutput={deleteOutput}
         outputData={editingOutput as OutputType}
         recommendations={data.recommendations}
       />

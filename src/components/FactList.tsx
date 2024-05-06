@@ -57,6 +57,14 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     setIsFactDialogVisible(false);
   };
 
+  const deleteFact = (factId: string) => {
+    const updatedFacts = data.facts.filter((fact) => fact.fact_id!== factId);
+    setData((prevState) => prevState ? ({
+     ...prevState,
+      facts: updatedFacts
+    }) : prevState);
+  };
+
   return (
     <div className="column facts">
       <h2>📊Facts</h2>
@@ -84,6 +92,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
         isDialogVisible={isFactDialogVisible}
         closeDialog={() => setIsFactDialogVisible(false)}
         saveFact={saveFact}
+        deleteFact={deleteFact}
         factData={editingFact as FactType}
         inputs={data.inputs}
       />

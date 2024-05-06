@@ -55,6 +55,14 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     setIsInsightDialogVisible(false);
   };
 
+  const deleteInsight = (insightId: string) => {
+    const updatedInsights = data.insights.filter((insight) => insight.insight_id!== insightId);
+    setData((prevState) => prevState ? ({
+      ...prevState,
+        insights: updatedInsights
+      }) : prevState);
+  };
+
   return (
     <div className="column insights">
       <h2>💡Insights</h2>
@@ -82,6 +90,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
         isDialogVisible={isInsightDialogVisible}
         closeDialog={() => setIsInsightDialogVisible(false)}
         saveInsight={saveInsight}
+        deleteInsight={deleteInsight}
         insightData={editingInsight as InsightType}
         facts={data.facts}
       />
