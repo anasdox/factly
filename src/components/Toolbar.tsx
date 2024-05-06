@@ -76,7 +76,7 @@ const Toolbar = ({ data, setData }: Props) => {
 
   return (
     <div className="toolbar">
-      <div>
+      <div title="Open Discovery">
         <label htmlFor="file-input">
           <FontAwesomeIcon icon={faUpload} size='lg' />
         </label>
@@ -88,13 +88,13 @@ const Toolbar = ({ data, setData }: Props) => {
           style={{ display: 'none' }}
         />
       </div>
-      <div onClick={handleExport}>
+      <div title="Save Discovery" onClick={handleExport}>
           <FontAwesomeIcon icon={faFileDownload} size='lg' />
       </div>
-      <div onClick={handleEditDiscovery}>
+      <div title="Edit Discovery Goal" onClick={handleEditDiscovery}>
           <FontAwesomeIcon icon={faEdit} size='lg' />
       </div>
-      <div onClick={handleNewDiscovery}>
+      <div title="New Discovery" onClick={handleNewDiscovery}>
           <FontAwesomeIcon icon={faPlus} size='lg' />
       </div>
       <DiscoveryModal
