@@ -44,7 +44,7 @@ const RecommendationModal: React.FC<Props> = ({
   };
 
   const handleDelete = () => {
-    if (recommendationData && recommendationData.recommendation_id ) {
+    if (recommendationData && recommendationData.recommendation_id && window.confirm('Are you sure you want to delete this recommendation?')) {
       deleteRecommendation(recommendationData.recommendation_id);
       closeDialog();
     }

@@ -44,7 +44,7 @@ const InsightModal: React.FC<Props> = ({
   };
 
   const handleDelete = () => {
-    if (insightData && insightData.insight_id ) {
+    if (insightData && insightData.insight_id && window.confirm('Are you sure you want to delete this insight?')) {
       deleteInsight(insightData.insight_id);
       closeDialog();
     }

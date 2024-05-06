@@ -43,7 +43,7 @@ const OutputModal: React.FC<Props> = ({
     closeDialog();
   };
   const handleDelete = () => {
-    if (outputData && outputData.output_id ) {
+    if (outputData && outputData.output_id && window.confirm(`Are you sure you want to delete this output?`)) {
       deleteOutput(outputData.output_id);
       closeDialog();
     }

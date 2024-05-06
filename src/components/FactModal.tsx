@@ -44,7 +44,7 @@ const FactModal: React.FC<Props> = ({
   };
 
   const handleDelete = () => {
-    if (factData && factData.fact_id) {
+    if (factData && factData.fact_id && window.confirm('Are you sure you want to delete this fact?')) {
       deleteFact(factData.fact_id);
       closeDialog();
     }

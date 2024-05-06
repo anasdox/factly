@@ -47,7 +47,7 @@ const InputModal: React.FC<Props> = ({
 
   
   const handleDelete = () => {
-    if (inputData && inputData.input_id && deleteInput) {
+    if (inputData && inputData.input_id && window.confirm('Are you sure you want to delete this input?')) {
       deleteInput(inputData.input_id);
       closeDialog();
     }
