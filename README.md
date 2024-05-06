@@ -56,13 +56,13 @@ So, come join me in this quirky quest, and let's make factly not just functional
 - [x] Load Discovery in json format
 - [x] Save Discovery in json format
 - [x] Add Entities: Input, Facts, Insights, Recommendations, Outputs
-- [X] Time to make it look nice
-- [ ] Time for code refactoring (Component Breakdown, Use Custom Hooks)
-- [ ] Edit entities
-- [ ] Remove entities
+- [x] Time to make it look nice
+- [x] Time for code refactoring (Component Breakdown, Use Custom Hooks)
+- [x] Edit entities
+- [x] Remove entities
 - [ ] Create New discovery
-- [ ] Create a new link between entites
-- [ ] Remove a link between entites
+- [x] Create a new link between entites
+- [x] Remove a link between entites
 
 ### Future Todo
 - [ ] Auto Facts extracttion from Text
