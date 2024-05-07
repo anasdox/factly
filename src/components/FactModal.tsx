@@ -52,31 +52,40 @@ const FactModal: React.FC<Props> = ({
 
   return (
     <ModalDialog isDialogVisible={isDialogVisible} closeDialog={closeDialog}>
-        <h2>{mode === 'add'? 'Add Fact' : 'Edit Fact'}</h2>
-        <form>
-          <label htmlFor="fact-text">Text</label>
-          <textarea
-            id="fact-text"
-            rows={5}
-            value={currentFactText}
-            required
-            onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
-              setCurrentFactText(event.target.value);
-            }} />
-          <select
-            id="fact-related-inputs"
-            value={currentFactRelatedInputs}
-            onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
-              const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
-              setCurrentRelatedInputs(selectedOptions);
-            }} multiple>
-            {inputs ? inputs.map((input) => (<option key={input.input_id} value={input.input_id}>{input.title}</option>)) : ""}
-          </select>
+      <h2>{mode === 'add' ? 'Add Fact' : 'Edit Fact'}</h2>
+      <form>
+        <label htmlFor="fact-text">Text</label>
+        <textarea
+          id="fact-text"
+          rows={5}
+          value={currentFactText}
+          required
+          onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
+            setCurrentFactText(event.target.value);
+          }} />
+        <label htmlFor="fact-related-inputs">Related Inputs</label>
+        <select
+          id="fact-related-inputs"
+          value={currentFactRelatedInputs}
+          onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+            const selectedOptions = Array.from(event.target.selectedOptions, (option) => (option as HTMLOptionElement).value);
+            setCurrentRelatedInputs(selectedOptions);
+          }} multiple>
+          {inputs ? inputs.map((input) => (<option key={input.input_id} value={input.input_id}>{input.title}</option>)) : ""}
+        </select>
 
-        </form>
-      <button onClick={closeDialog}>Close</button>
-      <button onClick={handleSave}>{mode === 'add' ? 'Add' : 'Save'}</button>
-      {mode === 'edit' && <button onClick={handleDelete}>Delete</button>}
+      </form>
+      <div className='modal-actions'>
+        <div className="modal-action-group-left">
+          <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? '➕Add' : '💾Save'}</button>
+        </div>
+        <div className="modal-action-group-right">
+          <button className='modal-action-close' onClick={closeDialog}>🗙Cancel</button>
+          {mode === 'edit' &&
+            <button className='modal-action-delete' onClick={handleDelete}>🗑️Delete</button>
+          }
+        </div>
+      </div>
     </ModalDialog>
   );
 };

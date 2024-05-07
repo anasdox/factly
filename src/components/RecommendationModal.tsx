@@ -74,11 +74,17 @@ const RecommendationModal: React.FC<Props> = ({
           {insights ? insights.map((insight) => (<option key={insight.insight_id} value={insight.insight_id}>{insight.text}</option>)) : ""}
         </select>
       </form>
-      <button onClick={closeDialog}>Close</button>
-      <button onClick={handleSave}>{mode === 'add' ? 'Add' : 'Save'}</button>
-      {mode === 'edit' &&
-        <button onClick={handleDelete}>Delete</button>
-      }
+      <div className='modal-actions'>
+        <div className="modal-action-group-left">
+          <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? '➕Add' : '💾Save'}</button>
+        </div>
+        <div className="modal-action-group-right">
+          <button className='modal-action-close' onClick={closeDialog}>🗙Cancel</button>
+          {mode === 'edit' &&
+            <button className='modal-action-delete' onClick={handleDelete}>🗑️Delete</button>
+          }
+        </div>
+      </div>
     </ModalDialog>
   );
 };

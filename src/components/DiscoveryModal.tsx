@@ -68,7 +68,9 @@ const DiscoveryModal: React.FC<Props> = ({
           value={goal}
           onChange={(e) => setGoal(e.target.value)}
         />
-        <label htmlFor="discovery-date">Date</label>
+        <div>
+          <label htmlFor="discovery-date">Date</label>
+        </div>
         <input
           id="discovery-date"
           type="date"
@@ -76,8 +78,14 @@ const DiscoveryModal: React.FC<Props> = ({
           onChange={(e) => setDate(e.target.value)}
         />
       </form>
-      <button onClick={closeDialog}>Close</button>
-      <button onClick={handleSave}>{mode === 'add' ? 'Add' : 'Save'}</button>
+      <div className='modal-actions'>
+        <div className="modal-action-group-left">
+          <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? '➕Add' : '💾Save'}</button>
+        </div>
+        <div className="modal-action-group-right">
+          <button className='modal-action-close' onClick={closeDialog}>🗙Cancel</button>
+        </div>
+      </div>
     </ModalDialog>
   );
 };

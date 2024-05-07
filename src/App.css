@@ -7,7 +7,6 @@
 
 .discovery-header {
   display: flex;
-  font-weight: bold;
   justify-content: space-between;
   padding: 2em;
   margin-bottom: 1em;
@@ -126,6 +125,58 @@ input[type=text], select, textarea {
   opacity: 1;
 }
 
-button {
-  margin-right: 0.5em;
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1em;
+}
+
+
+.modal-actions button {
+  border-radius: 10px;
+  padding: 6px 6px;
+  background: #ffffff;
+  color: #000000;
+  cursor: pointer;
+  border: #c5c5c5 solid 2px;
+}
+
+.modal-actions button:hover {
+  border: #000000 solid 2px;
+  cursor: pointer;
+  transition: 0.2s;
+  outline: none;
+}
+
+.modal-action-group-left {
+  display: flex;
+  gap: 1em;
+}
+
+.modal-action-group-right {
+  display: flex;
+  gap: 1em;
+}
+
+.modal-action-save {
+  /* Additional styling for the save/add button if needed */
+}
+
+.modal-action-close,
+.modal-action-delete {
+  /* Additional styling for the close/delete buttons if needed */
+}
+
+dialog {
+  border-radius: 10px;
+  border: #d1d1d1 solid 2px;
+}
+
+dialog label {
+  margin-bottom: 0.5em; 
+  font-weight: bold;
+  color: #000000;
+  font-size: 0.8em;
 }

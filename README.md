@@ -9,7 +9,7 @@ While Excalidraw is a useful tool for visualizing concepts and ideas, It's not a
 
 ## Vision
 
-factly aims to hamonize the way organizations and individuals conduct discoveries. factly provides a web tool for extracting actionable insights from multiples types of inputs using The FIR approach `Facts => Insights => Recommendations`. 
+factly aims to hamonize the way organizations and individuals conduct discoveries and make decisions. factly provides a web tool for extracting actionable insights from multiples types of inputs using The FIR approach `Facts => Insights => Recommendations`. 
 
 The vision is to create a tool that not only simplifies facts extractions but also empowers users to make informed decisions based on reliable insights.
 

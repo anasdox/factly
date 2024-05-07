@@ -52,33 +52,39 @@ const InsightModal: React.FC<Props> = ({
 
   return (
     <ModalDialog isDialogVisible={isDialogVisible} closeDialog={closeDialog}>
-        <h2>{mode === 'add' ? 'Add Insight' : 'Edit Insight'}</h2>
-        <form>
-          <label htmlFor="insight-text">Text</label>
-          <textarea
-            id="insight-text"
-            rows={5}
-            value={currentInsightText}
-            required
-            onChange={(event) => {
-              setCurrentInsightText(event.target.value);
-            }} />
-          <label htmlFor="insight-related-facts">Related Facts</label>
-          <select
-            id="insight-related-facts"
-            value={currentInsightRelatedFacts}
-            onChange={(event) => {
-              const selectedOptions = Array.from(event.target.selectedOptions, (option) => option.value);
-              setCurrentRelatedFacts(selectedOptions);
-            }} multiple>
-            {facts ? facts.map((fact) => (<option key={fact.fact_id} value={fact.fact_id}>{fact.text}</option>)) : ""}
-          </select>
-        </form>
-      <button onClick={closeDialog}>Close</button>
-      <button onClick={handleSave}>{mode === 'add' ? 'Add' : 'Save'}</button>
-      {mode === 'edit' &&
-        <button onClick={handleDelete}>Delete</button>
-      }
+      <h2>{mode === 'add' ? 'Add Insight' : 'Edit Insight'}</h2>
+      <form>
+        <label htmlFor="insight-text">Text</label>
+        <textarea
+          id="insight-text"
+          rows={5}
+          value={currentInsightText}
+          required
+          onChange={(event) => {
+            setCurrentInsightText(event.target.value);
+          }} />
+        <label htmlFor="insight-related-facts">Related Facts</label>
+        <select
+          id="insight-related-facts"
+          value={currentInsightRelatedFacts}
+          onChange={(event) => {
+            const selectedOptions = Array.from(event.target.selectedOptions, (option) => option.value);
+            setCurrentRelatedFacts(selectedOptions);
+          }} multiple>
+          {facts ? facts.map((fact) => (<option key={fact.fact_id} value={fact.fact_id}>{fact.text}</option>)) : ""}
+        </select>
+      </form>
+      <div className='modal-actions'>
+        <div className="modal-action-group-left">
+          <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? '➕Add' : '💾Save'}</button>
+        </div>
+        <div className="modal-action-group-right">
+          <button className='modal-action-close' onClick={closeDialog}>🗙Cancel</button>
+          {mode === 'edit' &&
+            <button className='modal-action-delete' onClick={handleDelete}>🗑️Delete</button>
+          }
+        </div>
+      </div>
     </ModalDialog>
   );
 };

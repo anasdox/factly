@@ -45,7 +45,7 @@ const InputModal: React.FC<Props> = ({
     closeDialog();
   };
 
-  
+
   const handleDelete = () => {
     if (inputData && inputData.input_id && window.confirm('Are you sure you want to delete this input?')) {
       deleteInput(inputData.input_id);
@@ -55,45 +55,51 @@ const InputModal: React.FC<Props> = ({
 
   return (
     <ModalDialog isDialogVisible={isDialogVisible} closeDialog={closeDialog}>
-        <h2>{mode === 'add'? 'Add Input' : 'Edit Input'}</h2>
-        <form>
-          <label htmlFor="input-title">Title</label>
-          <input
-            id="input-title"
-            type="text"
-            value={currentInputTitle}
-            onChange={
-              (event: { target: { value: React.SetStateAction<string>; }; }) => {
-                setCurrentInputTitle(event.target.value);
-              }} />
-          <label htmlFor="input-url">URL</label>
-          <input
-            id="input-url"
-            type="text"
-            value={currentInputUrl}
-            onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
-              setCurrentInputUrl(event.target.value);
+      <h2>{mode === 'add' ? 'Add Input' : 'Edit Input'}</h2>
+      <form>
+        <label htmlFor="input-title">Title</label>
+        <input
+          id="input-title"
+          type="text"
+          value={currentInputTitle}
+          onChange={
+            (event: { target: { value: React.SetStateAction<string>; }; }) => {
+              setCurrentInputTitle(event.target.value);
             }} />
-          <label htmlFor="input-type">Type</label>
-          <select
-            id="input-type"
-            value={currentInputType}
-            onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
-              setCurrentInputType(event.target.value);
-            }}>
-            <option value="text">Text</option>
-            <option value="web">Web</option>
-            <option value="image">Image</option>
-            <option value="video">Video</option>
-            <option value="audio">Audio</option>
-            <option value="pdf">Pdf</option>
-          </select>
-        </form>
-      <button onClick={closeDialog}>Close</button>
-      <button onClick={handleSave}>{mode === 'add' ? 'Add' : 'Save'}</button>
-      {mode === 'edit' &&
-        <button onClick={handleDelete}>Delete</button>
-      }
+        <label htmlFor="input-url">URL</label>
+        <input
+          id="input-url"
+          type="text"
+          value={currentInputUrl}
+          onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
+            setCurrentInputUrl(event.target.value);
+          }} />
+        <label htmlFor="input-type">Type</label>
+        <select
+          id="input-type"
+          value={currentInputType}
+          onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
+            setCurrentInputType(event.target.value);
+          }}>
+          <option value="text">Text</option>
+          <option value="web">Web</option>
+          <option value="image">Image</option>
+          <option value="video">Video</option>
+          <option value="audio">Audio</option>
+          <option value="pdf">Pdf</option>
+        </select>
+      </form>
+      <div className='modal-actions'>
+        <div className="modal-action-group-left">
+          <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? '➕Add' : '💾Save'}</button>
+        </div>
+        <div className="modal-action-group-right">
+          <button className='modal-action-close' onClick={closeDialog}>🗙Cancel</button>
+          {mode === 'edit' &&
+            <button className='modal-action-delete' onClick={handleDelete}>🗑️Delete</button>
+          }
+        </div>
+      </div>
     </ModalDialog>
   );
 };
