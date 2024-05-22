@@ -25,7 +25,7 @@ Clone the repository and install its dependencies:
 ```bash
 git clone https://github.com/anasdox/factly.git
 cd factly
-npm install
+npm install --force
 ```
 
 ### Running the Application
