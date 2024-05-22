@@ -79,13 +79,14 @@ const OutputModal: React.FC<Props> = ({
       </form>
       <div className='modal-actions'>
         <div className="modal-action-group-left">
-          <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? '➕Add' : '💾Save'}</button>
-        </div>
-        <div className="modal-action-group-right">
           <button className='modal-action-close' onClick={closeDialog}>🗙Cancel</button>
           {mode === 'edit' &&
             <button className='modal-action-delete' onClick={handleDelete}>🗑️Delete</button>
           }
+
+        </div>
+        <div className="modal-action-group-right">
+          <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? '➕Add' : '💾Save'}</button>
         </div>
       </div>
     </ModalDialog>
