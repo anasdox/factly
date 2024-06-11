@@ -12,7 +12,6 @@ type Props = {
   setData: React.Dispatch<React.SetStateAction<DiscoveryData | null>>;
   handleMouseEnter: (entityType: string, entityId: string, data: DiscoveryData) => void;
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
-
 };
 
 const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter, handleMouseLeave }) => {
@@ -39,9 +38,10 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
     if (modalMode === 'add') {
       const newInput: InputType = {
         input_id: Math.random().toString(16).slice(2),
-        title: inputData.title,
-        type: inputData.type,
-        url: inputData.url,
+        title: "",
+        type: "",
+        url: "",
+        text: "",
       };
       setData((prevState) => prevState ? ({
         ...prevState,

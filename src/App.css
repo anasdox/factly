@@ -107,7 +107,7 @@ input[type=text], select, textarea {
   color: #000000;
   position: absolute;
   background: #ffffff;
-  z-index: 2;
+  z-index: 3;
   top: 2px;
   right: 2px;
   border-radius: 16px;

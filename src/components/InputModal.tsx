@@ -21,16 +21,19 @@ const InputModal: React.FC<Props> = ({
   const [currentInputTitle, setCurrentInputTitle] = useState('');
   const [currentInputType, setCurrentInputType] = useState('text');
   const [currentInputUrl, setCurrentInputUrl] = useState('');
+  const [currentInputText, setCurrentInputText] = useState('');
 
   useEffect(() => {
     if (mode === 'edit' && inputData) {
       setCurrentInputTitle(inputData.title);
       setCurrentInputType(inputData.type);
-      setCurrentInputUrl(inputData.url);
+      setCurrentInputUrl(inputData.url ? inputData.url : '' );
+      setCurrentInputText(inputData.text ? inputData.text : '');
     } else {
       setCurrentInputTitle('');
       setCurrentInputType('text');
       setCurrentInputUrl('');
+      setCurrentInputText('');
     }
   }, [mode, inputData]);
 
@@ -40,6 +43,7 @@ const InputModal: React.FC<Props> = ({
       title: currentInputTitle,
       type: currentInputType,
       url: currentInputUrl,
+      text: currentInputText
     };
     saveInput(newInputData);
     closeDialog();
