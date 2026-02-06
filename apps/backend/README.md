@@ -25,7 +25,7 @@ Server-Sent Events Server
 
 The Factly backend includes an implementation for Server-Sent Events (SSE), enabling real-time updates for users connected to a room. To use SSE, follow these steps:
 
-1. Connect to the desired room by visiting `/events/:roomId` in your browser or using an HTTP client that supports Server-Sent Events (e.g., `curl --get "http://localhost:3000/events/<ROOM_ID>"`).
+1. Connect to the desired room by visiting `/events/:roomId` in your browser or using an HTTP client that supports Server-Sent Events (e.g., `curl --get "http://localhost:3002/events/<ROOM_ID>"`).
 2. Provide a username as a query parameter, for example, `?username=JohnDoe`.
 3. The server will establish a Server-Sent Events connection, allowing you to receive real-time updates from the room.
 

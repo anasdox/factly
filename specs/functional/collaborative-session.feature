@@ -4,7 +4,9 @@ Feature: Collaborative Session
   So that we can collaboratively build a discovery pipeline
 
   Non-goals:
-  - Conflict resolution for concurrent edits
+  - Conflict resolution for concurrent edits (last-write-wins is the accepted strategy)
+  - Incremental or delta synchronization (full-state replacement is used)
+  - Throttling or debouncing of update frequency
   - Presence indicators (who is currently viewing)
   - Chat or messaging between analysts
   - Cursor sharing or co-editing within a single entity
@@ -36,6 +38,13 @@ Feature: Collaborative Session
     When the Analyst modifies any entity in the discovery (add, edit, or delete)
     Then the frontend sends the full updated discovery data to the backend via POST /rooms/:id/update
     And the payload includes the discovery data, username, and sender uuid
+
+  @fsid:FS-ConcurrentUpdateLastWriteWins
+  Scenario: Concurrent updates follow last-write-wins strategy
+    Given two Analysts are connected to the same room
+    When both modify the discovery simultaneously
+    Then the last update received by the backend overwrites the previous one
+    And no merge or conflict resolution is attempted
 
   @fsid:FS-BroadcastUpdateToSubscribers
   Scenario: Backend broadcasts updates to other subscribers
