@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import InputList from './components/InputList';
 import FactList from './components/FactList';
@@ -8,9 +8,13 @@ import OutputList from './components/OutputList';
 import { useCalculateAndDrawLines } from './components/Lines';
 import { handleMouseEnter, handleMouseLeave } from './lib';
 import ToolBar from './components/Toolbar';
+import Toast from './components/Toast';
 
 const App: React.FC = () => {
   const [data, setData] = useState<DiscoveryData | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const handleError = useCallback((msg: string) => setErrorMessage(msg), []);
+  const clearError = useCallback(() => setErrorMessage(null), []);
   const inputRefs = useRef<(HTMLDivElement | null)[]>([]);
   const factRefs = useRef<(HTMLDivElement | null)[]>([]);
   const insightRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -70,6 +74,7 @@ const App: React.FC = () => {
 
   return (
     <div className="App">
+      <Toast message={errorMessage} onClose={clearError} />
       <header className='discovery-header'>
         <div className='discovery-details'>
           <div><h1>🔍{data.title}</h1></div>
@@ -78,6 +83,7 @@ const App: React.FC = () => {
         <ToolBar
           data={data}
           setData={setData}
+          onError={handleError}
         />
       </header>
       <main className="discovery-grid">

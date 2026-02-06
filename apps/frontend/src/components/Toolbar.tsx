@@ -13,9 +13,10 @@ import { isObjectEmpty } from "../lib";
 type Props = {
   data: DiscoveryData;
   setData: React.Dispatch<React.SetStateAction<DiscoveryData | null>>;
+  onError: (msg: string) => void;
 };
 
-const Toolbar = ({ data, setData }: Props) => {
+const Toolbar = ({ data, setData, onError }: Props) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [isStartEventRoomModalVisible, setIsStartEventRoomModalVisible] = useState(false);
@@ -96,12 +97,17 @@ const Toolbar = ({ data, setData }: Props) => {
           },
           body: JSON.stringify(data)
         });
+        if (!response.ok) {
+          const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
+          onError(errorBody.error || 'Failed to create room');
+          return;
+        }
         const roomData = await response.json();
         setRoomId(roomData.roomId);
         setIsStartEventRoomModalVisible(true);
       }
     } catch (error) {
-      console.error('Error creating room:', error);
+      onError('Network error: could not reach the server');
     }
   };
 
@@ -111,15 +117,15 @@ const Toolbar = ({ data, setData }: Props) => {
       const fetchRoomData = async () => {
         try {
           const response = await fetch(`http://localhost:3002/rooms/${roomId}`);
-          console.log("fetching room data", response.body);
+          if (!response.ok) {
+            const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
+            onError(errorBody.error || 'Failed to fetch room data');
+            return;
+          }
           const roomData = await response.json();
-          console.log('Room data:', roomData);
           if (roomData && Object.keys(roomData).length !== 0) {
-            console.log(roomData);
             isRemoteUpdate.current = true;
             setData(roomData);
-          } else {
-            console.error(`no data in room ${roomId}`);
           }
 
           let esurl = `http://localhost:3002/events/${roomId}?`;
@@ -146,20 +152,19 @@ const Toolbar = ({ data, setData }: Props) => {
             }
           };
 
-          newEventSource.onerror = (error) => {
-            console.error('EventSource failed:', error);
+          newEventSource.onerror = () => {
+            onError('Lost connection to the room');
             newEventSource.close();
           };
           setEventSource(newEventSource);
 
-          // Cleanup on component unmount
           return () => {
             if (eventSource && (eventSource as EventSource).readyState !== EventSource.CLOSED) {
               (eventSource as EventSource).close();
             }
           };
         } catch (error) {
-          console.error('Error fetching room data:', error);
+          onError('Network error: could not reach the server');
         }
       };
 
@@ -175,21 +180,25 @@ const Toolbar = ({ data, setData }: Props) => {
       return;
     }
     if (roomId && !isObjectEmpty(data)) {
-      try {
-        fetch(`http://localhost:3002/rooms/${roomId}/update`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            payload: data,
-            username: username,
-            senderUuid: uuid,
-          })
-        });
-      } catch (error) {
-        console.error('Error updating room data:', error);
-      }
+      fetch(`http://localhost:3002/rooms/${roomId}/update`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          payload: data,
+          username: username,
+          senderUuid: uuid,
+        })
+      }).then((response) => {
+        if (!response.ok) {
+          response.json().catch(() => ({ error: 'Unknown error' })).then((body) => {
+            onError(body.error || 'Failed to update room');
+          });
+        }
+      }).catch(() => {
+        onError('Network error: could not reach the server');
+      });
     }
   }, [data, roomId, username, uuid]);
 
