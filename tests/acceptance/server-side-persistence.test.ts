@@ -38,7 +38,9 @@ async function createRoom(data: object): Promise<string> {
 
 async function getRoom(roomId: string): Promise<any> {
   const res = await fetch(`${BASE_URL}/rooms/${roomId}`);
-  return res.json();
+  const text = await res.text();
+  if (!text) return null;
+  return JSON.parse(text);
 }
 
 async function deleteRoom(roomId: string): Promise<void> {
