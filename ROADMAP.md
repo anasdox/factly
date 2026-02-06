@@ -78,10 +78,14 @@
 - Rooms from different server lifecycles coexist
 
 ### M9: Input Validation and Error Handling
+**Status:** Delivered
 **Outcome:** The backend rejects malformed requests and returns meaningful error responses.
-- Schema validation on `POST /rooms` and `POST /rooms/:id/update`
-- Error middleware on Express routes
-- Frontend displays backend errors to the user
+- Schema validation on `POST /rooms` (DiscoveryData: 4 string fields + 5 array fields)
+- Schema validation on `POST /rooms/:id/update` (payload, senderUuid, username)
+- UUID v4 validation on `:id` parameter for GET, DELETE, and POST /rooms/:id routes
+- Global Express error middleware returning structured `{ error: string }` JSON
+- Frontend Toast notification component for backend errors
+- All fetch calls in Toolbar.tsx check `response.ok` and display errors via toast
 
 ## Risks and Dependencies
 
