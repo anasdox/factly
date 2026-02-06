@@ -40,5 +40,5 @@ Prerequisites: `npm install` done in `apps/backend/`. The script starts/stops th
 - [x] Refactoring phase completed
 
 ## User Validation
-- [ ] Demo presented to UoR
-- [ ] UoR approved merge
+- [x] Demo presented to UoR
+- [x] UoR approved merge (2026-02-06)

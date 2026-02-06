@@ -21,7 +21,7 @@ Deliver M8: Server-Side Persistence — discovery data survives server restarts.
 - [x] All acceptance tests pass (11 suites, 18 passed, 43 todo)
 - [x] spec_lint: OK
 - [x] traceability_check: OK
-- [ ] Demo and user validation
+- [x] Demo and user validation (UoR validated 2026-02-06)
 
 ## Validation
 - All acceptance tests pass
