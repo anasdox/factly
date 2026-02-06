@@ -11,7 +11,7 @@ info:
     - FS-JoinRoomWithExistingCredentials
     - FS-SseCredentialsGenerated
     - FS-BroadcastUpdateToSubscribers
-    - FS-SseSubscribersNotRegistered
+    - FS-SseSubscribersRegistered
     - FS-SseDisconnection
     - FS-ValidateRoomId
 
@@ -55,7 +55,6 @@ operations:
       3. Server assigns username (from query param or generates friendly username).
       4. Server sends a "credentials" message with the assigned uuid and username.
       5. Server registers the socket in the room's subscribers map.
-         BUG: The subscribers Set for the room is never initialized, so registration is a no-op.
 
       On disconnect:
       - Server removes the socket from the room's subscribers.
@@ -65,7 +64,7 @@ operations:
       - FS-JoinRoomViaSse
       - FS-JoinRoomWithExistingCredentials
       - FS-SseCredentialsGenerated
-      - FS-SseSubscribersNotRegistered
+      - FS-SseSubscribersRegistered
       - FS-SseDisconnection
       - FS-ValidateRoomId
     messages:
@@ -80,8 +79,6 @@ operations:
     description: |
       When a client sends an update via POST /rooms/{id}/update, the server
       should broadcast the updated payload to all other connected clients.
-      BUG: This operation is currently non-functional because the handler
-      body in POST /rooms/{id}/update is commented out.
     x-tsid: TS-BroadcastUpdate
     x-fsid-links:
       - FS-BroadcastUpdateToSubscribers
@@ -124,7 +121,7 @@ components:
     UpdateMessage:
       name: update
       title: Room Data Update
-      summary: Sent to subscribers when room data changes (currently non-functional)
+      summary: Sent to subscribers when room data changes
       contentType: application/json
       payload:
         type: object

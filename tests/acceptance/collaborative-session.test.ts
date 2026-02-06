@@ -7,6 +7,7 @@
  * - FS-JoinRoomWithExistingCredentials
  * - FS-SseCredentialsGenerated
  * - FS-SendUpdateToRoom
+ * - FS-ConcurrentUpdateLastWriteWins
  * - FS-BroadcastUpdateToSubscribers
  * - FS-SseSubscribersRegistered
  * - FS-SseDisconnection
@@ -104,6 +105,59 @@ describe('Collaborative Session', () => {
       });
 
       expect(response.status).toBe(204);
+    });
+  });
+
+  // @fsid:FS-ConcurrentUpdateLastWriteWins
+  describe('FS-ConcurrentUpdateLastWriteWins', () => {
+    it('concurrent updates result in last-write-wins, no merge attempted', async () => {
+      // Connect a subscriber to observe the final state
+      const subscriber = await connectSse(`${BASE_URL}/events/${roomId}`);
+      try {
+        await subscriber.waitForMessages(1, 3000);
+        const messageCountBefore = subscriber.messages.length;
+
+        // Analyst A sends an update adding a fact
+        const payloadA = {
+          ...VALID_DISCOVERY_DATA,
+          title: 'Update from A',
+          facts: [{ fact_id: 'fact-a', content: 'Fact from Analyst A', source: '', related_inputs: [] }],
+        };
+        await fetch(`${BASE_URL}/rooms/${roomId}/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payload: payloadA, senderUuid: 'uuid-a', username: 'AnalystA' }),
+        });
+
+        // Analyst B sends an update without A's fact (simulates concurrent edit before receiving A's update)
+        const payloadB = {
+          ...VALID_DISCOVERY_DATA,
+          title: 'Update from B',
+          facts: [],
+        };
+        await fetch(`${BASE_URL}/rooms/${roomId}/update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ payload: payloadB, senderUuid: 'uuid-b', username: 'AnalystB' }),
+        });
+
+        // Wait for both broadcast messages
+        const messages = await subscriber.waitForMessages(messageCountBefore + 2, 3000);
+        const lastUpdate = messages[messages.length - 1];
+
+        // Last write wins: B's update overwrites A's — A's fact is lost
+        expect(lastUpdate.type).toBe('update');
+        expect(lastUpdate.payload.title).toBe('Update from B');
+        expect(lastUpdate.payload.facts).toEqual([]);
+
+        // Verify stored state matches last write
+        const roomResponse = await fetch(`${BASE_URL}/rooms/${roomId}`);
+        const roomData = await roomResponse.json();
+        expect(roomData.title).toBe('Update from B');
+        expect(roomData.facts).toEqual([]);
+      } finally {
+        subscriber.close();
+      }
     });
   });
 
