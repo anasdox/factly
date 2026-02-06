@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { faEdit, faFileDownload, faPlus, faUpload, faPlayCircle } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./Toolbar.css";
@@ -23,6 +23,7 @@ const Toolbar = ({ data, setData }: Props) => {
   const [uuid, setUuid] = useLocalStorage('uuid', null);
   const [username, setUsername] = useLocalStorage('username', null);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
+  const isRemoteUpdate = useRef(false);
 
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
@@ -115,6 +116,7 @@ const Toolbar = ({ data, setData }: Props) => {
           console.log('Room data:', roomData);
           if (roomData && Object.keys(roomData).length !== 0) {
             console.log(roomData);
+            isRemoteUpdate.current = true;
             setData(roomData);
           } else {
             console.error(`no data in room ${roomId}`);
@@ -139,9 +141,8 @@ const Toolbar = ({ data, setData }: Props) => {
             }
 
             if (message.type === 'update' || message.type === 'init') {
-              if (JSON.stringify(message.payload) !== JSON.stringify(data)) {
-                setData(message.payload);
-              }
+              isRemoteUpdate.current = true;
+              setData(message.payload);
             }
           };
 
@@ -164,10 +165,15 @@ const Toolbar = ({ data, setData }: Props) => {
 
       fetchRoomData();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
 
   useEffect(() => {
+    if (isRemoteUpdate.current) {
+      isRemoteUpdate.current = false;
+      return;
+    }
     if (roomId && !isObjectEmpty(data)) {
       try {
         fetch(`http://localhost:3002/rooms/${roomId}/update`, {
