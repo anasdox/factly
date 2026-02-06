@@ -10,6 +10,12 @@ info:
     - FS-DeleteRoom
     - FS-GetServerStatus
     - FS-SendUpdateToRoom
+    - FS-RejectEmptyRoomBody
+    - FS-RejectMissingRequiredFields
+    - FS-RejectInvalidFieldTypes
+    - FS-RejectInvalidUpdateBody
+    - FS-RejectInvalidRoomIdFormat
+    - FS-ReturnStructuredErrorResponse
 
 servers:
   - url: http://localhost:3002
@@ -23,6 +29,9 @@ paths:
       x-tsid: TS-CreateRoom
       x-fsid-links:
         - FS-CreateRoom
+        - FS-RejectEmptyRoomBody
+        - FS-RejectMissingRequiredFields
+        - FS-RejectInvalidFieldTypes
       requestBody:
         required: true
         content:
@@ -44,6 +53,12 @@ paths:
                     format: uuid
                     description: UUID v4 identifier for the created room
                     example: "550e8400-e29b-41d4-a716-446655440000"
+        '400':
+          description: Validation error (empty body, missing fields, or invalid field types)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /rooms/{id}:
     get:
@@ -52,6 +67,7 @@ paths:
       x-tsid: TS-GetRoom
       x-fsid-links:
         - FS-RetrieveRoom
+        - FS-RejectInvalidRoomIdFormat
       parameters:
         - name: id
           in: path
@@ -66,16 +82,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DiscoveryData'
+        '400':
+          description: Invalid room ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
     delete:
       operationId: deleteRoom
       summary: Stop and delete a room
-      description: |
-        Deletes the room's subscribers and users from memory.
-        BUG: Currently calls store.clear() which deletes ALL rooms, not just the target.
+      description: Deletes the room's subscribers and users from memory and removes persisted data.
       x-tsid: TS-DeleteRoom
       x-fsid-links:
         - FS-DeleteRoom
+        - FS-RejectInvalidRoomIdFormat
       parameters:
         - name: id
           in: path
@@ -86,19 +107,24 @@ paths:
       responses:
         '204':
           description: Room stopped and deleted
+        '400':
+          description: Invalid room ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /rooms/{id}/update:
     post:
       operationId: updateRoom
       summary: Send a discovery data update to a room
-      description: |
-        Receives an update payload with discovery data, sender UUID, and username.
-        BUG: The handler body is commented out. The route accepts the request and returns 204
-        but does not save the data or broadcast to subscribers.
+      description: Receives an update payload with discovery data, sender UUID, and username. Saves and broadcasts to subscribers.
       x-tsid: TS-UpdateRoom
       x-fsid-links:
         - FS-SendUpdateToRoom
         - FS-BroadcastUpdateToSubscribers
+        - FS-RejectInvalidUpdateBody
+        - FS-RejectInvalidRoomIdFormat
       parameters:
         - name: id
           in: path
@@ -127,7 +153,13 @@ paths:
                   description: Username of the sender
       responses:
         '204':
-          description: Update received (currently no-op)
+          description: Update received and broadcast
+        '400':
+          description: Validation error (invalid room ID, missing fields, or invalid types)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /status:
     get:
@@ -195,6 +227,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Output'
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+          example: "Field \"title\" is required and must be a string"
 
     Input:
       type: object

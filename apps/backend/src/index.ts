@@ -40,22 +40,44 @@ app.use(bodyParser.json());
 app.use(cors());
 
 // Define API endpoints
-app.post('/rooms', async (req, res) => {
-  const roomId = await createRoom(req.body);
-  logger.info(`Created room with ID: ${roomId}`);
-  res.send({ roomId });
+app.post('/rooms', async (req, res, next) => {
+  try {
+    const validation = validateDiscoveryData(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+    const roomId = await createRoom(req.body);
+    logger.info(`Created room with ID: ${roomId}`);
+    res.send({ roomId });
+  } catch (err) {
+    next(err);
+  }
 });
 
-app.get('/rooms/:id', async (req, res) => {
-  logger.debug(`Fetched room data for ID: ${req.params.id}`);
-  const room = await getRoom(req.params.id);
-  res.send(room);
+app.get('/rooms/:id', async (req, res, next) => {
+  try {
+    if (!isRoomValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid room ID format. Must be UUID v4.' });
+    }
+    logger.debug(`Fetched room data for ID: ${req.params.id}`);
+    const room = await getRoom(req.params.id);
+    res.send(room);
+  } catch (err) {
+    next(err);
+  }
 });
 
-app.delete('/rooms/:id', async (req, res) => {
-  await stopRoom(req.params.id);
-  logger.info(`Stopped room with ID: ${req.params.id}`);
-  res.sendStatus(204);
+app.delete('/rooms/:id', async (req, res, next) => {
+  try {
+    if (!isRoomValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid room ID format. Must be UUID v4.' });
+    }
+    await stopRoom(req.params.id);
+    logger.info(`Stopped room with ID: ${req.params.id}`);
+    res.sendStatus(204);
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.get('/status', (req, res) => {
@@ -67,21 +89,32 @@ app.get('/status', (req, res) => {
   res.send(status);
 });
 
-app.post('/rooms/:id/update', async (req, res) => {
-  const roomId = req.params.id;
-  const data = req.body;
-  const senderUuid = data.senderUuid;
-  const username = data.username;
-  const payload = data.payload;
+app.post('/rooms/:id/update', async (req, res, next) => {
+  try {
+    const roomId = req.params.id;
+    if (!isRoomValid(roomId)) {
+      return res.status(400).json({ error: 'Invalid room ID format. Must be UUID v4.' });
+    }
+    const validation = validateUpdateBody(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+    const data = req.body;
+    const senderUuid = data.senderUuid;
+    const username = data.username;
+    const payload = data.payload;
 
-  logger.debug(`Received update for room ${roomId}: ${JSON.stringify({ senderUuid, username, payload })}`);
+    logger.debug(`Received update for room ${roomId}: ${JSON.stringify({ senderUuid, username, payload })}`);
 
-  await saveRoom(roomId, payload);
-  if (senderUuid && subscribers.has(roomId)) {
-    logger.info(`Broadcasting update for room ${roomId} from user ${senderUuid}`);
-    broadcastUpdate(roomId, payload, senderUuid, username);
+    await saveRoom(roomId, payload);
+    if (senderUuid && subscribers.has(roomId)) {
+      logger.info(`Broadcasting update for room ${roomId} from user ${senderUuid}`);
+      broadcastUpdate(roomId, payload, senderUuid, username);
+    }
+    res.sendStatus(204);
+  } catch (err) {
+    next(err);
   }
-  res.sendStatus(204);
 });
 
 // Define Server-Sent Events server
@@ -191,6 +224,46 @@ const isRoomValid = (roomId: string): boolean => {
   return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(roomId);
 };
 
+function validateDiscoveryData(body: any): { valid: boolean; error?: string } {
+  if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
+    return { valid: false, error: 'Body is required' };
+  }
+  const stringFields = ['discovery_id', 'title', 'goal', 'date'];
+  for (const field of stringFields) {
+    if (typeof body[field] !== 'string') {
+      return { valid: false, error: `Field "${field}" is required and must be a string` };
+    }
+  }
+  const arrayFields = ['inputs', 'facts', 'insights', 'recommendations', 'outputs'];
+  for (const field of arrayFields) {
+    if (!Array.isArray(body[field])) {
+      return { valid: false, error: `Field "${field}" is required and must be an array` };
+    }
+  }
+  return { valid: true };
+}
+
+function validateUpdateBody(body: any): { valid: boolean; error?: string } {
+  if (!body || typeof body !== 'object') {
+    return { valid: false, error: 'Body is required' };
+  }
+  if (!body.payload || typeof body.payload !== 'object' || Array.isArray(body.payload)) {
+    return { valid: false, error: 'Field "payload" is required and must be an object' };
+  }
+  if (typeof body.senderUuid !== 'string') {
+    return { valid: false, error: 'Field "senderUuid" is required and must be a string' };
+  }
+  if (typeof body.username !== 'string') {
+    return { valid: false, error: 'Field "username" is required and must be a string' };
+  }
+  return { valid: true };
+}
+
+// Global error middleware
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  logger.error(`Unhandled error: ${err.message}`);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 // Start the server
 app.listen(port, () => {
