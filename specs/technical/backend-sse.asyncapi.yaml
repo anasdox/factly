@@ -1,0 +1,155 @@
+asyncapi: 3.0.0
+info:
+  title: Factly Backend SSE API
+  version: 1.0.0
+  description: |
+    Server-Sent Events API for real-time collaborative discovery sessions.
+    Clients connect via HTTP GET to receive a stream of events for a specific room.
+  x-tsid: TS-BackendSseApi
+  x-fsid-links:
+    - FS-JoinRoomViaSse
+    - FS-JoinRoomWithExistingCredentials
+    - FS-SseCredentialsGenerated
+    - FS-BroadcastUpdateToSubscribers
+    - FS-SseSubscribersNotRegistered
+    - FS-SseDisconnection
+    - FS-ValidateRoomId
+
+servers:
+  development:
+    host: localhost:3002
+    protocol: http
+
+channels:
+  roomEvents:
+    address: /events/{roomId}
+    title: Room SSE Event Stream
+    description: |
+      SSE endpoint for a specific room. Clients connect via HTTP GET.
+      The server sends events as `text/event-stream`.
+      Connection is rejected (destroyed) if roomId is not a valid UUID v4.
+    parameters:
+      roomId:
+        description: UUID v4 identifier of the room to subscribe to
+    messages:
+      credentials:
+        $ref: '#/components/messages/CredentialsMessage'
+      update:
+        $ref: '#/components/messages/UpdateMessage'
+
+operations:
+  connectToRoom:
+    action: receive
+    channel:
+      $ref: '#/channels/roomEvents'
+    summary: Connect to a room and receive SSE events
+    description: |
+      The client opens an SSE connection to /events/{roomId}.
+      Optional query parameters:
+      - uuid: existing client UUID (from localStorage)
+      - username: existing username (from localStorage)
+
+      On connection:
+      1. Server validates roomId is a valid UUID v4. If not, destroys the connection.
+      2. Server assigns uuid (from query param or generates new UUID v4).
+      3. Server assigns username (from query param or generates friendly username).
+      4. Server sends a "credentials" message with the assigned uuid and username.
+      5. Server registers the socket in the room's subscribers map.
+         BUG: The subscribers Set for the room is never initialized, so registration is a no-op.
+
+      On disconnect:
+      - Server removes the socket from the room's subscribers.
+      - Server removes the username from the room's users map.
+    x-tsid: TS-ConnectToRoom
+    x-fsid-links:
+      - FS-JoinRoomViaSse
+      - FS-JoinRoomWithExistingCredentials
+      - FS-SseCredentialsGenerated
+      - FS-SseSubscribersNotRegistered
+      - FS-SseDisconnection
+      - FS-ValidateRoomId
+    messages:
+      - $ref: '#/channels/roomEvents/messages/credentials'
+      - $ref: '#/channels/roomEvents/messages/update'
+
+  broadcastUpdate:
+    action: send
+    channel:
+      $ref: '#/channels/roomEvents'
+    summary: Broadcast a room update to all subscribers except the sender
+    description: |
+      When a client sends an update via POST /rooms/{id}/update, the server
+      should broadcast the updated payload to all other connected clients.
+      BUG: This operation is currently non-functional because the handler
+      body in POST /rooms/{id}/update is commented out.
+    x-tsid: TS-BroadcastUpdate
+    x-fsid-links:
+      - FS-BroadcastUpdateToSubscribers
+    messages:
+      - $ref: '#/channels/roomEvents/messages/update'
+
+components:
+  messages:
+    CredentialsMessage:
+      name: credentials
+      title: Client Credentials
+      summary: Sent to the client immediately after SSE connection is established
+      contentType: application/json
+      payload:
+        type: object
+        required:
+          - type
+          - uuid
+          - username
+        properties:
+          type:
+            type: string
+            const: credentials
+          uuid:
+            type: string
+            format: uuid
+            description: Client identifier (generated or provided)
+          username:
+            type: string
+            description: Client display name (generated or provided)
+        example:
+          type: credentials
+          uuid: "550e8400-e29b-41d4-a716-446655440000"
+          username: "FriendlyPanda42"
+      x-tsid: TS-CredentialsMessage
+      x-fsid-links:
+        - FS-SseCredentialsGenerated
+        - FS-JoinRoomViaSse
+
+    UpdateMessage:
+      name: update
+      title: Room Data Update
+      summary: Sent to subscribers when room data changes (currently non-functional)
+      contentType: application/json
+      payload:
+        type: object
+        required:
+          - type
+          - payload
+        properties:
+          type:
+            type: string
+            enum: [update, init]
+          payload:
+            description: Full DiscoveryData object
+            type: object
+        example:
+          type: update
+          payload:
+            discovery_id: "abc123"
+            title: "Market Analysis"
+            goal: "Identify key trends"
+            date: "2025-01-15"
+            inputs: []
+            facts: []
+            insights: []
+            recommendations: []
+            outputs: []
+      x-tsid: TS-UpdateMessage
+      x-fsid-links:
+        - FS-BroadcastUpdateToSubscribers

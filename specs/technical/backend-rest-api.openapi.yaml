@@ -1,0 +1,285 @@
+openapi: 3.1.0
+info:
+  title: Factly Backend REST API
+  version: 1.0.0
+  description: HTTP REST API for room-based discovery session management.
+  x-tsid: TS-BackendRestApi
+  x-fsid-links:
+    - FS-CreateRoom
+    - FS-RetrieveRoom
+    - FS-DeleteRoom
+    - FS-GetServerStatus
+    - FS-SendUpdateToRoom
+
+servers:
+  - url: http://localhost:3002
+    description: Local development server
+
+paths:
+  /rooms:
+    post:
+      operationId: createRoom
+      summary: Create a new room with discovery data
+      x-tsid: TS-CreateRoom
+      x-fsid-links:
+        - FS-CreateRoom
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoveryData'
+      responses:
+        '200':
+          description: Room created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - roomId
+                properties:
+                  roomId:
+                    type: string
+                    format: uuid
+                    description: UUID v4 identifier for the created room
+                    example: "550e8400-e29b-41d4-a716-446655440000"
+
+  /rooms/{id}:
+    get:
+      operationId: getRoom
+      summary: Retrieve room data by ID
+      x-tsid: TS-GetRoom
+      x-fsid-links:
+        - FS-RetrieveRoom
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Room data retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoveryData'
+
+    delete:
+      operationId: deleteRoom
+      summary: Stop and delete a room
+      description: |
+        Deletes the room's subscribers and users from memory.
+        BUG: Currently calls store.clear() which deletes ALL rooms, not just the target.
+      x-tsid: TS-DeleteRoom
+      x-fsid-links:
+        - FS-DeleteRoom
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Room stopped and deleted
+
+  /rooms/{id}/update:
+    post:
+      operationId: updateRoom
+      summary: Send a discovery data update to a room
+      description: |
+        Receives an update payload with discovery data, sender UUID, and username.
+        BUG: The handler body is commented out. The route accepts the request and returns 204
+        but does not save the data or broadcast to subscribers.
+      x-tsid: TS-UpdateRoom
+      x-fsid-links:
+        - FS-SendUpdateToRoom
+        - FS-BroadcastUpdateToSubscribers
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - payload
+                - senderUuid
+                - username
+              properties:
+                payload:
+                  $ref: '#/components/schemas/DiscoveryData'
+                senderUuid:
+                  type: string
+                  description: UUID of the sender
+                username:
+                  type: string
+                  description: Username of the sender
+      responses:
+        '204':
+          description: Update received (currently no-op)
+
+  /status:
+    get:
+      operationId: getStatus
+      summary: Get connected client count per room
+      x-tsid: TS-GetServerStatus
+      x-fsid-links:
+        - FS-GetServerStatus
+      responses:
+        '200':
+          description: Map of room IDs to connected client counts
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: integer
+                  description: Number of connected SSE clients
+                example:
+                  "550e8400-e29b-41d4-a716-446655440000": 3
+                  "660e8400-e29b-41d4-a716-446655440001": 1
+
+components:
+  schemas:
+    DiscoveryData:
+      type: object
+      required:
+        - discovery_id
+        - title
+        - goal
+        - date
+        - inputs
+        - facts
+        - insights
+        - recommendations
+        - outputs
+      properties:
+        discovery_id:
+          type: string
+          description: Unique identifier for the discovery
+        title:
+          type: string
+        goal:
+          type: string
+        date:
+          type: string
+          format: date
+        inputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Input'
+        facts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Fact'
+        insights:
+          type: array
+          items:
+            $ref: '#/components/schemas/Insight'
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recommendation'
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Output'
+
+    Input:
+      type: object
+      required:
+        - input_id
+        - type
+        - title
+      properties:
+        input_id:
+          type: string
+        type:
+          type: string
+          enum: [text, web, image, video, audio, pdf, csv]
+        title:
+          type: string
+        url:
+          type: string
+          format: uri
+        text:
+          type: string
+
+    Fact:
+      type: object
+      required:
+        - fact_id
+        - related_inputs
+        - text
+      properties:
+        fact_id:
+          type: string
+        related_inputs:
+          type: array
+          items:
+            type: string
+          description: List of input_id references
+        text:
+          type: string
+
+    Insight:
+      type: object
+      required:
+        - insight_id
+        - related_facts
+        - text
+      properties:
+        insight_id:
+          type: string
+        related_facts:
+          type: array
+          items:
+            type: string
+          description: List of fact_id references
+        text:
+          type: string
+
+    Recommendation:
+      type: object
+      required:
+        - recommendation_id
+        - related_insights
+        - text
+      properties:
+        recommendation_id:
+          type: string
+        related_insights:
+          type: array
+          items:
+            type: string
+          description: List of insight_id references
+        text:
+          type: string
+
+    Output:
+      type: object
+      required:
+        - output_id
+        - related_recommendations
+        - text
+      properties:
+        output_id:
+          type: string
+        related_recommendations:
+          type: array
+          items:
+            type: string
+          description: List of recommendation_id references
+        text:
+          type: string

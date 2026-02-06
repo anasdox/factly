@@ -6,6 +6,9 @@ import "./Toolbar.css";
 import DiscoveryModal from "./DiscoveryModal";
 import StartEventRoomModal from './StartEventRoomModal';
 import { StringParam, useQueryParam } from "use-query-params";
+import { useLocalStorage } from 'usehooks-ts'
+import { isObjectEmpty } from "../lib";
+
 
 type Props = {
   data: DiscoveryData;
@@ -17,8 +20,10 @@ const Toolbar = ({ data, setData }: Props) => {
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [isStartEventRoomModalVisible, setIsStartEventRoomModalVisible] = useState(false);
   const [roomId, setRoomId] = useQueryParam('room', StringParam);
-  const [username = `User${Math.floor(Math.random() * 1000)}`, setUsername] = useQueryParam('username', StringParam);
-  
+  const [uuid, setUuid] = useLocalStorage('uuid', null);
+  const [username, setUsername] = useLocalStorage('username', null);
+  const [eventSource, setEventSource] = useState<EventSource | null>(null);
+
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
 
@@ -82,56 +87,75 @@ const Toolbar = ({ data, setData }: Props) => {
 
   const handleStartEventRoom = async () => {
     try {
-      const response = await fetch('http://localhost:3002/rooms', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
-      const roomData  = await response.json();
-      setRoomId(roomData.roomId);
-      setIsStartEventRoomModalVisible(true);
+      if (data && data.discovery_id) {
+        const response = await fetch('http://localhost:3002/rooms', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+        const roomData = await response.json();
+        setRoomId(roomData.roomId);
+        setIsStartEventRoomModalVisible(true);
+      }
     } catch (error) {
       console.error('Error creating room:', error);
     }
   };
 
   useEffect(() => {
-    if (roomId) {
+    if (roomId && !eventSource) {
       // Fetch room data
       const fetchRoomData = async () => {
         try {
           const response = await fetch(`http://localhost:3002/rooms/${roomId}`);
+          console.log("fetching room data", response.body);
           const roomData = await response.json();
+          console.log('Room data:', roomData);
           if (roomData && Object.keys(roomData).length !== 0) {
             console.log(roomData);
             setData(roomData);
           } else {
             console.error(`no data in room ${roomId}`);
           }
-            
-          // Set up SSE
-          const eventSource = new EventSource(`http://localhost:3002/events/${roomId}?username=${username}`);
-          eventSource.onmessage = (event) => {
-            console.log(event);
-            const message = JSON.parse(event.data);
-          
+
+          let esurl = `http://localhost:3002/events/${roomId}?`;
+          if (uuid) {
+            esurl += `uuid=${uuid}&`;
+          }
+          if (username) {
+            esurl += `username=${username}`;
+          }
+
+          const newEventSource = new EventSource(esurl);
+          newEventSource.onmessage = (event) => {
+            const message = JSON.parse(event.data)
+            console.log("Receive sse message:", message);
+
+            if (message.type === 'credentials') {
+              setUsername(message.username);
+              setUuid(message.uuid);
+            }
+
             if (message.type === 'update' || message.type === 'init') {
-              if (username !== message.username && JSON.stringify(message.payload) !== JSON.stringify(data)) {
+              if (JSON.stringify(message.payload) !== JSON.stringify(data)) {
                 setData(message.payload);
               }
             }
           };
 
-          eventSource.onerror = (error) => {
+          newEventSource.onerror = (error) => {
             console.error('EventSource failed:', error);
-            eventSource.close();
+            newEventSource.close();
           };
+          setEventSource(newEventSource);
 
           // Cleanup on component unmount
           return () => {
-            eventSource.close();
+            if (eventSource && (eventSource as EventSource).readyState !== EventSource.CLOSED) {
+              (eventSource as EventSource).close();
+            }
           };
         } catch (error) {
           console.error('Error fetching room data:', error);
@@ -140,25 +164,29 @@ const Toolbar = ({ data, setData }: Props) => {
 
       fetchRoomData();
     }
-  }, [roomId, setData, data, username]);
+  }, [roomId]);
 
 
   useEffect(() => {
-    if (roomId && data && username) {
+    if (roomId && !isObjectEmpty(data)) {
       try {
-        fetch(`http://localhost:3002/rooms/${roomId}/data`, {
+        fetch(`http://localhost:3002/rooms/${roomId}/update`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ data, username })
+          body: JSON.stringify({
+            payload: data,
+            username: username,
+            senderUuid: uuid,
+          })
         });
       } catch (error) {
         console.error('Error updating room data:', error);
       }
     }
-  }, [data, roomId, username]);
-  
+  }, [data, roomId, username, uuid]);
+
 
   return (
     <div className="toolbar">
@@ -175,24 +203,22 @@ const Toolbar = ({ data, setData }: Props) => {
         />
       </div>
       <div title="Save Discovery" onClick={handleExport}>
-          <FontAwesomeIcon icon={faFileDownload} size='lg' />
+        <FontAwesomeIcon icon={faFileDownload} size='lg' />
       </div>
       <div title="Edit Discovery Goal" onClick={handleEditDiscovery}>
-          <FontAwesomeIcon icon={faEdit} size='lg' />
+        <FontAwesomeIcon icon={faEdit} size='lg' />
       </div>
       <div title="New Discovery" onClick={handleNewDiscovery}>
-          <FontAwesomeIcon icon={faPlus} size='lg' />
+        <FontAwesomeIcon icon={faPlus} size='lg' />
       </div>
       <div title="Start Event Room" onClick={handleStartEventRoom}>
         <FontAwesomeIcon icon={faPlayCircle} size='lg' />
       </div>
-      
+
       <StartEventRoomModal
         isDialogVisible={isStartEventRoomModalVisible}
         closeDialog={() => setIsStartEventRoomModalVisible(false)}
         roomId={roomId ?? ""}
-        username={username ?? ""}
-        setUsername={setUsername}
       />
       <DiscoveryModal
         mode={modalMode}
@@ -200,7 +226,7 @@ const Toolbar = ({ data, setData }: Props) => {
         discoveryData={data}
         setDiscoveryData={setData}
         closeDialog={() => setIsModalVisible(false)}
-        
+
       />
     </div>);
 }

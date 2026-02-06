@@ -141,3 +141,11 @@ export function handleMouseLeave(entityType: string, entityId: string, data: Dis
     removeLinkHighlight(entityType, entityId, relatedEntity.type, relatedEntity.id);
   });
 }
+
+export const isObjectEmpty = (objectName: any) => {
+  return (
+    objectName &&
+    Object.keys(objectName).length === 0 &&
+    objectName.constructor === Object
+  );
+};

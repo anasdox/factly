@@ -1,0 +1,14 @@
+{
+  "name": "factly-acceptance-tests",
+  "private": true,
+  "scripts": {
+    "test": "jest --forceExit --detectOpenHandles",
+    "test:backend": "jest --forceExit --detectOpenHandles room-management collaborative-session"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.4.5"
+  }
+}
