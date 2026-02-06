@@ -70,9 +70,12 @@
 - Conflict-free operation (last-write-wins or similar simple strategy)
 
 ### M8: Server-Side Persistence
+**Status:** Delivered
 **Outcome:** Discovery data survives server restarts.
-- Replace temp-file random-name storage with deterministic persistent storage
+- Replaced `keyv-file` (random temp path) with `@keyv/sqlite` (deterministic `data/factly.db`)
 - Room data retrievable after server restart
+- Deleted rooms remain deleted after restart
+- Rooms from different server lifecycles coexist
 
 ### M9: Input Validation and Error Handling
 **Outcome:** The backend rejects malformed requests and returns meaningful error responses.
