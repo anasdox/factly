@@ -14,10 +14,13 @@ import * as path from 'path';
 const dataDir = path.join(__dirname, '..', 'data');
 fs.mkdirSync(dataDir, { recursive: true });
 
+const dbPath = path.join(dataDir, 'factly.db');
+
 const store = new Keyv({
-  store: new KeyvSqlite('sqlite://' + path.join(dataDir, 'factly.db'))
+  store: new KeyvSqlite('sqlite://' + dbPath)
 });
 
+store.on('error', (err) => console.error('Keyv connection error:', err));
 
 // Set up Winston logger
 const logger = winston.createLogger({
@@ -25,6 +28,8 @@ const logger = winston.createLogger({
   format: winston.format.json(),
   transports: [new winston.transports.Console()],
 });
+
+logger.info(`Using SQLite store at ${dbPath}`);
 
 
 const app = express();
