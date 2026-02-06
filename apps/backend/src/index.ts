@@ -5,18 +5,17 @@ import { Server, ServerResponse } from 'http';
 import { Socket } from 'net';
 import { v4 as uuid } from 'uuid';
 import Keyv from 'keyv';
-import { KeyvFile } from 'keyv-file';
+import KeyvSqlite from '@keyv/sqlite';
 import { generateUsername } from 'friendly-username-generator';
 import winston from 'winston';
-import * as os from 'os';
+import * as fs from 'fs';
+import * as path from 'path';
 
+const dataDir = path.join(__dirname, '..', 'data');
+fs.mkdirSync(dataDir, { recursive: true });
 
-const store = new Keyv({ 
-  store: new KeyvFile({
-    filename: `${os.tmpdir()}/keyv-file/default-rnd-${Math.random().toString(36).slice(2)}.json`, 
-    encode: JSON.stringify,
-    decode: JSON.parse
-  }) 
+const store = new Keyv({
+  store: new KeyvSqlite('sqlite://' + path.join(dataDir, 'factly.db'))
 });
 
 
