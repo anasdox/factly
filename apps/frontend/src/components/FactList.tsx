@@ -169,7 +169,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
         <div
           key={fact.fact_id}
           onClick={() => toggleFactSelection(fact.fact_id)}
-          className={selectedFactIds.has(fact.fact_id) ? 'fact-selectable selected' : 'fact-selectable'}
+          className={selectedFactIds.has(fact.fact_id) ? 'item-selectable selected' : 'item-selectable'}
         >
           <ItemWrapper
             id={"fact-" + fact.fact_id}

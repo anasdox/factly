@@ -170,7 +170,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
         <div
           key={insight.insight_id}
           onClick={() => toggleInsightSelection(insight.insight_id)}
-          className={selectedInsightIds.has(insight.insight_id) ? 'fact-selectable selected' : 'fact-selectable'}
+          className={selectedInsightIds.has(insight.insight_id) ? 'item-selectable selected' : 'item-selectable'}
         >
           <ItemWrapper
             id={"insight-" + insight.insight_id}

@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { LLMProvider, OutputTraceabilityContext } from './provider';
-import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, buildOutputsPrompt, parseStringArray, parseFactArray, ExtractedFact } from './prompts';
+import { LLMProvider } from './provider';
+import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, parseStringArray, parseFactArray, ExtractedFact, OutputTraceabilityContext } from './prompts';
 
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic;
@@ -73,29 +73,6 @@ export class AnthropicProvider implements LLMProvider {
   }
 
   async formulateOutputs(recommendations: string[], goal: string, outputType: string, context?: OutputTraceabilityContext): Promise<string[]> {
-    const numberedRecs = recommendations.map((r, i) => `${i + 1}. ${r}`).join('\n');
-
-    let userContent = `Research goal: ${goal}\n\nRecommendations to formulate outputs from:\n${numberedRecs}`;
-
-    if (context) {
-      if (context.facts && context.facts.length > 0) {
-        const factsSection = context.facts.map((f, i) => {
-          let entry = `${i + 1}. ${f.text}`;
-          if (f.source_excerpt) entry += `\n   Source: "${f.source_excerpt}"`;
-          return entry;
-        }).join('\n');
-        userContent += `\n\n--- Supporting Facts ---\n${factsSection}`;
-      }
-      if (context.insights && context.insights.length > 0) {
-        const insightsSection = context.insights.map((ins, i) => `${i + 1}. ${ins.text}`).join('\n');
-        userContent += `\n\n--- Supporting Insights ---\n${insightsSection}`;
-      }
-      if (context.inputs && context.inputs.length > 0) {
-        const inputsSection = context.inputs.map((inp, i) => `${i + 1}. ${inp.title}`).join('\n');
-        userContent += `\n\n--- Source Inputs ---\n${inputsSection}`;
-      }
-    }
-
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 4096,
@@ -104,7 +81,7 @@ export class AnthropicProvider implements LLMProvider {
       messages: [
         {
           role: 'user',
-          content: userContent,
+          content: buildOutputsUserContent(recommendations, goal, context),
         },
       ],
     });

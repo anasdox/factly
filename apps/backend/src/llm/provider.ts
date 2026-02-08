@@ -1,13 +1,8 @@
 import { AnthropicProvider } from './anthropic-provider';
 import { OpenAIProvider } from './openai-provider';
-import { ExtractedFact } from './prompts';
+import { ExtractedFact, OutputTraceabilityContext } from './prompts';
 
-export interface OutputTraceabilityContext {
-  inputs?: { title: string; text?: string }[];
-  facts?: { text: string; source_excerpt?: string }[];
-  insights?: { text: string }[];
-  recommendations?: { text: string }[];
-}
+export type { OutputTraceabilityContext };
 
 export interface LLMProvider {
   extractFacts(text: string, goal: string): Promise<ExtractedFact[]>;

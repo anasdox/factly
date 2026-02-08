@@ -204,7 +204,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
         <div
           key={recommendation.recommendation_id}
           onClick={() => toggleRecommendationSelection(recommendation.recommendation_id)}
-          className={selectedRecommendationIds.has(recommendation.recommendation_id) ? 'fact-selectable selected' : 'fact-selectable'}
+          className={selectedRecommendationIds.has(recommendation.recommendation_id) ? 'item-selectable selected' : 'item-selectable'}
         >
           <ItemWrapper
             id={"recommendation-" + recommendation.recommendation_id}

@@ -181,16 +181,16 @@ dialog label {
   font-size: 0.8em;
 }
 
-.fact-selectable {
+.item-selectable {
   cursor: pointer;
   width: 100%;
 }
 
-.fact-selectable.selected .wrapper {
+.item-selectable.selected .wrapper {
   box-shadow: 0 0 0 2px #2196f3;
 }
 
-.fact-selectable.selected .item {
+.item-selectable.selected .item {
   background-color: #bbdefb;
 }
 

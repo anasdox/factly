@@ -83,6 +83,43 @@ export function buildOutputsPrompt(outputType: string): string {
 
 export type ExtractedFact = { text: string; source_excerpt: string };
 
+export interface OutputTraceabilityContext {
+  inputs?: { title: string; text?: string }[];
+  facts?: { text: string; source_excerpt?: string }[];
+  insights?: { text: string }[];
+  recommendations?: { text: string }[];
+}
+
+export function buildOutputsUserContent(
+  recommendations: string[],
+  goal: string,
+  context?: OutputTraceabilityContext,
+): string {
+  const numberedRecs = recommendations.map((r, i) => `${i + 1}. ${r}`).join('\n');
+  let content = `Research goal: ${goal}\n\nRecommendations to formulate outputs from:\n${numberedRecs}`;
+
+  if (context) {
+    if (context.facts && context.facts.length > 0) {
+      const factsSection = context.facts.map((f, i) => {
+        let entry = `${i + 1}. ${f.text}`;
+        if (f.source_excerpt) entry += `\n   Source: "${f.source_excerpt}"`;
+        return entry;
+      }).join('\n');
+      content += `\n\n--- Supporting Facts ---\n${factsSection}`;
+    }
+    if (context.insights && context.insights.length > 0) {
+      const insightsSection = context.insights.map((ins, i) => `${i + 1}. ${ins.text}`).join('\n');
+      content += `\n\n--- Supporting Insights ---\n${insightsSection}`;
+    }
+    if (context.inputs && context.inputs.length > 0) {
+      const inputsSection = context.inputs.map((inp, i) => `${i + 1}. ${inp.title}`).join('\n');
+      content += `\n\n--- Source Inputs ---\n${inputsSection}`;
+    }
+  }
+
+  return content;
+}
+
 function stripCodeFences(raw: string): string {
   const trimmed = raw.trim();
   if (trimmed.startsWith('```')) {
