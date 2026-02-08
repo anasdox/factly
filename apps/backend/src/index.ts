@@ -13,6 +13,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { createProvider, LLMProvider, OutputTraceabilityContext } from './llm/provider';
 import { VALID_OUTPUT_TYPES, ExtractedFact } from './llm/prompts';
+import { extractTextFromUrl, WebScraperError } from './web-scraper';
 
 const dataDir = path.join(__dirname, '..', 'data');
 fs.mkdirSync(dataDir, { recursive: true });
@@ -112,12 +113,26 @@ app.post('/extract/facts', async (req, res, next) => {
       return res.status(503).json({ error: 'Extraction service not configured' });
     }
 
-    const { input_text, goal, input_id } = req.body;
+    const { input_text, input_url, goal, input_id } = req.body;
     logger.info(`Extracting facts for input ${input_id}`);
+
+    let text: string;
+    if (input_text) {
+      text = input_text;
+    } else {
+      try {
+        text = await extractTextFromUrl(input_url);
+      } catch (err: any) {
+        if (err instanceof WebScraperError) {
+          return res.status(err.statusCode).json({ error: err.message });
+        }
+        return res.status(502).json({ error: 'Failed to fetch URL' });
+      }
+    }
 
     let facts: ExtractedFact[];
     try {
-      facts = await llmProvider.extractFacts(input_text, goal);
+      facts = await llmProvider.extractFacts(text, goal);
     } catch (err: any) {
       return handleLLMError(err, res);
     }
@@ -413,8 +428,10 @@ function validateExtractionRequest(body: any): { valid: boolean; error?: string 
   if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
     return { valid: false, error: 'Body is required' };
   }
-  if (typeof body.input_text !== 'string' || body.input_text.length === 0) {
-    return { valid: false, error: 'Field "input_text" is required and must be a non-empty string' };
+  const hasText = typeof body.input_text === 'string' && body.input_text.length > 0;
+  const hasUrl = typeof body.input_url === 'string' && body.input_url.length > 0;
+  if (!hasText && !hasUrl) {
+    return { valid: false, error: 'Either "input_text" or "input_url" must be a non-empty string' };
   }
   if (typeof body.goal !== 'string' || body.goal.length === 0) {
     return { valid: false, error: 'Field "goal" is required and must be a non-empty string' };

@@ -71,14 +71,19 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
   const handleExtractFacts = async (input: InputType) => {
     setExtractingInputId(input.input_id);
     try {
+      const payload: Record<string, string> = {
+        goal: data.goal,
+        input_id: input.input_id,
+      };
+      if (input.type === 'web') {
+        payload.input_url = input.url || '';
+      } else {
+        payload.input_text = input.text || '';
+      }
       const response = await fetch('http://localhost:3002/extract/facts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          input_text: input.text,
-          goal: data.goal,
-          input_id: input.input_id,
-        }),
+        body: JSON.stringify(payload),
       });
       if (!response.ok) {
         const body = await response.json();
@@ -136,8 +141,11 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
           handleMouseEnter={() => handleMouseEnter("input", input.input_id, data)}
           handleMouseLeave={() => handleMouseLeave("input", input.input_id, data)}
           openEditModal={openEditModal}
-          onExtractFacts={input.type === 'text' ? () => handleExtractFacts(input) : undefined}
-          extractDisabled={input.type === 'text' && (!input.text || input.text.trim() === '')}
+          onExtractFacts={input.type === 'text' || input.type === 'web' ? () => handleExtractFacts(input) : undefined}
+          extractDisabled={
+            (input.type === 'text' && (!input.text || input.text.trim() === '')) ||
+            (input.type === 'web' && (!input.url || input.url.trim() === ''))
+          }
           extractLoading={extractingInputId === input.input_id}
         >
           <InputItem input={input} />
