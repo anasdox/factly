@@ -49,11 +49,14 @@ async function deleteRoom(roomId: string): Promise<void> {
 
 describe('Server-Side Persistence', () => {
 
-  afterAll(() => {
-    // Clean up test DB file for isolation
+  afterAll(async () => {
+    // Stop server before deleting DB to avoid leaving a broken connection
+    await stopServer();
     if (existsSync(DB_PATH)) {
       unlinkSync(DB_PATH);
     }
+    // Restart with a fresh DB for subsequent test suites
+    await startServer();
   });
 
   // @fsid:FS-RoomDataSurvivesRestart

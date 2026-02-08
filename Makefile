@@ -79,14 +79,23 @@ typecheck-frontend:
 typecheck: typecheck-backend typecheck-frontend
 
 ## Test
+## Tests manage their own backend process (start/stop/restart).
+## We must stop any external backend first to free port 3002 and the DB file,
+## then restart it after tests complete.
 
-test-acceptance:
-	cd $(TESTS_DIR) && npx jest --no-coverage --forceExit --detectOpenHandles --runInBand
+test-acceptance: restart-backend
+	cd $(TESTS_DIR) && npx jest --no-coverage --forceExit --detectOpenHandles --runInBand; \
+	status=$$?; \
+	$(MAKE) -C $(CURDIR) restart-backend; \
+	exit $$status
 
 test: test-acceptance
 
-test-backend:
-	cd $(TESTS_DIR) && npx jest --no-coverage --forceExit --detectOpenHandles --runInBand room-management collaborative-session
+test-backend: restart-backend
+	cd $(TESTS_DIR) && npx jest --no-coverage --forceExit --detectOpenHandles --runInBand room-management collaborative-session; \
+	status=$$?; \
+	$(MAKE) -C $(CURDIR) restart-backend; \
+	exit $$status
 
 ## Lint
 
