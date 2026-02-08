@@ -114,12 +114,16 @@
 - Accepted recommendations link to their source insights automatically
 
 ### M13: Auto Outputs Formulation
-**Status:** Planned
-**Outcome:** An analyst can trigger AI-assisted formulation of structured outputs from selected recommendations.
-- Backend endpoint to send recommendations to LLM and receive structured outputs
+**Status:** Delivered (Demo validated 2026-02-08)
+**Outcome:** An analyst can trigger AI-assisted formulation of structured outputs from selected recommendations, with professional Markdown rendering and full traceability.
+- Backend endpoint to send recommendations (with full provenance chain) to LLM and receive structured Markdown outputs
 - Frontend "Formulate Outputs" button on recommendation selection
-- Suggestion UI for proposed outputs with accept/edit/reject
+- Suggestion UI with Markdown rendering for proposed outputs with accept/edit/reject
 - Accepted outputs link to their source recommendations automatically
+- Output types: report, presentation, action_plan, brief
+- Full traceability: outputs cite recommendations → insights → facts → source excerpts
+- Markdown preview modal on output items
+- OutputRenderer abstraction for future format extensibility (HTML, PDF, audio)
 
 ## Risks and Dependencies
 
