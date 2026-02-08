@@ -22,14 +22,17 @@ const OutputModal: React.FC<Props> = ({
 }) => {
   const [currentOutputText, setCurrentOutputText] = useState("");
   const [currentOutputRelatedRecommendations, setCurrentRelatedRecommendations] = useState<string[]>([]);
+  const [currentOutputType, setCurrentOutputType] = useState<OutputType['type']>('report');
 
   useEffect(() => {
     if (mode === 'edit' && outputData) {
       setCurrentOutputText(outputData.text);
       setCurrentRelatedRecommendations(outputData.related_recommendations);
+      setCurrentOutputType(outputData.type || 'report');
     } else {
       setCurrentOutputText('');
       setCurrentRelatedRecommendations([]);
+      setCurrentOutputType('report');
     }
   }, [mode, outputData]);
 
@@ -38,6 +41,7 @@ const OutputModal: React.FC<Props> = ({
       output_id: outputData ? outputData.output_id : Math.random().toString(16).slice(2),
       text: currentOutputText,
       related_recommendations: currentOutputRelatedRecommendations,
+      type: currentOutputType,
     };
     saveOutput(newOutputData);
     closeDialog();
@@ -62,6 +66,17 @@ const OutputModal: React.FC<Props> = ({
           onChange={(event) => {
             setCurrentOutputText(event.target.value);
           }} />
+        <label htmlFor="output-type">Type</label>
+        <select
+          id="output-type"
+          value={currentOutputType}
+          onChange={(event) => setCurrentOutputType(event.target.value as OutputType['type'])}
+        >
+          <option value="report">Report</option>
+          <option value="presentation">Presentation</option>
+          <option value="action_plan">Action Plan</option>
+          <option value="brief">Brief</option>
+        </select>
         <label htmlFor="output-related-recommendations">Related Recommendations</label>
         <select
           id="output-related-recommendations"

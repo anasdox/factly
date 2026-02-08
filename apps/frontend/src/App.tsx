@@ -173,7 +173,8 @@ const App: React.FC = () => {
               handleMouseEnter={handleMouseEnter}
               handleMouseLeave={handleMouseLeave}
               setData={setData}
-              data={data} />
+              data={data}
+              onError={handleError} />
             : ""
         }
         {

@@ -38,6 +38,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
         output_id: Math.random().toString(16).slice(2),
         text: outputData.text,
         related_recommendations: outputData.related_recommendations,
+        type: outputData.type || 'report',
       };
       setData((prevState) => prevState ? ({
         ...prevState,
