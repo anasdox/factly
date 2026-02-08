@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencil } from '@fortawesome/free-solid-svg-icons';
+import { faPencil, faWandMagicSparkles, faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 
 type Props = {
@@ -11,18 +11,24 @@ type Props = {
   handleMouseLeave: () => void;
   item: ItemType;
   index: number;
-  openEditModal: OpenEditModalFunction | null; 
+  openEditModal: OpenEditModalFunction | null;
+  onExtractFacts?: () => void;
+  extractDisabled?: boolean;
+  extractLoading?: boolean;
 };
 
-const ItemWrapper: React.FC<Props> = ({ 
-  children, 
-  id, 
-  setItemRef, 
-  handleMouseEnter, 
-  handleMouseLeave, 
-  item, 
-  index, 
-  openEditModal}) => {
+const ItemWrapper: React.FC<Props> = ({
+  children,
+  id,
+  setItemRef,
+  handleMouseEnter,
+  handleMouseLeave,
+  item,
+  index,
+  openEditModal,
+  onExtractFacts,
+  extractDisabled,
+  extractLoading}) => {
 
   return (
     <div
@@ -34,12 +40,15 @@ const ItemWrapper: React.FC<Props> = ({
     >
       {React.cloneElement(children, { item })}
       <div id={`${id}-toolbar`} className='wrapper-item-toolbar'>
-        {/*<div>
-          <FontAwesomeIcon size={'sm'} icon={faLink} />
-        </div>
-        <div>
-          <FontAwesomeIcon size={'sm'} icon={faAdd} />
-        </div>*/}
+        {onExtractFacts !== undefined && (
+          <div
+            onClick={() => !extractDisabled && !extractLoading && onExtractFacts ? onExtractFacts() : null}
+            style={{ opacity: extractDisabled ? 0.3 : 1, cursor: extractDisabled ? 'not-allowed' : 'pointer' }}
+            title="Extract Facts"
+          >
+            <FontAwesomeIcon size={'sm'} icon={extractLoading ? faSpinner : faWandMagicSparkles} spin={extractLoading} />
+          </div>
+        )}
         <div onClick={() => openEditModal ? openEditModal(item): null}>
           <FontAwesomeIcon size={'sm'} icon={faPencil} />
         </div>

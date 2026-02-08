@@ -9,9 +9,19 @@ import { useCalculateAndDrawLines } from './components/Lines';
 import { handleMouseEnter, handleMouseLeave } from './lib';
 import ToolBar from './components/Toolbar';
 import Toast from './components/Toast';
+import DiscoveryModal from './components/DiscoveryModal';
+
+const STORAGE_KEY = 'factly_last_discovery';
 
 const App: React.FC = () => {
-  const [data, setData] = useState<DiscoveryData | null>(null);
+  const [data, setData] = useState<DiscoveryData | null>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try { return JSON.parse(saved); } catch { return null; }
+    }
+    return null;
+  });
+  const [showNewDiscoveryModal, setShowNewDiscoveryModal] = useState(!data);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const handleError = useCallback((msg: string) => setErrorMessage(msg), []);
   const clearError = useCallback(() => setErrorMessage(null), []);
@@ -23,12 +33,10 @@ const App: React.FC = () => {
   const calculateAndDrawLines = useCalculateAndDrawLines();
 
   useEffect(() => {
-    fetch('/data.json')
-      .then((response) => response.json())
-      .then((data: DiscoveryData) => {
-        setData(data);
-      });
-  }, []);
+    if (data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+  }, [data]);
 
   useEffect(() => {
     if (data) {
@@ -70,7 +78,38 @@ const App: React.FC = () => {
     }
   }, [data, calculateAndDrawLines]);
 
-  if (!data) return <div>Loading...</div>;
+  const handleNewDiscoveryFromWelcome = () => {
+    const emptyDiscovery: DiscoveryData = {
+      discovery_id: '',
+      title: '',
+      goal: '',
+      date: '',
+      inputs: [],
+      facts: [],
+      insights: [],
+      recommendations: [],
+      outputs: [],
+    };
+    setData(emptyDiscovery);
+    setShowNewDiscoveryModal(true);
+  };
+
+  if (!data) return (
+    <div className="App">
+      <div className="welcome-screen">
+        <h1>Factly</h1>
+        <p>Start a new discovery to begin extracting facts.</p>
+        <button className="welcome-new-discovery" onClick={handleNewDiscoveryFromWelcome}>New Discovery</button>
+      </div>
+      <DiscoveryModal
+        mode="add"
+        isDialogVisible={showNewDiscoveryModal}
+        discoveryData={null}
+        setDiscoveryData={setData}
+        closeDialog={() => setShowNewDiscoveryModal(false)}
+      />
+    </div>
+  );
 
   return (
     <div className="App">
@@ -93,7 +132,8 @@ const App: React.FC = () => {
             handleMouseEnter={handleMouseEnter}
             handleMouseLeave={handleMouseLeave}
             setData={setData}
-            data={data} />
+            data={data}
+            onError={handleError} />
           : ""}
         {
           factRefs ?
@@ -102,7 +142,8 @@ const App: React.FC = () => {
               handleMouseEnter={handleMouseEnter}
               handleMouseLeave={handleMouseLeave}
               setData={setData}
-              data={data} />
+              data={data}
+              onError={handleError} />
             : ""}
         {
           insightRefs ?

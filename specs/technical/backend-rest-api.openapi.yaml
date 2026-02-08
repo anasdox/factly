@@ -16,6 +16,12 @@ info:
     - FS-RejectInvalidUpdateBody
     - FS-RejectInvalidRoomIdFormat
     - FS-ReturnStructuredErrorResponse
+    - FS-TriggerFactsExtraction
+    - FS-DisplaySuggestedFacts
+    - FS-ExtractionErrorDisplay
+    - FS-TriggerInsightsExtraction
+    - FS-DisplaySuggestedInsights
+    - FS-InsightsExtractionErrorDisplay
 
 servers:
   - url: http://localhost:3002
@@ -156,6 +162,131 @@ paths:
           description: Update received and broadcast
         '400':
           description: Validation error (invalid room ID, missing fields, or invalid types)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /extract/facts:
+    post:
+      operationId: extractFacts
+      summary: Extract facts from text input using AI
+      description: Sends input text and discovery goal to an LLM provider to extract relevant facts. Returns suggested fact texts for analyst validation.
+      x-tsid: TS-ExtractFacts
+      x-fsid-links:
+        - FS-TriggerFactsExtraction
+        - FS-DisplaySuggestedFacts
+        - FS-ExtractionErrorDisplay
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - input_text
+                - goal
+                - input_id
+              properties:
+                input_text:
+                  type: string
+                  minLength: 1
+                  description: The text content of the Input to extract facts from
+                goal:
+                  type: string
+                  minLength: 1
+                  description: The Discovery goal used as extraction context
+                input_id:
+                  type: string
+                  description: The input_id of the source Input
+      responses:
+        '200':
+          description: Extraction successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtractionResponse'
+        '400':
+          description: Validation error (missing or invalid fields)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: LLM provider error (timeout, invalid response)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Extraction service not configured (missing LLM_PROVIDER or LLM_API_KEY)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /extract/insights:
+    post:
+      operationId: extractInsights
+      summary: Extract insights from selected facts using AI
+      description: Sends fact texts and discovery goal to an LLM provider to derive relevant insights. Returns suggested insight texts for analyst validation.
+      x-tsid: TS-ExtractInsights
+      x-fsid-links:
+        - FS-TriggerInsightsExtraction
+        - FS-DisplaySuggestedInsights
+        - FS-InsightsExtractionErrorDisplay
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - facts
+                - goal
+              properties:
+                facts:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - fact_id
+                      - text
+                    properties:
+                      fact_id:
+                        type: string
+                        description: The fact_id of the source Fact
+                      text:
+                        type: string
+                        minLength: 1
+                        description: The text content of the Fact
+                  description: The selected facts to derive insights from
+                goal:
+                  type: string
+                  minLength: 1
+                  description: The Discovery goal used as extraction context
+      responses:
+        '200':
+          description: Extraction successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightsExtractionResponse'
+        '400':
+          description: Validation error (missing or invalid fields)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: LLM provider error (timeout, invalid response)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Extraction service not configured (missing LLM_PROVIDER or LLM_API_KEY)
           content:
             application/json:
               schema:
@@ -325,3 +456,47 @@ components:
           description: List of recommendation_id references
         text:
           type: string
+
+    InsightsExtractionResponse:
+      type: object
+      required:
+        - suggestions
+        - fact_ids
+      properties:
+        suggestions:
+          type: array
+          items:
+            type: object
+            required:
+              - text
+            properties:
+              text:
+                type: string
+                description: A suggested insight text derived by the LLM
+          description: List of suggested insights for analyst validation
+        fact_ids:
+          type: array
+          items:
+            type: string
+          description: The fact_ids of the source Facts used for extraction
+
+    ExtractionResponse:
+      type: object
+      required:
+        - suggestions
+        - input_id
+      properties:
+        suggestions:
+          type: array
+          items:
+            type: object
+            required:
+              - text
+            properties:
+              text:
+                type: string
+                description: A suggested fact text extracted by the LLM
+          description: List of suggested facts for analyst validation
+        input_id:
+          type: string
+          description: The input_id of the source Input

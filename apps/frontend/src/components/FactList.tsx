@@ -1,10 +1,11 @@
 import React, { useCallback, useState } from 'react';
 import FactItem from './FactItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faLightbulb, faXmark, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import FactModal from './FactModal';
-
+import SuggestionsPanel from './SuggestionsPanel';
+import InsightModal from './InsightModal';
 
 type Props = {
   factRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -12,15 +13,29 @@ type Props = {
   setData: React.Dispatch<React.SetStateAction<DiscoveryData | null>>;
   handleMouseEnter: (entityType: string, entityId: string, data: DiscoveryData) => void;
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
-
+  onError: (msg: string) => void;
 };
 
-const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, handleMouseLeave }) => {
+type InsightSuggestionData = {
+  suggestions: { text: string }[];
+  factIds: string[];
+};
+
+const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, handleMouseLeave, onError }) => {
 
   const [isFactDialogVisible, setIsFactDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [editingFact, setEditingFact] = useState<ItemType | null>(null);
   const setFactRef = useCallback((element: HTMLDivElement, index: number) => { factRefs.current[index] = element; }, [factRefs]);
+
+  // Fact selection state
+  const [selectedFactIds, setSelectedFactIds] = useState<Set<string>>(new Set());
+  const [extractingInsights, setExtractingInsights] = useState(false);
+  const [insightSuggestionData, setInsightSuggestionData] = useState<InsightSuggestionData | null>(null);
+
+  // Manual insight creation from selection
+  const [isInsightModalVisible, setIsInsightModalVisible] = useState(false);
+  const [prefilledRelatedFacts, setPrefilledRelatedFacts] = useState<string[]>([]);
 
   const openAddModal = () => {
     setModalMode('add');
@@ -58,33 +73,132 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
   };
 
   const deleteFact = (factId: string) => {
-    const updatedFacts = data.facts.filter((fact) => fact.fact_id!== factId);
+    const updatedFacts = data.facts.filter((fact) => fact.fact_id !== factId);
     setData((prevState) => prevState ? ({
-     ...prevState,
+      ...prevState,
       facts: updatedFacts
     }) : prevState);
+  };
+
+  // Selection handlers
+  const toggleFactSelection = (factId: string) => {
+    setSelectedFactIds(prev => {
+      const next = new Set(prev);
+      if (next.has(factId)) {
+        next.delete(factId);
+      } else {
+        next.add(factId);
+      }
+      return next;
+    });
+  };
+
+  const clearSelection = () => {
+    setSelectedFactIds(new Set());
+  };
+
+  // Generate insights from selected facts
+  const handleExtractInsights = async () => {
+    const selected = data.facts.filter(f => selectedFactIds.has(f.fact_id));
+    if (selected.length === 0) return;
+
+    setExtractingInsights(true);
+    try {
+      const response = await fetch('http://localhost:3002/extract/insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          facts: selected.map(f => ({ fact_id: f.fact_id, text: f.text })),
+          goal: data.goal,
+        }),
+      });
+      if (!response.ok) {
+        const body = await response.json();
+        onError(body.error || 'Insights extraction failed');
+        return;
+      }
+      const result = await response.json();
+      if (result.suggestions.length === 0) {
+        onError('No insights could be derived from the selected facts.');
+        return;
+      }
+      setInsightSuggestionData({ suggestions: result.suggestions, factIds: result.fact_ids });
+    } catch (err: any) {
+      onError(err.message || 'Insights extraction request failed');
+    } finally {
+      setExtractingInsights(false);
+    }
+  };
+
+  const addInsightToData = useCallback((text: string, relatedFacts: string[]) => {
+    const newInsight: InsightType = {
+      insight_id: Math.random().toString(16).slice(2),
+      text,
+      related_facts: relatedFacts,
+    };
+    setData((prevState) => prevState ? ({
+      ...prevState,
+      insights: [...prevState.insights, newInsight],
+    }) : prevState);
+  }, [setData]);
+
+  const handleAcceptInsight = (text: string) => {
+    addInsightToData(text, Array.from(selectedFactIds));
+  };
+
+  const handleCloseSuggestions = useCallback(() => {
+    setInsightSuggestionData(null);
+  }, []);
+
+  // Manual insight creation with pre-filled related_facts
+  const handleAddInsightFromSelection = () => {
+    setPrefilledRelatedFacts(Array.from(selectedFactIds));
+    setIsInsightModalVisible(true);
+  };
+
+  const saveInsightFromSelection = (insightData: InsightType) => {
+    addInsightToData(insightData.text, insightData.related_facts);
+    setIsInsightModalVisible(false);
   };
 
   return (
     <div className="column facts">
       <h2>📊Facts</h2>
+      {selectedFactIds.size > 0 && (
+        <div className="selection-toolbar">
+          <span>{selectedFactIds.size} fact(s) selected</span>
+          <button onClick={handleExtractInsights} disabled={extractingInsights}>
+            <FontAwesomeIcon icon={extractingInsights ? faSpinner : faWandMagicSparkles} spin={extractingInsights} />
+            {' '}Generate Insights
+          </button>
+          <button onClick={handleAddInsightFromSelection}>
+            <FontAwesomeIcon icon={faLightbulb} />
+            {' '}Add Insight
+          </button>
+          <button onClick={clearSelection}>
+            <FontAwesomeIcon icon={faXmark} />
+            {' '}Clear
+          </button>
+        </div>
+      )}
       {data.facts.map((fact, index) => (
-
-        <ItemWrapper
-          id={"fact-" + fact.fact_id}
+        <div
           key={fact.fact_id}
-          index={index}
-          item={fact}
-          setItemRef={setFactRef}
-          handleMouseEnter={() => handleMouseEnter("fact", fact.fact_id, data)}
-          handleMouseLeave={() => handleMouseLeave("fact", fact.fact_id, data)}
-          openEditModal={openEditModal}
+          onClick={() => toggleFactSelection(fact.fact_id)}
+          className={selectedFactIds.has(fact.fact_id) ? 'fact-selectable selected' : 'fact-selectable'}
         >
-          <FactItem
-            fact={fact}
-          />
-        </ItemWrapper>
-
+          <ItemWrapper
+            id={"fact-" + fact.fact_id}
+            index={index}
+            item={fact}
+            setItemRef={setFactRef}
+            handleMouseEnter={() => handleMouseEnter("fact", fact.fact_id, data)}
+            handleMouseLeave={() => handleMouseLeave("fact", fact.fact_id, data)}
+            openEditModal={openEditModal}
+          >
+            <FactItem fact={fact} />
+          </ItemWrapper>
+        </div>
       ))}
       <button className="add-button fact-add-button" onClick={openAddModal}><FontAwesomeIcon icon={faAdd} /></button>
       <FactModal
@@ -96,9 +210,26 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
         factData={editingFact as FactType}
         inputs={data.inputs}
       />
+      {insightSuggestionData && (
+        <SuggestionsPanel
+          suggestions={insightSuggestionData.suggestions}
+          inputId="insights"
+          title="Suggested Insights"
+          onAccept={(text) => handleAcceptInsight(text)}
+          onClose={handleCloseSuggestions}
+        />
+      )}
+      <InsightModal
+        mode="add"
+        isDialogVisible={isInsightModalVisible}
+        closeDialog={() => setIsInsightModalVisible(false)}
+        saveInsight={saveInsightFromSelection}
+        deleteInsight={() => {}}
+        insightData={{ insight_id: '', text: '', related_facts: prefilledRelatedFacts } as InsightType}
+        facts={data.facts}
+      />
     </div>
   );
 };
-
 
 export default FactList;

@@ -1,0 +1,156 @@
+.suggestions-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.suggestions-panel {
+  background: #ffffff;
+  border-radius: 10px;
+  border: #d1d1d1 solid 2px;
+  padding: 1.5em;
+  width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.suggestions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1em;
+}
+
+.suggestions-header h3 {
+  margin: 0;
+  font-size: 1.1em;
+}
+
+.suggestions-close {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: #555;
+}
+
+.suggestions-close:hover {
+  color: #000;
+}
+
+.suggestions-bulk-actions {
+  display: flex;
+  gap: 0.5em;
+  margin-bottom: 1em;
+}
+
+.suggestions-bulk-actions button {
+  border-radius: 10px;
+  padding: 6px 12px;
+  background: #ffffff;
+  color: #000;
+  cursor: pointer;
+  border: #c5c5c5 solid 2px;
+  font-size: 0.85em;
+}
+
+.suggestions-bulk-actions button:hover {
+  border-color: #000;
+  transition: 0.2s;
+}
+
+.suggestions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+}
+
+.suggestion-card {
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 0.75em;
+  border: 1px solid #e0e0e0;
+}
+
+.suggestion-text {
+  margin: 0 0 0.5em 0;
+  font-size: 0.95em;
+  line-height: 1.4;
+}
+
+.suggestion-actions {
+  display: flex;
+  gap: 0.5em;
+}
+
+.suggestion-actions button {
+  border-radius: 8px;
+  padding: 4px 10px;
+  cursor: pointer;
+  border: 1px solid #c5c5c5;
+  font-size: 0.8em;
+  background: #fff;
+}
+
+.suggestion-accept {
+  color: #2e7d32;
+  border-color: #2e7d32 !important;
+}
+
+.suggestion-accept:hover {
+  background: #e8f5e9 !important;
+}
+
+.suggestion-edit-btn {
+  color: #1565c0;
+  border-color: #1565c0 !important;
+}
+
+.suggestion-edit-btn:hover {
+  background: #e3f2fd !important;
+}
+
+.suggestion-reject {
+  color: #c62828;
+  border-color: #c62828 !important;
+}
+
+.suggestion-reject:hover {
+  background: #ffebee !important;
+}
+
+.suggestion-edit textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  resize: vertical;
+  font-size: 0.95em;
+  margin-bottom: 0.5em;
+}
+
+.suggestion-edit-actions {
+  display: flex;
+  gap: 0.5em;
+}
+
+.suggestion-edit-actions button {
+  border-radius: 8px;
+  padding: 4px 10px;
+  cursor: pointer;
+  border: 1px solid #c5c5c5;
+  font-size: 0.8em;
+  background: #fff;
+}
+
+.suggestion-edit-actions button:hover {
+  border-color: #000;
+}

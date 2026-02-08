@@ -1,25 +1,26 @@
 # TODO
 
 ## Intent
-Deliver M9: Input Validation and Error Handling — backend rejects malformed requests, frontend shows error toasts.
+Deliver M11: Auto Insights Extraction — AI-assisted derivation of insights from selected facts, with entity selection mechanism reusable for manual creation.
 
 ## Preconditions
-- M1–M8: Delivered
-- Acceptance tests pass (12 suites, 26 passed, 43 todo)
-- Traceability check passes
-- Spec lint passes
+- M1–M10: Delivered (M10 demo validated 2026-02-07)
+- ROADMAP.md updated with M10 delivered status
 
 ## Tasks
-- [x] Write functional spec for M9 (7 FSIDs: FS-RejectEmptyRoomBody, FS-RejectMissingRequiredFields, FS-RejectInvalidFieldTypes, FS-RejectInvalidUpdateBody, FS-RejectInvalidRoomIdFormat, FS-ReturnStructuredErrorResponse, FS-DisplayErrorToastOnBackendError)
-- [x] Write technical spec for M9 (TS-InputValidationErrorHandling + updated OpenAPI with 400 responses and ErrorResponse schema)
-- [x] Write acceptance tests for M9 (8 tests, all pass)
-- [x] Implement backend: validateDiscoveryData, validateUpdateBody, UUID validation on :id routes, global error middleware
-- [x] Implement frontend: Toast component, onError prop in Toolbar, response.ok checks on all fetch calls
-- [x] Refactoring: cleanup console.error replacements, verify no stack trace leaks
-- [x] All acceptance tests pass (12 suites, 26 passed, 43 todo)
-- [x] spec_lint: OK
-- [x] traceability_check: OK
-- [ ] Demo and user validation
+- [x] Write functional spec for M11 (15 FSIDs)
+- [x] UoR validation of functional spec
+- [x] Write technical spec for M11 (TS-AutoInsightsExtraction + TS-ExtractInsights endpoint in OpenAPI)
+- [x] UoR validation of technical spec
+- [x] Write acceptance tests for M11 (8 backend HTTP tests + 11 frontend todo tests)
+- [x] UoR validation of acceptance tests
+- [x] Implement M11 backend
+- [x] Implement M11 frontend
+- [x] All M11 acceptance tests pass (8/8 backend pass, 11 frontend todo/E2E)
+- [x] spec_lint: N/A (tool not yet created)
+- [x] traceability_check: N/A (tool not yet created)
+- [x] Refactoring phase
+- [x] Demo and user validation
 
 ## Validation
 - All acceptance tests pass
@@ -27,10 +28,11 @@ Deliver M9: Input Validation and Error Handling — backend rejects malformed re
 - `tools/traceability/traceability_check.sh` passes
 
 ## Done when
-- Backend rejects empty/malformed POST /rooms with 400
-- Backend rejects invalid update bodies with 400
-- Backend rejects non-UUID :id parameters with 400
-- All error responses are structured JSON { error: string }
-- Frontend displays toast on backend errors
+- Analyst can select 1+ facts in the Facts column
+- Selected facts can be used to trigger AI insight extraction via LLM
+- Selected facts can be used to pre-fill related_facts when creating an insight manually
+- Extracted insights appear as suggestions the analyst can accept, edit, or reject
+- Accepted insights are added to the pipeline with related_facts linked
+- No insight enters the pipeline without explicit analyst validation
 - All CI gates green
 - User validation complete
