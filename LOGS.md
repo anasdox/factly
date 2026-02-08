@@ -28,6 +28,7 @@
 
 ## Outcomes
 
+- 2026-02-07: M12 delivered. Backend: POST /extract/recommendations endpoint, extractRecommendations in both LLM providers, RECOMMENDATIONS_SYSTEM_PROMPT. Frontend: insight selection mechanism (useItemSelection hook shared with FactList), AI recommendation generation via SuggestionsPanel, manual recommendation creation with pre-filled related_insights. Refactoring: handleLLMError helper deduplicates 3 endpoint error blocks, useItemSelection hook shared between FactList and InsightList. Fix: ResizeObserver on columns to recalculate lines when toolbar/suggestions appear.
 - 2026-02-07: M11 implementation complete. Backend: POST /extract/insights endpoint with validation, extractInsights in both LLM providers. Frontend: fact selection mechanism (click-to-toggle), SelectionToolbar, AI insight generation via SuggestionsPanel, manual insight creation with pre-filled related_facts via InsightModal. Refactoring: extracted parseStringArray helper to deduplicate providers, extracted extractText per-provider helper, consolidated addInsightToData in FactList, stabilized handleCloseSuggestions with useCallback. All 8 backend acceptance tests pass.
 - 2026-02-07: M10 demo validated. Refactoring: extracted shared LLM prompt, replaced dynamic requires with static imports, added max_tokens to OpenAI provider, fixed InputModal (textarea for text type, conditional URL/text field), fixed saveInput ignoring form data in add mode, removed default discovery loading in favor of localStorage persistence with welcome screen.
 

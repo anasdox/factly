@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { LLMProvider } from './provider';
-import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, parseStringArray } from './prompts';
+import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, parseStringArray } from './prompts';
 
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic;
@@ -47,6 +47,24 @@ export class AnthropicProvider implements LLMProvider {
         {
           role: 'user',
           content: `Research goal: ${goal}\n\nFacts to derive insights from:\n${numberedFacts}`,
+        },
+      ],
+    });
+
+    return parseStringArray(this.extractText(response));
+  }
+
+  async extractRecommendations(insights: string[], goal: string): Promise<string[]> {
+    const numberedInsights = insights.map((ins, i) => `${i + 1}. ${ins}`).join('\n');
+    const response = await this.client.messages.create({
+      model: this.model,
+      max_tokens: 2048,
+      temperature: 0.2,
+      system: RECOMMENDATIONS_SYSTEM_PROMPT,
+      messages: [
+        {
+          role: 'user',
+          content: `Research goal: ${goal}\n\nInsights to formulate recommendations from:\n${numberedInsights}`,
         },
       ],
     });

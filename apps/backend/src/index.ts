@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -88,6 +89,17 @@ app.delete('/rooms/:id', async (req, res, next) => {
   }
 });
 
+function handleLLMError(err: any, res: express.Response) {
+  logger.error(`LLM extraction error: ${err.message}`);
+  if (err.message?.includes('timeout') || err.code === 'ETIMEDOUT') {
+    return res.status(502).json({ error: 'Extraction timed out' });
+  }
+  if (err instanceof SyntaxError) {
+    return res.status(502).json({ error: 'Extraction returned invalid response' });
+  }
+  return res.status(502).json({ error: 'Extraction service unavailable' });
+}
+
 app.post('/extract/facts', async (req, res, next) => {
   try {
     const validation = validateExtractionRequest(req.body);
@@ -106,14 +118,7 @@ app.post('/extract/facts', async (req, res, next) => {
     try {
       facts = await llmProvider.extractFacts(input_text, goal);
     } catch (err: any) {
-      logger.error(`LLM extraction error: ${err.message}`);
-      if (err.message?.includes('timeout') || err.code === 'ETIMEDOUT') {
-        return res.status(502).json({ error: 'Extraction timed out' });
-      }
-      if (err instanceof SyntaxError) {
-        return res.status(502).json({ error: 'Extraction returned invalid response' });
-      }
-      return res.status(502).json({ error: 'Extraction service unavailable' });
+      return handleLLMError(err, res);
     }
 
     const suggestions = facts.map((text) => ({ text }));
@@ -143,18 +148,41 @@ app.post('/extract/insights', async (req, res, next) => {
     try {
       insights = await llmProvider.extractInsights(factTexts, goal);
     } catch (err: any) {
-      logger.error(`LLM extraction error: ${err.message}`);
-      if (err.message?.includes('timeout') || err.code === 'ETIMEDOUT') {
-        return res.status(502).json({ error: 'Extraction timed out' });
-      }
-      if (err instanceof SyntaxError) {
-        return res.status(502).json({ error: 'Extraction returned invalid response' });
-      }
-      return res.status(502).json({ error: 'Extraction service unavailable' });
+      return handleLLMError(err, res);
     }
 
     const suggestions = insights.map((text) => ({ text }));
     res.json({ suggestions, fact_ids: factIds });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/extract/recommendations', async (req, res, next) => {
+  try {
+    const validation = validateRecommendationsExtractionRequest(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    if (!llmProvider) {
+      return res.status(503).json({ error: 'Extraction service not configured' });
+    }
+
+    const { insights, goal } = req.body;
+    const insightTexts = insights.map((i: any) => i.text);
+    const insightIds = insights.map((i: any) => i.insight_id);
+    logger.info(`Extracting recommendations from ${insights.length} insights`);
+
+    let recommendations: string[];
+    try {
+      recommendations = await llmProvider.extractRecommendations(insightTexts, goal);
+    } catch (err: any) {
+      return handleLLMError(err, res);
+    }
+
+    const suggestions = recommendations.map((text) => ({ text }));
+    res.json({ suggestions, insight_ids: insightIds });
   } catch (err) {
     next(err);
   }
@@ -368,6 +396,27 @@ function validateInsightsExtractionRequest(body: any): { valid: boolean; error?:
     }
     if (typeof fact.text !== 'string' || fact.text.length === 0) {
       return { valid: false, error: 'Each fact must have a non-empty "text" string' };
+    }
+  }
+  if (typeof body.goal !== 'string' || body.goal.length === 0) {
+    return { valid: false, error: 'Field "goal" is required and must be a non-empty string' };
+  }
+  return { valid: true };
+}
+
+function validateRecommendationsExtractionRequest(body: any): { valid: boolean; error?: string } {
+  if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
+    return { valid: false, error: 'Body is required' };
+  }
+  if (!Array.isArray(body.insights) || body.insights.length === 0) {
+    return { valid: false, error: 'Field "insights" is required and must be a non-empty array' };
+  }
+  for (const insight of body.insights) {
+    if (typeof insight.insight_id !== 'string' || insight.insight_id.length === 0) {
+      return { valid: false, error: 'Each insight must have a non-empty "insight_id" string' };
+    }
+    if (typeof insight.text !== 'string' || insight.text.length === 0) {
+      return { valid: false, error: 'Each insight must have a non-empty "text" string' };
     }
   }
   if (typeof body.goal !== 'string' || body.goal.length === 0) {

@@ -106,7 +106,7 @@
 - Accepted insights link to their source facts automatically
 
 ### M12: Auto Recommendations Extraction
-**Status:** Planned
+**Status:** Delivered (Demo validated 2026-02-07)
 **Outcome:** An analyst can trigger AI-assisted formulation of recommendations from selected insights.
 - Backend endpoint to send insights to LLM and receive structured recommendations
 - Frontend "Extract Recommendations" button on insight selection

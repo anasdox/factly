@@ -4,6 +4,7 @@ import { OpenAIProvider } from './openai-provider';
 export interface LLMProvider {
   extractFacts(text: string, goal: string): Promise<string[]>;
   extractInsights(facts: string[], goal: string): Promise<string[]>;
+  extractRecommendations(insights: string[], goal: string): Promise<string[]>;
 }
 
 export function createProvider(): LLMProvider | null {

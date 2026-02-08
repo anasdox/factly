@@ -6,6 +6,7 @@ import ItemWrapper from './ItemWrapper';
 import FactModal from './FactModal';
 import SuggestionsPanel from './SuggestionsPanel';
 import InsightModal from './InsightModal';
+import { useItemSelection } from '../hooks/useItemSelection';
 
 type Props = {
   factRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -29,7 +30,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
   const setFactRef = useCallback((element: HTMLDivElement, index: number) => { factRefs.current[index] = element; }, [factRefs]);
 
   // Fact selection state
-  const [selectedFactIds, setSelectedFactIds] = useState<Set<string>>(new Set());
+  const { selectedIds: selectedFactIds, toggleSelection: toggleFactSelection, clearSelection } = useItemSelection();
   const [extractingInsights, setExtractingInsights] = useState(false);
   const [insightSuggestionData, setInsightSuggestionData] = useState<InsightSuggestionData | null>(null);
 
@@ -78,23 +79,6 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
       ...prevState,
       facts: updatedFacts
     }) : prevState);
-  };
-
-  // Selection handlers
-  const toggleFactSelection = (factId: string) => {
-    setSelectedFactIds(prev => {
-      const next = new Set(prev);
-      if (next.has(factId)) {
-        next.delete(factId);
-      } else {
-        next.add(factId);
-      }
-      return next;
-    });
-  };
-
-  const clearSelection = () => {
-    setSelectedFactIds(new Set());
   };
 
   // Generate insights from selected facts

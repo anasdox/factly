@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { LLMProvider } from './provider';
-import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, parseStringArray } from './prompts';
+import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, parseStringArray } from './prompts';
 
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;
@@ -47,6 +47,24 @@ export class OpenAIProvider implements LLMProvider {
         {
           role: 'user',
           content: `Research goal: ${goal}\n\nFacts to derive insights from:\n${numberedFacts}`,
+        },
+      ],
+    });
+
+    return parseStringArray(this.extractText(response));
+  }
+
+  async extractRecommendations(insights: string[], goal: string): Promise<string[]> {
+    const numberedInsights = insights.map((ins, i) => `${i + 1}. ${ins}`).join('\n');
+    const response = await this.client.chat.completions.create({
+      model: this.model,
+      max_tokens: 2048,
+      temperature: 0.2,
+      messages: [
+        { role: 'system', content: RECOMMENDATIONS_SYSTEM_PROMPT },
+        {
+          role: 'user',
+          content: `Research goal: ${goal}\n\nInsights to formulate recommendations from:\n${numberedInsights}`,
         },
       ],
     });

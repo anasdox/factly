@@ -69,8 +69,18 @@ const App: React.FC = () => {
         };
 
         window.addEventListener('resize', handleResize);
+
+        // Recalculate lines when column contents change size (e.g. toolbar/suggestions panel)
+        const grid = document.querySelector('.discovery-grid');
+        let resizeObserver: ResizeObserver | null = null;
+        if (grid) {
+          resizeObserver = new ResizeObserver(handleResize);
+          grid.querySelectorAll('.column').forEach(col => resizeObserver!.observe(col));
+        }
+
         return () => {
           window.removeEventListener('resize', handleResize);
+          resizeObserver?.disconnect();
           const existingLines = document.querySelectorAll('.line');
           existingLines.forEach(line => line.remove());
         }
@@ -152,7 +162,8 @@ const App: React.FC = () => {
               handleMouseEnter={handleMouseEnter}
               handleMouseLeave={handleMouseLeave}
               setData={setData}
-              data={data} />
+              data={data}
+              onError={handleError} />
             : ""
         }
         {
