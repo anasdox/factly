@@ -76,6 +76,7 @@ const App: React.FC = () => {
         if (grid) {
           resizeObserver = new ResizeObserver(handleResize);
           grid.querySelectorAll('.column').forEach(col => resizeObserver!.observe(col));
+          grid.querySelectorAll('.toolbar-wrapper').forEach(el => resizeObserver!.observe(el));
         }
 
         return () => {

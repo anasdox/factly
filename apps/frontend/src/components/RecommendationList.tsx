@@ -175,7 +175,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
   return (
     <div className="column recommendations">
       <h2>👍Recommendations</h2>
-      {selectedRecommendationIds.size > 0 && (
+      <div className={`toolbar-wrapper${selectedRecommendationIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
         <div className="selection-toolbar">
           <span>{selectedRecommendationIds.size} recommendation(s) selected</span>
           <select
@@ -199,7 +199,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
             {' '}Clear
           </button>
         </div>
-      )}
+      </div>
       {data.recommendations.map((recommendation, index) => (
         <div
           key={recommendation.recommendation_id}

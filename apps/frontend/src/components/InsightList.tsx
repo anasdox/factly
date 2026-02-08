@@ -149,7 +149,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
   return (
     <div className="column insights">
       <h2>💡Insights</h2>
-      {selectedInsightIds.size > 0 && (
+      <div className={`toolbar-wrapper${selectedInsightIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
         <div className="selection-toolbar">
           <span>{selectedInsightIds.size} insight(s) selected</span>
           <button onClick={handleExtractRecommendations} disabled={extractingRecommendations}>
@@ -165,7 +165,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
             {' '}Clear
           </button>
         </div>
-      )}
+      </div>
       {data.insights.map((insight, index) => (
         <div
           key={insight.insight_id}

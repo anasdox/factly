@@ -148,7 +148,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
   return (
     <div className="column facts">
       <h2>📊Facts</h2>
-      {selectedFactIds.size > 0 && (
+      <div className={`toolbar-wrapper${selectedFactIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
         <div className="selection-toolbar">
           <span>{selectedFactIds.size} fact(s) selected</span>
           <button onClick={handleExtractInsights} disabled={extractingInsights}>
@@ -164,7 +164,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
             {' '}Clear
           </button>
         </div>
-      )}
+      </div>
       {data.facts.map((fact, index) => (
         <div
           key={fact.fact_id}
