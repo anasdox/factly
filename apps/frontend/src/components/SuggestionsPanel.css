@@ -21,6 +21,10 @@
   overflow-y: auto;
 }
 
+.suggestions-panel-wide {
+  width: 700px;
+}
+
 .suggestions-header {
   display: flex;
   justify-content: space-between;
@@ -153,4 +157,57 @@
 
 .suggestion-edit-actions button:hover {
   border-color: #000;
+}
+
+.suggestion-markdown {
+  font-size: 0.9em;
+  line-height: 1.5;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.suggestion-markdown h1,
+.suggestion-markdown h2,
+.suggestion-markdown h3 {
+  margin: 0.4em 0 0.2em;
+  font-size: 1em;
+}
+
+.suggestion-markdown h2 { font-size: 1.05em; }
+.suggestion-markdown h1 { font-size: 1.1em; }
+
+.suggestion-markdown p {
+  margin: 0.3em 0;
+}
+
+.suggestion-markdown ul,
+.suggestion-markdown ol {
+  margin: 0.3em 0;
+  padding-left: 1.2em;
+}
+
+.suggestion-markdown blockquote {
+  margin: 0.3em 0;
+  padding: 0.2em 0.6em;
+  border-left: 3px solid #1565c0;
+  background: #e3f2fd;
+  font-size: 0.9em;
+}
+
+.suggestion-markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.3em 0;
+  font-size: 0.9em;
+}
+
+.suggestion-markdown th,
+.suggestion-markdown td {
+  border: 1px solid #ccc;
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.suggestion-markdown th {
+  background: #e0e0e0;
 }

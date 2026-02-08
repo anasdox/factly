@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { markdownRenderer } from '../renderers/MarkdownRenderer';
 import './SuggestionsPanel.css';
 
 type Suggestion = {
@@ -12,9 +13,10 @@ type Props = {
   onAccept: (suggestion: Suggestion, inputId: string) => void;
   onClose: () => void;
   title?: string;
+  renderMarkdown?: boolean;
 };
 
-const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, inputId, onAccept, onClose, title = 'Suggested Facts' }) => {
+const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, inputId, onAccept, onClose, title = 'Suggested Facts', renderMarkdown = false }) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>(initialSuggestions);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editText, setEditText] = useState('');
@@ -69,7 +71,7 @@ const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, in
 
   return (
     <div className="suggestions-overlay">
-      <div className="suggestions-panel">
+      <div className={`suggestions-panel${renderMarkdown ? ' suggestions-panel-wide' : ''}`}>
         <div className="suggestions-header">
           <h3>{title} ({suggestions.length})</h3>
           <button className="suggestions-close" onClick={onClose}>&times;</button>
@@ -95,7 +97,11 @@ const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, in
                 </div>
               ) : (
                 <>
-                  <p className="suggestion-text">{suggestion.text}</p>
+                  {renderMarkdown ? (
+                    <div className="suggestion-text suggestion-markdown">{markdownRenderer.render(suggestion.text)}</div>
+                  ) : (
+                    <p className="suggestion-text">{suggestion.text}</p>
+                  )}
                   {suggestion.source_excerpt && (
                     <blockquote className="suggestion-excerpt">{suggestion.source_excerpt}</blockquote>
                   )}

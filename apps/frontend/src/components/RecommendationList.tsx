@@ -238,6 +238,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
           title="Suggested Outputs"
           onAccept={(suggestion) => handleAcceptOutput(suggestion)}
           onClose={handleCloseSuggestions}
+          renderMarkdown
         />
       )}
       <OutputModal
