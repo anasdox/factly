@@ -175,8 +175,89 @@ dialog {
 }
 
 dialog label {
-  margin-bottom: 0.5em; 
+  margin-bottom: 0.5em;
   font-weight: bold;
   color: #000000;
   font-size: 0.8em;
+}
+
+.fact-selectable {
+  cursor: pointer;
+  width: 100%;
+}
+
+.fact-selectable.selected .wrapper {
+  box-shadow: 0 0 0 2px #2196f3;
+}
+
+.fact-selectable.selected .item {
+  background-color: #bbdefb;
+}
+
+.selection-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5em;
+  margin-bottom: 0.5em;
+  background: #e3f2fd;
+  border-radius: 10px;
+  font-size: 0.85em;
+  width: 100%;
+  box-sizing: border-box;
+  flex-wrap: wrap;
+}
+
+.selection-toolbar span {
+  font-weight: bold;
+  margin-right: 0.5em;
+}
+
+.selection-toolbar button {
+  border: 1px solid #90caf9;
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
+.selection-toolbar button:hover {
+  background: #2196f3;
+  color: #ffffff;
+  transition: 0.2s;
+}
+
+.selection-toolbar button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.welcome-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 80vh;
+  gap: 1em;
+}
+
+.welcome-screen p {
+  color: #666;
+}
+
+.welcome-new-discovery {
+  padding: 12px 24px;
+  border: 2px solid #4e4e4e;
+  border-radius: 10px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: bold;
+}
+
+.welcome-new-discovery:hover {
+  background: #4e4e4e;
+  color: #ffffff;
+  transition: 0.2s;
 }

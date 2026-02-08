@@ -10,6 +10,7 @@ import { generateUsername } from 'friendly-username-generator';
 import winston from 'winston';
 import * as fs from 'fs';
 import * as path from 'path';
+import { createProvider, LLMProvider } from './llm/provider';
 
 const dataDir = path.join(__dirname, '..', 'data');
 fs.mkdirSync(dataDir, { recursive: true });
@@ -30,6 +31,13 @@ const logger = winston.createLogger({
 });
 
 logger.info(`Using SQLite store at ${dbPath}`);
+
+const llmProvider: LLMProvider | null = createProvider();
+if (llmProvider) {
+  logger.info(`LLM provider configured: ${process.env.LLM_PROVIDER}`);
+} else {
+  logger.warn('LLM provider not configured. Extraction endpoint will return 503.');
+}
 
 
 const app = express();
@@ -75,6 +83,78 @@ app.delete('/rooms/:id', async (req, res, next) => {
     await stopRoom(req.params.id);
     logger.info(`Stopped room with ID: ${req.params.id}`);
     res.sendStatus(204);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/extract/facts', async (req, res, next) => {
+  try {
+    const validation = validateExtractionRequest(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    if (!llmProvider) {
+      return res.status(503).json({ error: 'Extraction service not configured' });
+    }
+
+    const { input_text, goal, input_id } = req.body;
+    logger.info(`Extracting facts for input ${input_id}`);
+
+    let facts: string[];
+    try {
+      facts = await llmProvider.extractFacts(input_text, goal);
+    } catch (err: any) {
+      logger.error(`LLM extraction error: ${err.message}`);
+      if (err.message?.includes('timeout') || err.code === 'ETIMEDOUT') {
+        return res.status(502).json({ error: 'Extraction timed out' });
+      }
+      if (err instanceof SyntaxError) {
+        return res.status(502).json({ error: 'Extraction returned invalid response' });
+      }
+      return res.status(502).json({ error: 'Extraction service unavailable' });
+    }
+
+    const suggestions = facts.map((text) => ({ text }));
+    res.json({ suggestions, input_id });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/extract/insights', async (req, res, next) => {
+  try {
+    const validation = validateInsightsExtractionRequest(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    if (!llmProvider) {
+      return res.status(503).json({ error: 'Extraction service not configured' });
+    }
+
+    const { facts, goal } = req.body;
+    const factTexts = facts.map((f: any) => f.text);
+    const factIds = facts.map((f: any) => f.fact_id);
+    logger.info(`Extracting insights from ${facts.length} facts`);
+
+    let insights: string[];
+    try {
+      insights = await llmProvider.extractInsights(factTexts, goal);
+    } catch (err: any) {
+      logger.error(`LLM extraction error: ${err.message}`);
+      if (err.message?.includes('timeout') || err.code === 'ETIMEDOUT') {
+        return res.status(502).json({ error: 'Extraction timed out' });
+      }
+      if (err instanceof SyntaxError) {
+        return res.status(502).json({ error: 'Extraction returned invalid response' });
+      }
+      return res.status(502).json({ error: 'Extraction service unavailable' });
+    }
+
+    const suggestions = insights.map((text) => ({ text }));
+    res.json({ suggestions, fact_ids: factIds });
   } catch (err) {
     next(err);
   }
@@ -255,6 +335,43 @@ function validateUpdateBody(body: any): { valid: boolean; error?: string } {
   }
   if (typeof body.username !== 'string') {
     return { valid: false, error: 'Field "username" is required and must be a string' };
+  }
+  return { valid: true };
+}
+
+function validateExtractionRequest(body: any): { valid: boolean; error?: string } {
+  if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
+    return { valid: false, error: 'Body is required' };
+  }
+  if (typeof body.input_text !== 'string' || body.input_text.length === 0) {
+    return { valid: false, error: 'Field "input_text" is required and must be a non-empty string' };
+  }
+  if (typeof body.goal !== 'string' || body.goal.length === 0) {
+    return { valid: false, error: 'Field "goal" is required and must be a non-empty string' };
+  }
+  if (typeof body.input_id !== 'string' || body.input_id.length === 0) {
+    return { valid: false, error: 'Field "input_id" is required and must be a non-empty string' };
+  }
+  return { valid: true };
+}
+
+function validateInsightsExtractionRequest(body: any): { valid: boolean; error?: string } {
+  if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
+    return { valid: false, error: 'Body is required' };
+  }
+  if (!Array.isArray(body.facts) || body.facts.length === 0) {
+    return { valid: false, error: 'Field "facts" is required and must be a non-empty array' };
+  }
+  for (const fact of body.facts) {
+    if (typeof fact.fact_id !== 'string' || fact.fact_id.length === 0) {
+      return { valid: false, error: 'Each fact must have a non-empty "fact_id" string' };
+    }
+    if (typeof fact.text !== 'string' || fact.text.length === 0) {
+      return { valid: false, error: 'Each fact must have a non-empty "text" string' };
+    }
+  }
+  if (typeof body.goal !== 'string' || body.goal.length === 0) {
+    return { valid: false, error: 'Field "goal" is required and must be a non-empty string' };
   }
   return { valid: true };
 }

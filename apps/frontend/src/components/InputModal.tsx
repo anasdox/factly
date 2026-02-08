@@ -66,23 +66,14 @@ const InputModal: React.FC<Props> = ({
           id="input-title"
           type="text"
           value={currentInputTitle}
-          onChange={
-            (event: { target: { value: React.SetStateAction<string>; }; }) => {
-              setCurrentInputTitle(event.target.value);
-            }} />
-        <label htmlFor="input-url">URL</label>
-        <input
-          id="input-url"
-          type="text"
-          value={currentInputUrl}
-          onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
-            setCurrentInputUrl(event.target.value);
+          onChange={(event) => {
+            setCurrentInputTitle(event.target.value);
           }} />
         <label htmlFor="input-type">Type</label>
         <select
           id="input-type"
           value={currentInputType}
-          onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
+          onChange={(event) => {
             setCurrentInputType(event.target.value);
           }}>
           <option value="text">Text</option>
@@ -92,6 +83,29 @@ const InputModal: React.FC<Props> = ({
           <option value="audio">Audio</option>
           <option value="pdf">Pdf</option>
         </select>
+        {currentInputType === 'text' ? (
+          <>
+            <label htmlFor="input-text">Text</label>
+            <textarea
+              id="input-text"
+              rows={5}
+              value={currentInputText}
+              onChange={(event) => {
+                setCurrentInputText(event.target.value);
+              }} />
+          </>
+        ) : (
+          <>
+            <label htmlFor="input-url">URL</label>
+            <input
+              id="input-url"
+              type="text"
+              value={currentInputUrl}
+              onChange={(event) => {
+                setCurrentInputUrl(event.target.value);
+              }} />
+          </>
+        )}
       </form>
       <div className='modal-actions'>
         <div className="modal-action-group-left">

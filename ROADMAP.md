@@ -78,7 +78,7 @@
 - Rooms from different server lifecycles coexist
 
 ### M9: Input Validation and Error Handling
-**Status:** Delivered
+**Status:** Delivered (Demo validated)
 **Outcome:** The backend rejects malformed requests and returns meaningful error responses.
 - Schema validation on `POST /rooms` (DiscoveryData: 4 string fields + 5 array fields)
 - Schema validation on `POST /rooms/:id/update` (payload, senderUuid, username)
@@ -87,6 +87,40 @@
 - Frontend Toast notification component for backend errors
 - All fetch calls in Toolbar.tsx check `response.ok` and display errors via toast
 
+### M10: Auto Facts Extraction from Text
+**Status:** Delivered (Demo validated 2026-02-07)
+**Outcome:** An analyst can trigger AI-assisted extraction of facts from a text input. Proposed facts appear as suggestions that the analyst validates, edits, or rejects before they enter the pipeline.
+- Backend endpoint to send input text to LLM and receive structured facts
+- LLM integration (provider TBD — Claude API or OpenAI)
+- Frontend "Extract Facts" button on text inputs
+- Suggestion UI: list of proposed facts with accept/edit/reject actions
+- Accepted facts are added to the pipeline with `related_inputs` linked automatically
+- Human-in-the-loop: no fact enters the pipeline without analyst validation
+
+### M11: Auto Insights Extraction
+**Status:** Delivered (Demo validated 2026-02-07)
+**Outcome:** An analyst can trigger AI-assisted derivation of insights from selected facts. Proposed insights appear as suggestions to validate.
+- Backend endpoint to send facts to LLM and receive structured insights
+- Frontend "Extract Insights" button on fact selection
+- Suggestion UI for proposed insights with accept/edit/reject
+- Accepted insights link to their source facts automatically
+
+### M12: Auto Recommendations Extraction
+**Status:** Planned
+**Outcome:** An analyst can trigger AI-assisted formulation of recommendations from selected insights.
+- Backend endpoint to send insights to LLM and receive structured recommendations
+- Frontend "Extract Recommendations" button on insight selection
+- Suggestion UI for proposed recommendations with accept/edit/reject
+- Accepted recommendations link to their source insights automatically
+
+### M13: Auto Outputs Formulation
+**Status:** Planned
+**Outcome:** An analyst can trigger AI-assisted formulation of structured outputs from selected recommendations.
+- Backend endpoint to send recommendations to LLM and receive structured outputs
+- Frontend "Formulate Outputs" button on recommendation selection
+- Suggestion UI for proposed outputs with accept/edit/reject
+- Accepted outputs link to their source recommendations automatically
+
 ## Risks and Dependencies
 
 | Risk | Mitigation |
@@ -94,10 +128,14 @@
 | No test coverage on either app | Acceptance tests must be written before any new feature work |
 | Frontend state management is purely local; scaling to multiple views or features may be difficult | Evaluate state management approach when adding features beyond M9 |
 | No CI/CD pipeline | Set up CI before merging new features to main |
+| LLM provider dependency (M10-M13) | Abstract behind a provider interface; support at least two providers |
+| LLM API cost per request (M10-M13) | Monitor usage; consider caching repeated extractions |
+| LLM hallucination risk (M10-M13) | Human-in-the-loop validation mandatory; no auto-commit to pipeline |
+| API key security (M10-M13) | Keys stored server-side only; never exposed to frontend |
 
 ## Non-Goals (Project-Wide)
 
-- AI-powered analysis or entity extraction
+- ~~AI-powered analysis or entity extraction~~ → Moved to Future Milestones (Decision: 20260207-EnableAIPoweredEntityExtraction)
 - User authentication and authorization
 - Mobile or desktop native clients
 - Offline-first or PWA capabilities
