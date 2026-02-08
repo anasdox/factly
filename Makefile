@@ -1,11 +1,13 @@
 BACKEND_DIR  := apps/backend
 FRONTEND_DIR := apps/frontend
 TESTS_DIR    := tests/acceptance
+BACKEND_PID  := /tmp/factly-backend.pid
 
 .PHONY: install install-backend install-frontend install-tests \
-        start-backend start-frontend start \
+        start-backend stop-backend restart-backend start-frontend start \
         build-backend build-frontend build \
-        test test-backend \
+        typecheck typecheck-backend typecheck-frontend \
+        test test-backend test-acceptance \
         clean lint
 
 ## Install
@@ -16,7 +18,7 @@ install-backend:
 	cd $(BACKEND_DIR) && npm install
 
 install-frontend:
-	cd $(FRONTEND_DIR) && npm install
+	cd $(FRONTEND_DIR) && npm install --legacy-peer-deps
 
 install-tests:
 	cd $(TESTS_DIR) && npm install
@@ -24,10 +26,37 @@ install-tests:
 ## Run
 
 start-backend:
-	cd $(BACKEND_DIR) && npm start
+	@if [ -f $(BACKEND_PID) ] && kill -0 $$(cat $(BACKEND_PID)) 2>/dev/null; then \
+		echo "Backend already running (PID $$(cat $(BACKEND_PID)))"; \
+	else \
+		cd $(BACKEND_DIR) && nohup npx ts-node src/index.ts > /tmp/factly-backend.log 2>&1 & echo $$! > $(BACKEND_PID); \
+		sleep 2; \
+		if kill -0 $$(cat $(BACKEND_PID)) 2>/dev/null; then \
+			echo "Backend started (PID $$(cat $(BACKEND_PID)))"; \
+		else \
+			echo "Backend failed to start. See /tmp/factly-backend.log"; \
+			cat /tmp/factly-backend.log; \
+			exit 1; \
+		fi; \
+	fi
+
+stop-backend:
+	@if [ -f $(BACKEND_PID) ] && kill -0 $$(cat $(BACKEND_PID)) 2>/dev/null; then \
+		kill $$(cat $(BACKEND_PID)) && rm -f $(BACKEND_PID); \
+		echo "Backend stopped"; \
+	else \
+		echo "Backend not running"; \
+		rm -f $(BACKEND_PID); \
+	fi
+	@# Also kill any stray process on port 3002
+	@lsof -ti:3002 2>/dev/null | xargs kill 2>/dev/null || true
+
+restart-backend: stop-backend start-backend
 
 start-frontend:
 	cd $(FRONTEND_DIR) && npm start
+
+start: start-backend start-frontend
 
 ## Build
 
@@ -39,13 +68,25 @@ build-frontend:
 
 build: build-backend build-frontend
 
+## Typecheck
+
+typecheck-backend:
+	cd $(BACKEND_DIR) && npx tsc --noEmit
+
+typecheck-frontend:
+	cd $(FRONTEND_DIR) && npx tsc --noEmit
+
+typecheck: typecheck-backend typecheck-frontend
+
 ## Test
 
-test:
-	cd $(TESTS_DIR) && npx jest --forceExit --detectOpenHandles --runInBand
+test-acceptance:
+	cd $(TESTS_DIR) && npx jest --no-coverage --forceExit --detectOpenHandles --runInBand
+
+test: test-acceptance
 
 test-backend:
-	cd $(TESTS_DIR) && npx jest --forceExit --detectOpenHandles --runInBand room-management collaborative-session
+	cd $(TESTS_DIR) && npx jest --no-coverage --forceExit --detectOpenHandles --runInBand room-management collaborative-session
 
 ## Lint
 
@@ -59,3 +100,8 @@ clean:
 	rm -rf $(BACKEND_DIR)/node_modules $(BACKEND_DIR)/dist
 	rm -rf $(FRONTEND_DIR)/node_modules $(FRONTEND_DIR)/build
 	rm -rf $(TESTS_DIR)/node_modules
+
+## Logs
+
+logs-backend:
+	@tail -f /tmp/factly-backend.log
