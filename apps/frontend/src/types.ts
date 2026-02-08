@@ -10,6 +10,7 @@ type FactType = {
   fact_id: string;
   related_inputs: string[];
   text: string;
+  source_excerpt?: string;
 };
 
 type InsightType = {
@@ -28,6 +29,7 @@ type OutputType = {
   output_id: string;
   related_recommendations: string[];
   text: string;
+  type: 'report' | 'presentation' | 'action_plan' | 'brief';
 };
 
 type DiscoveryData = {

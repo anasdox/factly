@@ -127,8 +127,8 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     }) : prevState);
   }, [setData]);
 
-  const handleAcceptRecommendation = (text: string) => {
-    addRecommendationToData(text, Array.from(selectedInsightIds));
+  const handleAcceptRecommendation = (suggestion: { text: string }) => {
+    addRecommendationToData(suggestion.text, Array.from(selectedInsightIds));
   };
 
   const handleCloseSuggestions = useCallback(() => {
@@ -200,7 +200,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
           suggestions={recommendationSuggestionData.suggestions}
           inputId="recommendations"
           title="Suggested Recommendations"
-          onAccept={(text) => handleAcceptRecommendation(text)}
+          onAccept={(suggestion) => handleAcceptRecommendation(suggestion)}
           onClose={handleCloseSuggestions}
         />
       )}

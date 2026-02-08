@@ -126,8 +126,8 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     }) : prevState);
   }, [setData]);
 
-  const handleAcceptInsight = (text: string) => {
-    addInsightToData(text, Array.from(selectedFactIds));
+  const handleAcceptInsight = (suggestion: { text: string }) => {
+    addInsightToData(suggestion.text, Array.from(selectedFactIds));
   };
 
   const handleCloseSuggestions = useCallback(() => {
@@ -199,7 +199,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           suggestions={insightSuggestionData.suggestions}
           inputId="insights"
           title="Suggested Insights"
-          onAccept={(text) => handleAcceptInsight(text)}
+          onAccept={(suggestion) => handleAcceptInsight(suggestion)}
           onClose={handleCloseSuggestions}
         />
       )}

@@ -17,7 +17,7 @@ type Props = {
 };
 
 type SuggestionData = {
-  suggestions: { text: string }[];
+  suggestions: { text: string; source_excerpt?: string }[];
   inputId: string;
 };
 
@@ -98,11 +98,12 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
     }
   };
 
-  const handleAcceptSuggestion = (text: string, inputId: string) => {
+  const handleAcceptSuggestion = (suggestion: { text: string; source_excerpt?: string }, inputId: string) => {
     const newFact: FactType = {
       fact_id: Math.random().toString(16).slice(2),
-      text,
+      text: suggestion.text,
       related_inputs: [inputId],
+      source_excerpt: suggestion.source_excerpt,
     };
     setData((prevState) => prevState ? ({
       ...prevState,

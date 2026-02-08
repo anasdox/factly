@@ -11,7 +11,8 @@ import { generateUsername } from 'friendly-username-generator';
 import winston from 'winston';
 import * as fs from 'fs';
 import * as path from 'path';
-import { createProvider, LLMProvider } from './llm/provider';
+import { createProvider, LLMProvider, OutputTraceabilityContext } from './llm/provider';
+import { VALID_OUTPUT_TYPES, ExtractedFact } from './llm/prompts';
 
 const dataDir = path.join(__dirname, '..', 'data');
 fs.mkdirSync(dataDir, { recursive: true });
@@ -114,14 +115,14 @@ app.post('/extract/facts', async (req, res, next) => {
     const { input_text, goal, input_id } = req.body;
     logger.info(`Extracting facts for input ${input_id}`);
 
-    let facts: string[];
+    let facts: ExtractedFact[];
     try {
       facts = await llmProvider.extractFacts(input_text, goal);
     } catch (err: any) {
       return handleLLMError(err, res);
     }
 
-    const suggestions = facts.map((text) => ({ text }));
+    const suggestions = facts.map((f) => ({ text: f.text, source_excerpt: f.source_excerpt }));
     res.json({ suggestions, input_id });
   } catch (err) {
     next(err);
@@ -183,6 +184,47 @@ app.post('/extract/recommendations', async (req, res, next) => {
 
     const suggestions = recommendations.map((text) => ({ text }));
     res.json({ suggestions, insight_ids: insightIds });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/extract/outputs', async (req, res, next) => {
+  try {
+    const validation = validateOutputsFormulationRequest(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    if (!llmProvider) {
+      return res.status(503).json({ error: 'Extraction service not configured' });
+    }
+
+    const { recommendations, goal, output_type, facts, insights, inputs } = req.body;
+    const recTexts = recommendations.map((r: any) => r.text);
+    const recIds = recommendations.map((r: any) => r.recommendation_id);
+    logger.info(`Formulating ${output_type} outputs from ${recommendations.length} recommendations`);
+
+    const traceabilityContext: OutputTraceabilityContext = {};
+    if (Array.isArray(facts) && facts.length > 0) {
+      traceabilityContext.facts = facts;
+    }
+    if (Array.isArray(insights) && insights.length > 0) {
+      traceabilityContext.insights = insights;
+    }
+    if (Array.isArray(inputs) && inputs.length > 0) {
+      traceabilityContext.inputs = inputs;
+    }
+
+    let outputs: string[];
+    try {
+      outputs = await llmProvider.formulateOutputs(recTexts, goal, output_type, traceabilityContext);
+    } catch (err: any) {
+      return handleLLMError(err, res);
+    }
+
+    const suggestions = outputs.map((text) => ({ text }));
+    res.json({ suggestions, recommendation_ids: recIds });
   } catch (err) {
     next(err);
   }
@@ -421,6 +463,30 @@ function validateRecommendationsExtractionRequest(body: any): { valid: boolean; 
   }
   if (typeof body.goal !== 'string' || body.goal.length === 0) {
     return { valid: false, error: 'Field "goal" is required and must be a non-empty string' };
+  }
+  return { valid: true };
+}
+
+function validateOutputsFormulationRequest(body: any): { valid: boolean; error?: string } {
+  if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
+    return { valid: false, error: 'Body is required' };
+  }
+  if (!Array.isArray(body.recommendations) || body.recommendations.length === 0) {
+    return { valid: false, error: 'Field "recommendations" is required and must be a non-empty array' };
+  }
+  for (const rec of body.recommendations) {
+    if (typeof rec.recommendation_id !== 'string' || rec.recommendation_id.length === 0) {
+      return { valid: false, error: 'Each recommendation must have a non-empty "recommendation_id" string' };
+    }
+    if (typeof rec.text !== 'string' || rec.text.length === 0) {
+      return { valid: false, error: 'Each recommendation must have a non-empty "text" string' };
+    }
+  }
+  if (typeof body.goal !== 'string' || body.goal.length === 0) {
+    return { valid: false, error: 'Field "goal" is required and must be a non-empty string' };
+  }
+  if (typeof body.output_type !== 'string' || !VALID_OUTPUT_TYPES.includes(body.output_type)) {
+    return { valid: false, error: `Field "output_type" must be one of: ${VALID_OUTPUT_TYPES.join(', ')}` };
   }
   return { valid: true };
 }

@@ -5,10 +5,12 @@ Rules:
 - Only extract facts that are relevant to the given research goal.
 - Do not add interpretation or opinion — only observable facts.
 - Facts must not contain adjectives or subjective qualifiers (e.g. "important", "significant", "many", "large", "good"). If the source text uses such terms, reformulate the fact to keep only the measurable or observable part, or drop the fact if no factual core remains.
-- Return a JSON array of strings, each string being one fact.
+- For each fact, include the exact excerpt from the source text that supports it.
+- Return a JSON array of objects, each with "text" (the fact statement) and "source_excerpt" (the exact quote from the source).
 - If no relevant facts can be extracted, return an empty array.
 
-Respond ONLY with a valid JSON array of strings. No explanation, no markdown.`;
+Respond ONLY with a valid JSON array of objects. No explanation, no markdown.
+Example: [{"text": "Global temperature rose by 1.1°C in 2023", "source_excerpt": "The global temperature rose by 1.1°C in 2023 compared to pre-industrial levels."}]`;
 
 export const INSIGHTS_SYSTEM_PROMPT = `You are an insight derivation assistant. Your role is to derive analytical insights from a set of observable facts.
 
@@ -34,8 +36,80 @@ Rules:
 
 Respond ONLY with a valid JSON array of strings. No explanation, no markdown.`;
 
+const OUTPUTS_BASE_PROMPT = `You are a professional document formulation assistant. Your role is to produce structured, professional Markdown deliverables from recommendations, with full traceability to the underlying research chain.
+
+Rules:
+- Produce rich, professional Markdown content — use headings, bullet lists, blockquotes, bold, and tables where appropriate.
+- Each output must cite its sources: reference the recommendations, insights, and facts that support it.
+- Use blockquotes (>) to cite source excerpts or key facts that back the output.
+- Include a "Sources & Traceability" section at the end that maps conclusions back to their supporting evidence chain.
+- Do not add speculation beyond what the recommendations and their underlying evidence support.
+- Return a JSON array of strings, each string being one complete Markdown document/section.
+- If no relevant outputs can be formulated, return an empty array.
+
+Respond ONLY with a valid JSON array of strings. No explanation outside the JSON.`;
+
+export const VALID_OUTPUT_TYPES = ['report', 'presentation', 'action_plan', 'brief'] as const;
+
+export const OUTPUT_TYPE_INSTRUCTIONS: Record<string, string> = {
+  report: `Produce a structured report section in Markdown with:
+- A clear ## heading
+- An executive summary paragraph
+- Detailed findings with supporting evidence cited as blockquotes
+- A "### Sources & Traceability" subsection mapping each conclusion to its recommendation → insight → fact chain`,
+  presentation: `Produce a presentation slide content in Markdown with:
+- A clear ## slide title
+- 3-5 bullet points as key takeaways
+- Supporting evidence cited as blockquotes
+- Speaker notes in a "### Notes" subsection with traceability to recommendations and facts`,
+  action_plan: `Produce an action plan item in Markdown with:
+- A clear ## action title
+- **Objective**, **Timeline**, **Owner** fields
+- Detailed steps as a numbered list
+- Supporting rationale with evidence cited as blockquotes
+- A "### Traceability" subsection linking to recommendations → insights → facts`,
+  brief: `Produce an executive brief section in Markdown with:
+- A clear ## heading
+- A concise summary (2-3 sentences)
+- Key data points highlighted in **bold**
+- Supporting evidence cited as blockquotes
+- A "### Sources" subsection with the evidence chain`,
+};
+
+export function buildOutputsPrompt(outputType: string): string {
+  const instruction = OUTPUT_TYPE_INSTRUCTIONS[outputType] || OUTPUT_TYPE_INSTRUCTIONS.report;
+  return `${OUTPUTS_BASE_PROMPT}\n\nOutput type: ${outputType}\n${instruction}`;
+}
+
+export type ExtractedFact = { text: string; source_excerpt: string };
+
+function stripCodeFences(raw: string): string {
+  const trimmed = raw.trim();
+  if (trimmed.startsWith('```')) {
+    const firstNewline = trimmed.indexOf('\n');
+    const lastFence = trimmed.lastIndexOf('```');
+    if (firstNewline !== -1 && lastFence > firstNewline) {
+      return trimmed.slice(firstNewline + 1, lastFence).trim();
+    }
+  }
+  return trimmed;
+}
+
+export function parseFactArray(raw: string): ExtractedFact[] {
+  const parsed = JSON.parse(stripCodeFences(raw));
+  if (!Array.isArray(parsed)) {
+    throw new Error('LLM response is not an array');
+  }
+  return parsed
+    .filter((item: unknown) => typeof item === 'object' && item !== null && 'text' in item)
+    .map((item: any) => ({
+      text: String(item.text),
+      source_excerpt: typeof item.source_excerpt === 'string' ? item.source_excerpt : '',
+    }));
+}
+
 export function parseStringArray(raw: string): string[] {
-  const parsed = JSON.parse(raw);
+  const parsed = JSON.parse(stripCodeFences(raw));
   if (!Array.isArray(parsed)) {
     throw new Error('LLM response is not an array');
   }

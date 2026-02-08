@@ -114,6 +114,8 @@ describe('Auto Facts Extraction from Text', () => {
           expect(suggestion).toHaveProperty('text');
           expect(typeof suggestion.text).toBe('string');
           expect(suggestion.text.length).toBeGreaterThan(0);
+          expect(suggestion).toHaveProperty('source_excerpt');
+          expect(typeof suggestion.source_excerpt).toBe('string');
         }
       } else {
         // LLM not configured — 503 is acceptable

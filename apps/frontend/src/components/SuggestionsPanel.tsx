@@ -3,12 +3,13 @@ import './SuggestionsPanel.css';
 
 type Suggestion = {
   text: string;
+  source_excerpt?: string;
 };
 
 type Props = {
   suggestions: Suggestion[];
   inputId: string;
-  onAccept: (text: string, inputId: string) => void;
+  onAccept: (suggestion: Suggestion, inputId: string) => void;
   onClose: () => void;
   title?: string;
 };
@@ -19,7 +20,7 @@ const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, in
   const [editText, setEditText] = useState('');
 
   const handleAccept = (index: number) => {
-    onAccept(suggestions[index].text, inputId);
+    onAccept(suggestions[index], inputId);
     setSuggestions(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -34,7 +35,8 @@ const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, in
 
   const handleConfirmEdit = () => {
     if (editingIndex !== null && editText.trim()) {
-      onAccept(editText.trim(), inputId);
+      const original = suggestions[editingIndex];
+      onAccept({ text: editText.trim(), source_excerpt: original.source_excerpt }, inputId);
       setSuggestions(prev => prev.filter((_, i) => i !== editingIndex));
       setEditingIndex(null);
       setEditText('');
@@ -47,7 +49,7 @@ const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, in
   };
 
   const handleAcceptAll = () => {
-    suggestions.forEach(s => onAccept(s.text, inputId));
+    suggestions.forEach(s => onAccept(s, inputId));
     setSuggestions([]);
   };
 
@@ -94,6 +96,9 @@ const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, in
               ) : (
                 <>
                   <p className="suggestion-text">{suggestion.text}</p>
+                  {suggestion.source_excerpt && (
+                    <blockquote className="suggestion-excerpt">{suggestion.source_excerpt}</blockquote>
+                  )}
                   <div className="suggestion-actions">
                     <button className="suggestion-accept" onClick={() => handleAccept(index)}>Accept</button>
                     <button className="suggestion-edit-btn" onClick={() => handleStartEdit(index)}>Edit</button>
