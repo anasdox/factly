@@ -98,31 +98,38 @@
 - Human-in-the-loop: no fact enters the pipeline without analyst validation
 
 ### M11: Auto Insights Extraction
-**Status:** Delivered (Demo validated 2026-02-07)
+**Status:** Delivered (Demo validated 2026-02-07, enhanced 2026-02-09)
 **Outcome:** An analyst can trigger AI-assisted derivation of insights from selected facts. Proposed insights appear as suggestions to validate.
 - Backend endpoint to send facts to LLM and receive structured insights
 - Frontend "Extract Insights" button on fact selection
+- "Select All" button to bulk-select all facts for extraction
 - Suggestion UI for proposed insights with accept/edit/reject
-- Accepted insights link to their source facts automatically
+- Per-insight traceability: LLM returns which specific facts support each insight; accepted insights link only to their source facts (not all selected facts)
+- Improved LLM prompts for cross-cutting pattern detection across many facts
+- Increased max_tokens (2048 → 4096) for larger fact sets
 
 ### M12: Auto Recommendations Extraction
-**Status:** Delivered (Demo validated 2026-02-07)
+**Status:** Delivered (Demo validated 2026-02-07, enhanced 2026-02-09)
 **Outcome:** An analyst can trigger AI-assisted formulation of recommendations from selected insights.
 - Backend endpoint to send insights to LLM and receive structured recommendations
 - Frontend "Extract Recommendations" button on insight selection
+- "Select All" button to bulk-select all insights for extraction
 - Suggestion UI for proposed recommendations with accept/edit/reject
-- Accepted recommendations link to their source insights automatically
+- Per-recommendation traceability: LLM returns which specific insights support each recommendation; accepted recommendations link only to their source insights (not all selected insights)
+- Improved LLM prompts for root-cause and systemic improvement detection
+- Increased max_tokens (2048 → 4096) for larger insight sets
 
 ### M13: Auto Outputs Formulation
-**Status:** Delivered (Demo validated 2026-02-08)
+**Status:** Delivered (Demo validated 2026-02-08, enhanced 2026-02-09)
 **Outcome:** An analyst can trigger AI-assisted formulation of structured outputs from selected recommendations, with professional Markdown rendering and full traceability.
 - Backend endpoint to send recommendations (with full provenance chain) to LLM and receive structured Markdown outputs
 - Frontend "Formulate Outputs" button on recommendation selection
+- "Select All" button to bulk-select all recommendations for output formulation
 - Suggestion UI with Markdown rendering for proposed outputs with accept/edit/reject
 - Accepted outputs link to their source recommendations automatically
 - Output types: report, presentation, action_plan, brief
 - Full traceability: outputs cite recommendations → insights → facts → source excerpts
-- Markdown preview modal on output items
+- Markdown preview modal on output items (click anywhere on output to preview)
 - OutputRenderer abstraction for future format extensibility (HTML, PDF, audio)
 
 ## Risks and Dependencies
