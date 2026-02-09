@@ -22,7 +22,7 @@ export class OpenAIProvider implements LLMProvider {
   async extractFacts(text: string, goal: string): Promise<ExtractedFact[]> {
     const response = await this.client.chat.completions.create({
       model: this.model,
-      max_tokens: 2048,
+      max_tokens: 4096,
       temperature: 0.2,
       messages: [
         { role: 'system', content: EXTRACTION_SYSTEM_PROMPT },

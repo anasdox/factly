@@ -22,7 +22,7 @@ export class AnthropicProvider implements LLMProvider {
   async extractFacts(text: string, goal: string): Promise<ExtractedFact[]> {
     const response = await this.client.messages.create({
       model: this.model,
-      max_tokens: 2048,
+      max_tokens: 4096,
       temperature: 0.2,
       system: EXTRACTION_SYSTEM_PROMPT,
       messages: [

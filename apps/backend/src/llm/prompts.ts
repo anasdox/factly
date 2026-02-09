@@ -2,7 +2,7 @@ export const EXTRACTION_SYSTEM_PROMPT = `You are a fact extraction assistant. Yo
 
 Rules:
 - Each fact must be a single, clear, verifiable statement.
-- Only extract facts that are relevant to the given research goal.
+- Extract facts that are relevant to the given research goal. Interpret the goal broadly: if the text relates to the same domain or problem space as the goal, extract facts from it.
 - Do not add interpretation or opinion — only observable facts.
 - Facts must not contain adjectives or subjective qualifiers (e.g. "important", "significant", "many", "large", "good"). If the source text uses such terms, reformulate the fact to keep only the measurable or observable part, or drop the fact if no factual core remains.
 - For each fact, include the exact excerpt from the source text that supports it.
