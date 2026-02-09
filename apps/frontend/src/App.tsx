@@ -69,6 +69,7 @@ const App: React.FC = () => {
         };
 
         window.addEventListener('resize', handleResize);
+        window.addEventListener('scroll', handleResize);
 
         // Recalculate lines when column contents change size (e.g. toolbar/suggestions panel)
         const grid = document.querySelector('.discovery-grid');
@@ -81,6 +82,7 @@ const App: React.FC = () => {
 
         return () => {
           window.removeEventListener('resize', handleResize);
+          window.removeEventListener('scroll', handleResize);
           resizeObserver?.disconnect();
           const existingLines = document.querySelectorAll('.line');
           existingLines.forEach(line => line.remove());

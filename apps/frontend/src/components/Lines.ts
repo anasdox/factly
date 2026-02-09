@@ -128,8 +128,8 @@ const createLine = (
   const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
 
   line.style.position = 'absolute';
-  line.style.left = `${startX}px`;
-  line.style.top = `${startY}px`;
+  line.style.left = `${startX + window.scrollX}px`;
+  line.style.top = `${startY + window.scrollY}px`;
   line.style.width = `${length}px`;
   line.style.transform = `rotate(${angle}deg)`;
   line.style.transformOrigin = '0 0';
