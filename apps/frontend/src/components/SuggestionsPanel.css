@@ -12,13 +12,14 @@
 }
 
 .suggestions-panel {
-  background: #ffffff;
+  background: var(--bg-modal);
   border-radius: 10px;
-  border: #d1d1d1 solid 2px;
+  border: var(--border-dialog) solid 2px;
   padding: 1.5em;
   width: 500px;
   max-height: 80vh;
   overflow-y: auto;
+  color: var(--text-primary);
 }
 
 .suggestions-panel-wide {
@@ -42,11 +43,11 @@
   border: none;
   font-size: 1.5em;
   cursor: pointer;
-  color: #555;
+  color: var(--color-close-btn);
 }
 
 .suggestions-close:hover {
-  color: #000;
+  color: var(--color-close-btn-hover);
 }
 
 .suggestions-bulk-actions {
@@ -58,15 +59,15 @@
 .suggestions-bulk-actions button {
   border-radius: 10px;
   padding: 6px 12px;
-  background: #ffffff;
-  color: #000;
+  background: var(--bg-btn);
+  color: var(--text-primary);
   cursor: pointer;
-  border: #c5c5c5 solid 2px;
+  border: var(--border-btn) solid 2px;
   font-size: 0.85em;
 }
 
 .suggestions-bulk-actions button:hover {
-  border-color: #000;
+  border-color: var(--border-btn-hover);
   transition: 0.2s;
 }
 
@@ -77,10 +78,10 @@
 }
 
 .suggestion-card {
-  background: #f5f5f5;
+  background: var(--bg-suggestion-card);
   border-radius: 8px;
   padding: 0.75em;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--border-suggestion-card);
 }
 
 .suggestion-text {
@@ -98,47 +99,49 @@
   border-radius: 8px;
   padding: 4px 10px;
   cursor: pointer;
-  border: 1px solid #c5c5c5;
+  border: 1px solid var(--border-btn);
   font-size: 0.8em;
-  background: #fff;
+  background: var(--bg-btn);
 }
 
 .suggestion-accept {
-  color: #2e7d32;
-  border-color: #2e7d32 !important;
+  color: var(--color-suggestion-accept);
+  border-color: var(--color-suggestion-accept) !important;
 }
 
 .suggestion-accept:hover {
-  background: #e8f5e9 !important;
+  background: var(--bg-suggestion-accept-hover) !important;
 }
 
 .suggestion-edit-btn {
-  color: #1565c0;
-  border-color: #1565c0 !important;
+  color: var(--color-suggestion-edit);
+  border-color: var(--color-suggestion-edit) !important;
 }
 
 .suggestion-edit-btn:hover {
-  background: #e3f2fd !important;
+  background: var(--bg-suggestion-edit-hover) !important;
 }
 
 .suggestion-reject {
-  color: #c62828;
-  border-color: #c62828 !important;
+  color: var(--color-suggestion-reject);
+  border-color: var(--color-suggestion-reject) !important;
 }
 
 .suggestion-reject:hover {
-  background: #ffebee !important;
+  background: var(--bg-suggestion-reject-hover) !important;
 }
 
 .suggestion-edit textarea {
   width: 100%;
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-input);
   border-radius: 4px;
   box-sizing: border-box;
   resize: vertical;
   font-size: 0.95em;
   margin-bottom: 0.5em;
+  background: var(--bg-surface);
+  color: var(--text-primary);
 }
 
 .suggestion-edit-actions {
@@ -150,13 +153,14 @@
   border-radius: 8px;
   padding: 4px 10px;
   cursor: pointer;
-  border: 1px solid #c5c5c5;
+  border: 1px solid var(--border-btn);
   font-size: 0.8em;
-  background: #fff;
+  background: var(--bg-btn);
+  color: var(--text-primary);
 }
 
 .suggestion-edit-actions button:hover {
-  border-color: #000;
+  border-color: var(--border-btn-hover);
 }
 
 .suggestion-markdown {
@@ -189,8 +193,8 @@
 .suggestion-markdown blockquote {
   margin: 0.3em 0;
   padding: 0.2em 0.6em;
-  border-left: 3px solid #1565c0;
-  background: #e3f2fd;
+  border-left: 3px solid var(--border-suggestion-blockquote);
+  background: var(--bg-suggestion-blockquote);
   font-size: 0.9em;
 }
 
@@ -203,11 +207,11 @@
 
 .suggestion-markdown th,
 .suggestion-markdown td {
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-input);
   padding: 4px 8px;
   text-align: left;
 }
 
 .suggestion-markdown th {
-  background: #e0e0e0;
+  background: var(--bg-suggestion-table-header);
 }

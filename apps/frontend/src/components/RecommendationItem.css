@@ -1,7 +1,7 @@
 .recommendation-item {
-  background-color: #b0ffba;
+  background-color: var(--bg-item-recommendation);
 }
 
 .recommendation-add-button {
-  background-color: #b0ffba;
+  background-color: var(--bg-item-recommendation);
 }

@@ -9,3 +9,7 @@
   margin: 0.5em;
   align-self: center;
 }
+
+.input-icon {
+  color: var(--text-secondary);
+}

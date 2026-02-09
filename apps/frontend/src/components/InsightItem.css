@@ -1,7 +1,7 @@
 .insight-item {
-  background-color: #b0f3ff;
+  background-color: var(--bg-item-insight);
 }
 
 .insight-add-button {
-  background-color: #b0f3ff;
+  background-color: var(--bg-item-insight);
 }

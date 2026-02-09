@@ -1,7 +1,7 @@
 .fact-item {
-  background-color: #ffe881;
+  background-color: var(--bg-item-fact);
 }
 
 .fact-add-button {
-  background-color: #ffe881;
+  background-color: var(--bg-item-fact);
 }

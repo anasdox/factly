@@ -31,7 +31,7 @@ const StartEventRoomModal = ({ isDialogVisible, closeDialog, roomId }: Props) =>
             <input type="text" value={roomUrl} readOnly style={{ flex: 1 }} />
             <FontAwesomeIcon
               icon={copied ? faCheck : faCopy}
-              style={{ cursor: 'pointer', color: copied ? 'green' : '#555' }}
+              style={{ cursor: 'pointer', color: copied ? 'var(--color-suggestion-accept)' : 'var(--text-secondary)' }}
               title={copied ? 'Copied!' : 'Copy URL'}
               onClick={handleCopy}
             />

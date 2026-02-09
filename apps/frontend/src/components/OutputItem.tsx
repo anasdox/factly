@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye } from '@fortawesome/free-solid-svg-icons';
 import OutputPreviewModal from './OutputPreviewModal';
 import './OutputItem.css';
 
@@ -22,13 +20,6 @@ const OutputItem: React.FC<Props> = ({ output }) => {
     <div className="output-item item" onClick={() => setPreviewOpen(true)}>
       {output.type && <span className="output-type-badge">{TYPE_LABELS[output.type] || output.type}</span>}
       <span className="output-text">{output.text.length > 150 ? output.text.slice(0, 150) + '...' : output.text}</span>
-      <button
-        className="output-preview-btn"
-        onClick={(e) => { e.stopPropagation(); setPreviewOpen(true); }}
-        title="Preview"
-      >
-        <FontAwesomeIcon icon={faEye} />
-      </button>
       <OutputPreviewModal
         isVisible={previewOpen}
         onClose={() => setPreviewOpen(false)}

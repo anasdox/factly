@@ -8,14 +8,15 @@
   border-radius: 5px;
   cursor: pointer;
   display: inline-flex;
-  background-color: #ffffff;
+  background-color: var(--bg-toolbar-btn);
   align-items: center;
   border: none;
   text-decoration: none;
   height: 32px;
+  color: var(--text-primary);
 }
 
 .toolbar > div:hover {
-  background-color: #ebebeb;
-  color: rgb(0, 0, 0);
+  background-color: var(--bg-toolbar-btn-hover);
+  color: var(--text-primary);
 }

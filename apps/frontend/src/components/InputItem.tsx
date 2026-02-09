@@ -13,7 +13,7 @@ const InputItem: React.FC<Props> = ({ input }) => {
       onClick={() => window.open(input.url, '_blank', 'noopener')}
     >
       <div>
-        <FontAwesomeIcon color="#555" size={'2xl'} icon={
+        <FontAwesomeIcon className="input-icon" size={'2xl'} icon={
           input.type === "text" ? faFileAlt :
             input.type === "image" ? faImage :
               input.type === "video" ? faVideo :

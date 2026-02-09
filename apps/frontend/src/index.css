@@ -1,9 +1,137 @@
+:root {
+  --bg-page: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-item: #c7c7c7;
+  --bg-item-fact: #ffe881;
+  --bg-item-insight: #b0f3ff;
+  --bg-item-recommendation: #b0ffba;
+  --bg-item-output: #e0e7ff;
+  --text-primary: #000000;
+  --text-secondary: #666666;
+  --text-output-badge: #3730a3;
+  --border-color: #c7c7c7;
+  --border-dialog: #d1d1d1;
+  --border-input: #ccc;
+  --bg-toolbar-btn: #ffffff;
+  --bg-toolbar-btn-hover: #ebebeb;
+  --bg-selection-toolbar: #e3f2fd;
+  --border-selection: #90caf9;
+  --color-accent: #2196f3;
+  --color-highlight: #d400ff;
+  --line-color: #575757;
+  --bg-suggestion-card: #f5f5f5;
+  --border-suggestion-card: #e0e0e0;
+  --bg-modal: #ffffff;
+  --bg-add-btn: #c7c7c7;
+  --bg-btn: #ffffff;
+  --border-btn: #c5c5c5;
+  --border-btn-hover: #000000;
+  --bg-code: #f3f4f6;
+  --bg-code-block: #1f2937;
+  --color-code-block: #f9fafb;
+  --bg-blockquote: #f5f3ff;
+  --color-blockquote: #4338ca;
+  --border-blockquote: #6366f1;
+  --bg-table-header: #f3f4f6;
+  --border-table: #d1d5db;
+  --color-heading-1: #111827;
+  --color-heading-2: #1f2937;
+  --color-heading-3: #374151;
+  --color-body-text: #374151;
+  --color-strong: #111827;
+  --border-hr: #e5e7eb;
+  --bg-preview-btn-hover: #f3f4f6;
+  --color-preview-btn: #6b7280;
+  --border-preview-btn: #d1d5db;
+  --color-close-btn: #555555;
+  --color-close-btn-hover: #000000;
+  --bg-suggestion-blockquote: #e3f2fd;
+  --border-suggestion-blockquote: #1565c0;
+  --bg-suggestion-table-header: #e0e0e0;
+  --color-welcome-text: #666666;
+  --bg-welcome-btn: #ffffff;
+  --border-welcome-btn: #4e4e4e;
+  --bg-welcome-btn-hover: #4e4e4e;
+  --color-welcome-btn-hover: #ffffff;
+  --color-suggestion-accept: #2e7d32;
+  --bg-suggestion-accept-hover: #e8f5e9;
+  --color-suggestion-edit: #1565c0;
+  --bg-suggestion-edit-hover: #e3f2fd;
+  --color-suggestion-reject: #c62828;
+  --bg-suggestion-reject-hover: #ffebee;
+}
+
+[data-theme="dark"] {
+  --bg-page: #1a1a2e;
+  --bg-surface: #16213e;
+  --bg-item: #2a2a4a;
+  --bg-item-fact: #665a20;
+  --bg-item-insight: #1a4a5a;
+  --bg-item-recommendation: #1a5a2a;
+  --bg-item-output: #2a2a5a;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --text-output-badge: #a5b4fc;
+  --border-color: #3a3a5a;
+  --border-dialog: #3a3a5a;
+  --border-input: #3a3a5a;
+  --bg-toolbar-btn: #2a2a4a;
+  --bg-toolbar-btn-hover: #3a3a6a;
+  --bg-selection-toolbar: #1a3a5a;
+  --border-selection: #2a5a8a;
+  --color-accent: #64b5f6;
+  --color-highlight: #e040fb;
+  --line-color: #5a5a7a;
+  --bg-suggestion-card: #2a2a4a;
+  --border-suggestion-card: #3a3a5a;
+  --bg-modal: #1e1e3a;
+  --bg-add-btn: #3a3a5a;
+  --bg-btn: #2a2a4a;
+  --border-btn: #3a3a5a;
+  --border-btn-hover: #a0a0a0;
+  --bg-code: #2a2a4a;
+  --bg-code-block: #0f0f1f;
+  --color-code-block: #e0e0e0;
+  --bg-blockquote: #1a1a3a;
+  --color-blockquote: #a5b4fc;
+  --border-blockquote: #6366f1;
+  --bg-table-header: #2a2a4a;
+  --border-table: #3a3a5a;
+  --color-heading-1: #e0e0e0;
+  --color-heading-2: #d0d0d0;
+  --color-heading-3: #c0c0c0;
+  --color-body-text: #c0c0c0;
+  --color-strong: #e0e0e0;
+  --border-hr: #3a3a5a;
+  --bg-preview-btn-hover: #2a2a4a;
+  --color-preview-btn: #a0a0a0;
+  --border-preview-btn: #3a3a5a;
+  --color-close-btn: #a0a0a0;
+  --color-close-btn-hover: #e0e0e0;
+  --bg-suggestion-blockquote: #1a2a4a;
+  --border-suggestion-blockquote: #64b5f6;
+  --bg-suggestion-table-header: #2a2a4a;
+  --color-welcome-text: #a0a0a0;
+  --bg-welcome-btn: #2a2a4a;
+  --border-welcome-btn: #5a5a7a;
+  --bg-welcome-btn-hover: #5a5a7a;
+  --color-welcome-btn-hover: #e0e0e0;
+  --color-suggestion-accept: #66bb6a;
+  --bg-suggestion-accept-hover: #1a3a2a;
+  --color-suggestion-edit: #64b5f6;
+  --bg-suggestion-edit-hover: #1a2a4a;
+  --color-suggestion-reject: #ef5350;
+  --bg-suggestion-reject-hover: #3a1a1a;
+}
+
 body {
   margin: 0;
   font-family: Consolas, 'Courier New', monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-size: 16px;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
 }
 
 code {
@@ -13,4 +141,5 @@ code {
 button, input, select, textarea {
   font: inherit;
   font-size: small;
+  color: inherit;
 }

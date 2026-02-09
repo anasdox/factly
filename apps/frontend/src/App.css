@@ -10,7 +10,7 @@
   justify-content: space-between;
   padding: 2em;
   margin-bottom: 1em;
-  border-bottom: #c7c7c7 1px dashed;
+  border-bottom: var(--border-color) 1px dashed;
 }
 
 .discovery-details {
@@ -26,7 +26,7 @@
 .column {
   display: flex;
   flex-direction: column;
-  align-items: center; 
+  align-items: center;
   padding-left: 2em;
   padding-right: 2em;
 }
@@ -46,17 +46,18 @@
 }
 
 .select-all-button {
-  border: 1px solid #90caf9;
+  border: 1px solid var(--border-selection);
   border-radius: 6px;
   padding: 3px 8px;
-  background: #ffffff;
+  background: var(--bg-btn);
+  color: var(--text-primary);
   cursor: pointer;
   font-size: 0.75em;
   white-space: nowrap;
 }
 
 .select-all-button:hover {
-  background: #2196f3;
+  background: var(--color-accent);
   color: #ffffff;
   transition: 0.2s;
 }
@@ -64,13 +65,13 @@
 .line {
   position: absolute;
   height: 1px;
-  background: #575757;
+  background: var(--line-color);
   z-index: 1;
 }
 
 .item {
   padding: 0.5em;
-  background-color: #c7c7c7;
+  background-color: var(--bg-item);
   border-radius: 10px;
   cursor: pointer;
   font-size: 1em;
@@ -78,9 +79,9 @@
   position: relative;
   display: flow-root;
   min-height: 24px;
-} 
+}
 .item:hover {
-  box-shadow: 0 0 0 2px #d400ff;
+  box-shadow: 0 0 0 2px var(--color-highlight);
 }
 
 .add-button {
@@ -88,7 +89,8 @@
   border: none;
   border-radius: 50%;
   font-weight: bolder;
-  background-color: #c7c7c7;
+  background-color: var(--bg-add-btn);
+  color: var(--text-primary);
   height: 42px;
   width: 42px;
 }
@@ -96,24 +98,26 @@
 .add-button:hover{
   filter: contrast(1.4);
   cursor: pointer;
-  box-shadow: 0 0 0 2px #4e4e4e;
+  box-shadow: 0 0 0 2px var(--border-btn-hover);
 }
 
 input[type=text], select, textarea {
   width: 100%;
   padding: 12px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-input);
   border-radius: 4px;
   box-sizing: border-box;
   margin-top: 6px;
   margin-bottom: 16px;
   resize: vertical;
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
 }
 
 .highlighted {
-  box-shadow: 0 0 0 2px #4e4e4e;
+  box-shadow: 0 0 0 2px var(--border-btn-hover);
   filter: contrast(1.4);
-  
+
 }
 
 .wrapper {
@@ -129,9 +133,9 @@ input[type=text], select, textarea {
   align-items: center;
   justify-content: space-between;
   flex-direction: row;
-  color: #000000;
+  color: var(--text-primary);
   position: absolute;
-  background: #ffffff;
+  background: var(--bg-surface);
   z-index: 3;
   top: 2px;
   right: 2px;
@@ -162,14 +166,14 @@ input[type=text], select, textarea {
 .modal-actions button {
   border-radius: 10px;
   padding: 6px 6px;
-  background: #ffffff;
-  color: #000000;
+  background: var(--bg-btn);
+  color: var(--text-primary);
   cursor: pointer;
-  border: #c5c5c5 solid 2px;
+  border: var(--border-btn) solid 2px;
 }
 
 .modal-actions button:hover {
-  border: #000000 solid 2px;
+  border: var(--border-btn-hover) solid 2px;
   cursor: pointer;
   transition: 0.2s;
   outline: none;
@@ -196,13 +200,15 @@ input[type=text], select, textarea {
 
 dialog {
   border-radius: 10px;
-  border: #d1d1d1 solid 2px;
+  border: var(--border-dialog) solid 2px;
+  background: var(--bg-modal);
+  color: var(--text-primary);
 }
 
 dialog label {
   margin-bottom: 0.5em;
   font-weight: bold;
-  color: #000000;
+  color: var(--text-primary);
   font-size: 0.8em;
 }
 
@@ -212,12 +218,9 @@ dialog label {
 }
 
 .item-selectable.selected .wrapper {
-  box-shadow: 0 0 0 2px #2196f3;
+  box-shadow: 0 0 0 2px var(--color-accent);
 }
 
-.item-selectable.selected .item {
-  background-color: #bbdefb;
-}
 
 .toolbar-wrapper {
   display: grid;
@@ -238,7 +241,7 @@ dialog label {
   gap: 0.5em;
   padding: 0.5em;
   margin: 0 5px;
-  background: #e3f2fd;
+  background: var(--bg-selection-toolbar);
   border-radius: 10px;
   font-size: 0.85em;
   width: 100%;
@@ -254,17 +257,18 @@ dialog label {
 
 .selection-toolbar button,
 .selection-toolbar select {
-  border: 1px solid #90caf9;
+  border: 1px solid var(--border-selection);
   border-radius: 6px;
   padding: 4px 4px;
   margin-bottom: 4px;
-  background: #ffffff;
+  background: var(--bg-btn);
   cursor: pointer;
   font-size: 0.85em;
+  color: var(--text-primary);
 }
 
 .selection-toolbar button:hover {
-  background: #2196f3;
+  background: var(--color-accent);
   color: #ffffff;
   transition: 0.2s;
 }
@@ -285,21 +289,22 @@ dialog label {
 }
 
 .welcome-screen p {
-  color: #666;
+  color: var(--color-welcome-text);
 }
 
 .welcome-new-discovery {
   padding: 12px 24px;
-  border: 2px solid #4e4e4e;
+  border: 2px solid var(--border-welcome-btn);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--bg-welcome-btn);
   cursor: pointer;
   font-size: 1em;
   font-weight: bold;
+  color: var(--text-primary);
 }
 
 .welcome-new-discovery:hover {
-  background: #4e4e4e;
-  color: #ffffff;
+  background: var(--bg-welcome-btn-hover);
+  color: var(--color-welcome-btn-hover);
   transition: 0.2s;
 }

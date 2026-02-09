@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { faEdit, faFileDownload, faPlus, faUpload, faPlayCircle } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faFileDownload, faPlus, faUpload, faPlayCircle, faMoon, faSun } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./Toolbar.css";
 
@@ -25,6 +25,19 @@ const Toolbar = ({ data, setData, onError }: Props) => {
   const [username, setUsername] = useLocalStorage('username', null);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
   const isRemoteUpdate = useRef(false);
+
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
@@ -228,6 +241,9 @@ const Toolbar = ({ data, setData, onError }: Props) => {
       </div>
       <div title="Start Event Room" onClick={handleStartEventRoom}>
         <FontAwesomeIcon icon={faPlayCircle} size='lg' />
+      </div>
+      <div title="Toggle Dark Mode" onClick={toggleTheme}>
+        <FontAwesomeIcon icon={theme === 'light' ? faMoon : faSun} size='lg' />
       </div>
 
       <StartEventRoomModal
