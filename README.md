@@ -37,47 +37,49 @@ apps/
 
 See `GLOBAL_TECHNICAL_ARCHITECTURE.md` for the full architecture description.
 
-## Getting Started
+## Quick Start
+
+```bash
+git clone https://github.com/anasdox/factly.git
+cd factly
+make install
+make start
+```
+
+Open http://localhost:3000 to start a discovery session.
+
+### AI-Assisted Extraction (optional)
+
+To enable AI-powered fact/insight/recommendation extraction, create `apps/backend/.env`:
+
+```env
+LLM_PROVIDER=anthropic   # or "openai"
+LLM_API_KEY=your-api-key
+LLM_MODEL=claude-sonnet-4-5-20250929  # optional, provider default used if omitted
+```
 
 ### Prerequisites
 
 - Node.js >= 18
 - npm
+- make
 
-### Installation
+### Available Make Targets
 
-```bash
-git clone https://github.com/anasdox/factly.git
-cd factly
-cd apps/backend && npm install
-cd ../frontend && npm install
-```
-
-### Running
-
-Start the backend and frontend in separate terminals:
-
-```bash
-# Terminal 1 - Backend
-cd apps/backend
-npm start
-```
-
-```bash
-# Terminal 2 - Frontend
-cd apps/frontend
-npm start
-```
-
-The frontend opens on `http://localhost:3000`. The backend API listens on `http://localhost:3002`.
-
-### Running Tests
-
-```bash
-cd tests/acceptance
-npm install
-npm test
-```
+| Command | Description |
+|---------|-------------|
+| `make install` | Install all dependencies (backend, frontend, tests) |
+| `make start` | Start backend (background) and frontend |
+| `make start-backend` | Start backend in the background |
+| `make start-frontend` | Start frontend dev server |
+| `make stop-backend` | Stop the background backend process |
+| `make restart-backend` | Restart the backend |
+| `make test` | Run acceptance tests |
+| `make build` | Build backend and frontend for production |
+| `make typecheck` | Run TypeScript type checks on both apps |
+| `make lint` | Run spec-lint and traceability checks |
+| `make logs-backend` | Tail the backend log file |
+| `make clean` | Remove all `node_modules` and build artifacts |
 
 ## Project Structure
 
