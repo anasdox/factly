@@ -16,25 +16,32 @@ export const INSIGHTS_SYSTEM_PROMPT = `You are an insight derivation assistant. 
 
 Rules:
 - Each insight must be a conclusion, implication, or pattern derived from the provided facts — not a restatement.
-- Only derive insights that are relevant to the given research goal.
+- Derive insights that are relevant to the given research goal. Interpret the goal broadly: if the facts relate to the same domain or problem space as the goal, derive insights from them.
+- Look for patterns, implications, contradictions, dependencies, and gaps across the facts.
+- When many facts are provided, group related facts and derive cross-cutting insights that synthesize multiple facts together.
 - Insights must not contain adjectives or subjective qualifiers (e.g. "important", "significant", "many", "large", "good"). Keep insights precise and analytical.
 - Do not add speculation beyond what the facts support.
-- Return a JSON array of strings, each string being one insight.
+- For each insight, indicate which fact numbers (from the numbered list) support it.
+- Return a JSON array of objects, each with "text" (the insight) and "source_facts" (array of 1-based fact numbers that support this insight).
 - If no relevant insights can be derived, return an empty array.
 
-Respond ONLY with a valid JSON array of strings. No explanation, no markdown.`;
+Respond ONLY with a valid JSON array of objects. No explanation, no markdown.
+Example: [{"text": "X depends on Y", "source_facts": [1, 3, 7]}]`;
 
 export const RECOMMENDATIONS_SYSTEM_PROMPT = `You are a recommendation formulation assistant. Your role is to formulate actionable recommendations from a set of analytical insights.
 
 Rules:
 - Each recommendation must be a concrete, actionable proposal — not a restatement of an insight.
-- Only formulate recommendations that are relevant to the given research goal.
+- Formulate recommendations that are relevant to the given research goal. Interpret the goal broadly: if the insights relate to the same domain or problem space as the goal, formulate recommendations from them.
+- When many insights are provided, look for opportunities to address root causes, resolve contradictions, fill gaps, and propose systemic improvements.
 - Recommendations must not contain adjectives or subjective qualifiers (e.g. "important", "significant", "many", "large", "good"). Keep recommendations precise and actionable.
 - Do not add speculation beyond what the insights support.
-- Return a JSON array of strings, each string being one recommendation.
+- For each recommendation, indicate which insight numbers (from the numbered list) support it.
+- Return a JSON array of objects, each with "text" (the recommendation) and "source_insights" (array of 1-based insight numbers that support this recommendation).
 - If no relevant recommendations can be formulated, return an empty array.
 
-Respond ONLY with a valid JSON array of strings. No explanation, no markdown.`;
+Respond ONLY with a valid JSON array of objects. No explanation, no markdown.
+Example: [{"text": "Implement X to address Y", "source_insights": [1, 3]}]`;
 
 const OUTPUTS_BASE_PROMPT = `You are a professional document formulation assistant. Your role is to produce structured, professional Markdown deliverables from recommendations, with full traceability to the underlying research chain.
 
@@ -82,6 +89,8 @@ export function buildOutputsPrompt(outputType: string): string {
 }
 
 export type ExtractedFact = { text: string; source_excerpt: string };
+export type ExtractedInsight = { text: string; source_facts: number[] };
+export type ExtractedRecommendation = { text: string; source_insights: number[] };
 
 export interface OutputTraceabilityContext {
   inputs?: { title: string; text?: string }[];
@@ -146,9 +155,48 @@ export function parseFactArray(raw: string): ExtractedFact[] {
 }
 
 export function parseStringArray(raw: string): string[] {
-  const parsed = JSON.parse(stripCodeFences(raw));
+  const cleaned = stripCodeFences(raw);
+  const parsed = JSON.parse(cleaned);
   if (!Array.isArray(parsed)) {
     throw new Error('LLM response is not an array');
   }
-  return parsed.filter((item: unknown) => typeof item === 'string' && item.length > 0);
+  return parsed
+    .map((item: unknown) => {
+      if (typeof item === 'string') return item;
+      if (typeof item === 'object' && item !== null && 'text' in item) return String((item as any).text);
+      return '';
+    })
+    .filter((s: string) => s.length > 0);
+}
+
+export function parseInsightArray(raw: string): ExtractedInsight[] {
+  const cleaned = stripCodeFences(raw);
+  const parsed = JSON.parse(cleaned);
+  if (!Array.isArray(parsed)) {
+    throw new Error('LLM response is not an array');
+  }
+  return parsed
+    .filter((item: unknown) => typeof item === 'object' && item !== null && 'text' in item)
+    .map((item: any) => ({
+      text: String(item.text),
+      source_facts: Array.isArray(item.source_facts)
+        ? item.source_facts.filter((n: unknown) => typeof n === 'number')
+        : [],
+    }));
+}
+
+export function parseRecommendationArray(raw: string): ExtractedRecommendation[] {
+  const cleaned = stripCodeFences(raw);
+  const parsed = JSON.parse(cleaned);
+  if (!Array.isArray(parsed)) {
+    throw new Error('LLM response is not an array');
+  }
+  return parsed
+    .filter((item: unknown) => typeof item === 'object' && item !== null && 'text' in item)
+    .map((item: any) => ({
+      text: String(item.text),
+      source_insights: Array.isArray(item.source_insights)
+        ? item.source_insights.filter((n: unknown) => typeof n === 'number')
+        : [],
+    }));
 }

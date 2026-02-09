@@ -157,17 +157,26 @@ app.post('/extract/insights', async (req, res, next) => {
 
     const { facts, goal } = req.body;
     const factTexts = facts.map((f: any) => f.text);
-    const factIds = facts.map((f: any) => f.fact_id);
+    const factIds: string[] = facts.map((f: any) => f.fact_id);
     logger.info(`Extracting insights from ${facts.length} facts`);
 
-    let insights: string[];
+    let insights: import('./llm/prompts').ExtractedInsight[];
     try {
       insights = await llmProvider.extractInsights(factTexts, goal);
     } catch (err: any) {
       return handleLLMError(err, res);
     }
 
-    const suggestions = insights.map((text) => ({ text }));
+    if (insights.length === 0) {
+      logger.warn(`LLM returned 0 insights for ${facts.length} facts (goal: "${goal}")`);
+    }
+
+    const suggestions = insights.map((insight) => ({
+      text: insight.text,
+      related_fact_ids: insight.source_facts
+        .filter((n) => n >= 1 && n <= factIds.length)
+        .map((n) => factIds[n - 1]),
+    }));
     res.json({ suggestions, fact_ids: factIds });
   } catch (err) {
     next(err);
@@ -187,17 +196,22 @@ app.post('/extract/recommendations', async (req, res, next) => {
 
     const { insights, goal } = req.body;
     const insightTexts = insights.map((i: any) => i.text);
-    const insightIds = insights.map((i: any) => i.insight_id);
+    const insightIds: string[] = insights.map((i: any) => i.insight_id);
     logger.info(`Extracting recommendations from ${insights.length} insights`);
 
-    let recommendations: string[];
+    let recommendations: import('./llm/prompts').ExtractedRecommendation[];
     try {
       recommendations = await llmProvider.extractRecommendations(insightTexts, goal);
     } catch (err: any) {
       return handleLLMError(err, res);
     }
 
-    const suggestions = recommendations.map((text) => ({ text }));
+    const suggestions = recommendations.map((rec) => ({
+      text: rec.text,
+      related_insight_ids: rec.source_insights
+        .filter((n) => n >= 1 && n <= insightIds.length)
+        .map((n) => insightIds[n - 1]),
+    }));
     res.json({ suggestions, insight_ids: insightIds });
   } catch (err) {
     next(err);

@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { LLMProvider } from './provider';
-import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, parseStringArray, parseFactArray, ExtractedFact, OutputTraceabilityContext } from './prompts';
+import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext } from './prompts';
 
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic;
@@ -36,11 +36,11 @@ export class AnthropicProvider implements LLMProvider {
     return parseFactArray(this.extractText(response));
   }
 
-  async extractInsights(facts: string[], goal: string): Promise<string[]> {
+  async extractInsights(facts: string[], goal: string): Promise<ExtractedInsight[]> {
     const numberedFacts = facts.map((f, i) => `${i + 1}. ${f}`).join('\n');
     const response = await this.client.messages.create({
       model: this.model,
-      max_tokens: 2048,
+      max_tokens: 4096,
       temperature: 0.2,
       system: INSIGHTS_SYSTEM_PROMPT,
       messages: [
@@ -51,14 +51,14 @@ export class AnthropicProvider implements LLMProvider {
       ],
     });
 
-    return parseStringArray(this.extractText(response));
+    return parseInsightArray(this.extractText(response));
   }
 
-  async extractRecommendations(insights: string[], goal: string): Promise<string[]> {
+  async extractRecommendations(insights: string[], goal: string): Promise<ExtractedRecommendation[]> {
     const numberedInsights = insights.map((ins, i) => `${i + 1}. ${ins}`).join('\n');
     const response = await this.client.messages.create({
       model: this.model,
-      max_tokens: 2048,
+      max_tokens: 4096,
       temperature: 0.2,
       system: RECOMMENDATIONS_SYSTEM_PROMPT,
       messages: [
@@ -69,7 +69,7 @@ export class AnthropicProvider implements LLMProvider {
       ],
     });
 
-    return parseStringArray(this.extractText(response));
+    return parseRecommendationArray(this.extractText(response));
   }
 
   async formulateOutputs(recommendations: string[], goal: string, outputType: string, context?: OutputTraceabilityContext): Promise<string[]> {

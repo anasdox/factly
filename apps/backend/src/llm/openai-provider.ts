@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { LLMProvider, OutputTraceabilityContext } from './provider';
-import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, parseStringArray, parseFactArray, ExtractedFact } from './prompts';
+import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, ExtractedFact, ExtractedInsight, ExtractedRecommendation } from './prompts';
 
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;
@@ -36,11 +36,11 @@ export class OpenAIProvider implements LLMProvider {
     return parseFactArray(this.extractText(response));
   }
 
-  async extractInsights(facts: string[], goal: string): Promise<string[]> {
+  async extractInsights(facts: string[], goal: string): Promise<ExtractedInsight[]> {
     const numberedFacts = facts.map((f, i) => `${i + 1}. ${f}`).join('\n');
     const response = await this.client.chat.completions.create({
       model: this.model,
-      max_tokens: 2048,
+      max_tokens: 4096,
       temperature: 0.2,
       messages: [
         { role: 'system', content: INSIGHTS_SYSTEM_PROMPT },
@@ -51,14 +51,14 @@ export class OpenAIProvider implements LLMProvider {
       ],
     });
 
-    return parseStringArray(this.extractText(response));
+    return parseInsightArray(this.extractText(response));
   }
 
-  async extractRecommendations(insights: string[], goal: string): Promise<string[]> {
+  async extractRecommendations(insights: string[], goal: string): Promise<ExtractedRecommendation[]> {
     const numberedInsights = insights.map((ins, i) => `${i + 1}. ${ins}`).join('\n');
     const response = await this.client.chat.completions.create({
       model: this.model,
-      max_tokens: 2048,
+      max_tokens: 4096,
       temperature: 0.2,
       messages: [
         { role: 'system', content: RECOMMENDATIONS_SYSTEM_PROMPT },
@@ -69,7 +69,7 @@ export class OpenAIProvider implements LLMProvider {
       ],
     });
 
-    return parseStringArray(this.extractText(response));
+    return parseRecommendationArray(this.extractText(response));
   }
 
   async formulateOutputs(recommendations: string[], goal: string, outputType: string, context?: OutputTraceabilityContext): Promise<string[]> {

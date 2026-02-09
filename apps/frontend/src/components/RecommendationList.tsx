@@ -1,7 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import RecommendationItem from './RecommendationItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faClipboardList, faXmark, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faClipboardList, faXmark, faSpinner, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import RecommendationModal from './RecommendationModal';
 import SuggestionsPanel from './SuggestionsPanel';
@@ -37,8 +37,11 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
   const setRecommendationRef = useCallback((element: HTMLDivElement, index: number) => { recommendationRefs.current[index] = element; }, [recommendationRefs]);
 
   // Recommendation selection state
-  const { selectedIds: selectedRecommendationIds, toggleSelection: toggleRecommendationSelection, clearSelection } = useItemSelection();
+  const { selectedIds: selectedRecommendationIds, toggleSelection: toggleRecommendationSelection, clearSelection, selectAll } = useItemSelection();
   const [selectedOutputType, setSelectedOutputType] = useState<OutputType['type']>('report');
+
+  // Clear selection when discovery changes
+  useEffect(() => { clearSelection(); }, [data.discovery_id, clearSelection]);
   const [extractingOutputs, setExtractingOutputs] = useState(false);
   const [outputSuggestionData, setOutputSuggestionData] = useState<OutputSuggestionData | null>(null);
 
@@ -174,7 +177,14 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
 
   return (
     <div className="column recommendations">
-      <h2>👍Recommendations</h2>
+      <div className="column-header">
+        <h2>👍Recommendations</h2>
+        {data.recommendations.length > 0 && selectedRecommendationIds.size < data.recommendations.length && (
+          <button className="select-all-button" onClick={() => selectAll(data.recommendations.map(r => r.recommendation_id))}>
+            <FontAwesomeIcon icon={faCheckDouble} /> Select All
+          </button>
+        )}
+      </div>
       <div className={`toolbar-wrapper${selectedRecommendationIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
         <div className="selection-toolbar">
           <span>{selectedRecommendationIds.size} recommendation(s) selected</span>

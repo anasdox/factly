@@ -19,5 +19,9 @@ export function useItemSelection() {
     setSelectedIds(new Set());
   }, []);
 
-  return { selectedIds, toggleSelection, clearSelection };
+  const selectAll = useCallback((ids: string[]) => {
+    setSelectedIds(new Set(ids));
+  }, []);
+
+  return { selectedIds, toggleSelection, clearSelection, selectAll };
 }

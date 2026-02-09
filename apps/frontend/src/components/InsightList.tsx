@@ -1,7 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import InsightItem from './InsightItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faClipboardList, faXmark, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faClipboardList, faXmark, faSpinner, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import InsightModal from './InsightModal';
 import SuggestionsPanel from './SuggestionsPanel';
@@ -30,8 +30,11 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
   const setInsightRef = useCallback((element: HTMLDivElement, index: number) => { insightRefs.current[index] = element; }, [insightRefs]);
 
   // Insight selection state
-  const { selectedIds: selectedInsightIds, toggleSelection: toggleInsightSelection, clearSelection } = useItemSelection();
+  const { selectedIds: selectedInsightIds, toggleSelection: toggleInsightSelection, clearSelection, selectAll } = useItemSelection();
   const [extractingRecommendations, setExtractingRecommendations] = useState(false);
+
+  // Clear selection when discovery changes
+  useEffect(() => { clearSelection(); }, [data.discovery_id, clearSelection]);
   const [recommendationSuggestionData, setRecommendationSuggestionData] = useState<RecommendationSuggestionData | null>(null);
 
   // Manual recommendation creation from selection
@@ -127,8 +130,11 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     }) : prevState);
   }, [setData]);
 
-  const handleAcceptRecommendation = (suggestion: { text: string }) => {
-    addRecommendationToData(suggestion.text, Array.from(selectedInsightIds));
+  const handleAcceptRecommendation = (suggestion: { text: string; related_insight_ids?: string[] }) => {
+    const relatedInsights = suggestion.related_insight_ids && suggestion.related_insight_ids.length > 0
+      ? suggestion.related_insight_ids
+      : Array.from(selectedInsightIds);
+    addRecommendationToData(suggestion.text, relatedInsights);
   };
 
   const handleCloseSuggestions = useCallback(() => {
@@ -148,7 +154,14 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
 
   return (
     <div className="column insights">
-      <h2>💡Insights</h2>
+      <div className="column-header">
+        <h2>💡Insights</h2>
+        {data.insights.length > 0 && selectedInsightIds.size < data.insights.length && (
+          <button className="select-all-button" onClick={() => selectAll(data.insights.map(i => i.insight_id))}>
+            <FontAwesomeIcon icon={faCheckDouble} /> Select All
+          </button>
+        )}
+      </div>
       <div className={`toolbar-wrapper${selectedInsightIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
         <div className="selection-toolbar">
           <span>{selectedInsightIds.size} insight(s) selected</span>

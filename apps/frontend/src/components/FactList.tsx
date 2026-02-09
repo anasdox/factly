@@ -1,7 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import FactItem from './FactItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faLightbulb, faXmark, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faLightbulb, faXmark, faSpinner, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import FactModal from './FactModal';
 import SuggestionsPanel from './SuggestionsPanel';
@@ -30,8 +30,11 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
   const setFactRef = useCallback((element: HTMLDivElement, index: number) => { factRefs.current[index] = element; }, [factRefs]);
 
   // Fact selection state
-  const { selectedIds: selectedFactIds, toggleSelection: toggleFactSelection, clearSelection } = useItemSelection();
+  const { selectedIds: selectedFactIds, toggleSelection: toggleFactSelection, clearSelection, selectAll } = useItemSelection();
   const [extractingInsights, setExtractingInsights] = useState(false);
+
+  // Clear selection when discovery changes
+  useEffect(() => { clearSelection(); }, [data.discovery_id, clearSelection]);
   const [insightSuggestionData, setInsightSuggestionData] = useState<InsightSuggestionData | null>(null);
 
   // Manual insight creation from selection
@@ -126,8 +129,11 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     }) : prevState);
   }, [setData]);
 
-  const handleAcceptInsight = (suggestion: { text: string }) => {
-    addInsightToData(suggestion.text, Array.from(selectedFactIds));
+  const handleAcceptInsight = (suggestion: { text: string; related_fact_ids?: string[] }) => {
+    const relatedFacts = suggestion.related_fact_ids && suggestion.related_fact_ids.length > 0
+      ? suggestion.related_fact_ids
+      : Array.from(selectedFactIds);
+    addInsightToData(suggestion.text, relatedFacts);
   };
 
   const handleCloseSuggestions = useCallback(() => {
@@ -147,7 +153,14 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
 
   return (
     <div className="column facts">
-      <h2>📊Facts</h2>
+      <div className="column-header">
+        <h2>📊Facts</h2>
+        {data.facts.length > 0 && selectedFactIds.size < data.facts.length && (
+          <button className="select-all-button" onClick={() => selectAll(data.facts.map(f => f.fact_id))}>
+            <FontAwesomeIcon icon={faCheckDouble} /> Select All
+          </button>
+        )}
+      </div>
       <div className={`toolbar-wrapper${selectedFactIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
         <div className="selection-toolbar">
           <span>{selectedFactIds.size} fact(s) selected</span>

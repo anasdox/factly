@@ -30,10 +30,35 @@
   padding-left: 2em;
   padding-right: 2em;
 }
-.column > h2 {
+.column > h2,
+.column-header h2 {
   font-size: 1.2em;
   overflow: hidden;
   white-space: nowrap;
+}
+
+.column-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  width: 100%;
+  justify-content: center;
+}
+
+.select-all-button {
+  border: 1px solid #90caf9;
+  border-radius: 6px;
+  padding: 3px 8px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 0.75em;
+  white-space: nowrap;
+}
+
+.select-all-button:hover {
+  background: #2196f3;
+  color: #ffffff;
+  transition: 0.2s;
 }
 
 .line {
@@ -198,11 +223,13 @@ dialog label {
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows 0.25s ease;
+  overflow: hidden;
   width: 100%;
 }
 
 .toolbar-wrapper-open {
   grid-template-rows: 1fr;
+  margin-bottom: 0.5em;
 }
 
 .selection-toolbar {
@@ -210,7 +237,7 @@ dialog label {
   align-items: center;
   gap: 0.5em;
   padding: 0.5em;
-  margin-bottom: 0.5em;
+  margin: 0 5px;
   background: #e3f2fd;
   border-radius: 10px;
   font-size: 0.85em;

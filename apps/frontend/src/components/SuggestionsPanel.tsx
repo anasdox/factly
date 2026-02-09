@@ -5,6 +5,8 @@ import './SuggestionsPanel.css';
 type Suggestion = {
   text: string;
   source_excerpt?: string;
+  related_fact_ids?: string[];
+  related_insight_ids?: string[];
 };
 
 type Props = {
@@ -38,7 +40,7 @@ const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, in
   const handleConfirmEdit = () => {
     if (editingIndex !== null && editText.trim()) {
       const original = suggestions[editingIndex];
-      onAccept({ text: editText.trim(), source_excerpt: original.source_excerpt }, inputId);
+      onAccept({ ...original, text: editText.trim() }, inputId);
       setSuggestions(prev => prev.filter((_, i) => i !== editingIndex));
       setEditingIndex(null);
       setEditText('');
