@@ -49,7 +49,7 @@ const ItemWrapper: React.FC<Props> = ({
             <FontAwesomeIcon size={'sm'} icon={extractLoading ? faSpinner : faWandMagicSparkles} spin={extractLoading} />
           </div>
         )}
-        <div onClick={() => openEditModal ? openEditModal(item): null}>
+        <div onClick={() => openEditModal ? openEditModal(item): null} title="Edit">
           <FontAwesomeIcon size={'sm'} icon={faPencil} />
         </div>
       </div>

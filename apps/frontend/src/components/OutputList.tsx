@@ -85,7 +85,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
         </ItemWrapper>
 
       ))}
-      <button className="add-button output-add-button" onClick={openAddModal}><FontAwesomeIcon icon={faAdd} /></button>
+      <button className="add-button output-add-button" onClick={openAddModal} title="Add Output"><FontAwesomeIcon icon={faAdd} /></button>
       <OutputModal
         mode={modalMode}
         isDialogVisible={isOutputDialogVisible}

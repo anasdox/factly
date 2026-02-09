@@ -23,7 +23,7 @@ const OutputPreviewModal: React.FC<Props> = ({ isVisible, onClose, content, outp
       <div className="output-preview-modal">
         <div className="output-preview-header">
           <h2>{outputType ? TYPE_LABELS[outputType] || outputType : 'Output'} Preview</h2>
-          <button className="output-preview-close" onClick={onClose}>&times;</button>
+          <button className="output-preview-close" onClick={onClose} title="Close">&times;</button>
         </div>
         <div className="output-preview-content markdown-body">
           {markdownRenderer.render(content)}

@@ -157,7 +157,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
       <div className="column-header">
         <h2>💡Insights</h2>
         {data.insights.length > 0 && selectedInsightIds.size < data.insights.length && (
-          <button className="select-all-button" onClick={() => selectAll(data.insights.map(i => i.insight_id))}>
+          <button className="select-all-button" onClick={() => selectAll(data.insights.map(i => i.insight_id))} title="Select all insights">
             <FontAwesomeIcon icon={faCheckDouble} /> Select All
           </button>
         )}
@@ -198,7 +198,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
           </ItemWrapper>
         </div>
       ))}
-      <button className="add-button insight-add-button" onClick={openAddModal}><FontAwesomeIcon icon={faAdd} /></button>
+      <button className="add-button insight-add-button" onClick={openAddModal} title="Add Insight"><FontAwesomeIcon icon={faAdd} /></button>
       <InsightModal
         mode={modalMode}
         isDialogVisible={isInsightDialogVisible}

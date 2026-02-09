@@ -180,7 +180,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
       <div className="column-header">
         <h2>👍Recommendations</h2>
         {data.recommendations.length > 0 && selectedRecommendationIds.size < data.recommendations.length && (
-          <button className="select-all-button" onClick={() => selectAll(data.recommendations.map(r => r.recommendation_id))}>
+          <button className="select-all-button" onClick={() => selectAll(data.recommendations.map(r => r.recommendation_id))} title="Select all recommendations">
             <FontAwesomeIcon icon={faCheckDouble} /> Select All
           </button>
         )}
@@ -231,7 +231,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
           </ItemWrapper>
         </div>
       ))}
-      <button className="add-button recommendation-add-button" onClick={openAddModal}><FontAwesomeIcon icon={faAdd} /></button>
+      <button className="add-button recommendation-add-button" onClick={openAddModal} title="Add Recommendation"><FontAwesomeIcon icon={faAdd} /></button>
       <RecommendationModal
         mode={modalMode}
         isDialogVisible={isRecommendationDialogVisible}

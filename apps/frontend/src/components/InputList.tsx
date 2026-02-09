@@ -151,7 +151,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
           <InputItem input={input} />
         </ItemWrapper>
       ))}
-      <button className="add-button" onClick={openAddModal}><FontAwesomeIcon icon={faAdd} /></button >
+      <button className="add-button" onClick={openAddModal} title="Add Input"><FontAwesomeIcon icon={faAdd} /></button >
       <InputModal
         mode={modalMode}
         isDialogVisible={isInputDialogVisible}

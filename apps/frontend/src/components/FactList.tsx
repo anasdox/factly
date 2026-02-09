@@ -156,7 +156,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
       <div className="column-header">
         <h2>📊Facts</h2>
         {data.facts.length > 0 && selectedFactIds.size < data.facts.length && (
-          <button className="select-all-button" onClick={() => selectAll(data.facts.map(f => f.fact_id))}>
+          <button className="select-all-button" onClick={() => selectAll(data.facts.map(f => f.fact_id))} title="Select all facts">
             <FontAwesomeIcon icon={faCheckDouble} /> Select All
           </button>
         )}
@@ -197,7 +197,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           </ItemWrapper>
         </div>
       ))}
-      <button className="add-button fact-add-button" onClick={openAddModal}><FontAwesomeIcon icon={faAdd} /></button>
+      <button className="add-button fact-add-button" onClick={openAddModal} title="Add Fact"><FontAwesomeIcon icon={faAdd} /></button>
       <FactModal
         mode={modalMode}
         isDialogVisible={isFactDialogVisible}
