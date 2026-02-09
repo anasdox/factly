@@ -15,7 +15,7 @@
 
 .discovery-details {
   display: block;
-  width: 712px;
+  flex: 1;
 }
 
 .discovery-details h5 {
