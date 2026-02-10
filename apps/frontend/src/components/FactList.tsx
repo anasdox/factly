@@ -7,6 +7,7 @@ import FactModal from './FactModal';
 import SuggestionsPanel from './SuggestionsPanel';
 import InsightModal from './InsightModal';
 import { useItemSelection } from '../hooks/useItemSelection';
+import { API_URL } from '../config';
 
 type Props = {
   factRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -91,7 +92,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
 
     setExtractingInsights(true);
     try {
-      const response = await fetch('http://localhost:3002/extract/insights', {
+      const response = await fetch(`${API_URL}/extract/insights`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

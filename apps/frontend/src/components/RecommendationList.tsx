@@ -7,6 +7,7 @@ import RecommendationModal from './RecommendationModal';
 import SuggestionsPanel from './SuggestionsPanel';
 import OutputModal from './OutputModal';
 import { useItemSelection } from '../hooks/useItemSelection';
+import { API_URL } from '../config';
 
 type Props = {
   recommendationRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -112,7 +113,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
 
     setExtractingOutputs(true);
     try {
-      const response = await fetch('http://localhost:3002/extract/outputs', {
+      const response = await fetch(`${API_URL}/extract/outputs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

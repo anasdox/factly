@@ -10,6 +10,7 @@ import { handleMouseEnter, handleMouseLeave } from './lib';
 import ToolBar from './components/Toolbar';
 import Toast from './components/Toast';
 import DiscoveryModal from './components/DiscoveryModal';
+import { API_URL } from './config';
 
 const STORAGE_KEY = 'factly_last_discovery';
 
@@ -50,7 +51,7 @@ const App: React.FC = () => {
 
     const fetchRoomData = async () => {
       try {
-        const response = await fetch(`http://localhost:3002/rooms/${roomId}`);
+        const response = await fetch(`${API_URL}/rooms/${roomId}`);
         if (!response.ok) {
           setLoadingRoom(false);
           return;

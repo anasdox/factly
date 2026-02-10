@@ -5,6 +5,7 @@ import { faAdd } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import InputModal from './InputModal';
 import SuggestionsPanel from './SuggestionsPanel';
+import { API_URL } from '../config';
 
 
 type Props = {
@@ -80,7 +81,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
       } else {
         payload.input_text = input.text || '';
       }
-      const response = await fetch('http://localhost:3002/extract/facts', {
+      const response = await fetch(`${API_URL}/extract/facts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

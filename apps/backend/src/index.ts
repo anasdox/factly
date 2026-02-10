@@ -44,7 +44,7 @@ if (llmProvider) {
 
 
 const app = express();
-const port = 3002;
+const port = parseInt(process.env.PORT || '3002', 10);
 
 // Add middleware
 app.use(bodyParser.json());

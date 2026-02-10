@@ -81,6 +81,129 @@ LLM_MODEL=claude-sonnet-4-5-20250929  # optional, provider default used if omitt
 | `make logs-backend` | Tail the backend log file |
 | `make clean` | Remove all `node_modules` and build artifacts |
 
+## Deploiement avec Docker Compose
+
+Docker Compose permet de deployer factly en un seul commande. Le frontend est servi par nginx (port 80) qui fait aussi office de reverse-proxy vers le backend. Le backend tourne sur Express avec une base SQLite persistee dans un volume Docker.
+
+### Architecture Docker
+
+```
+                    ┌──────────────────────────────┐
+                    │      docker-compose.yml       │
+                    │                               │
+   :80 ────────────►│  frontend (nginx)             │
+                    │    - fichiers statiques React  │
+                    │    - reverse-proxy /status,    │
+                    │      /rooms, /events,          │
+                    │      /extract → backend        │
+                    │                               │
+                    │  backend (node)               │
+                    │    - Express sur :3002         │
+                    │    - volume SQLite             │
+                    └──────────────────────────────┘
+```
+
+### Pre-requis
+
+- Docker >= 20.10
+- Docker Compose >= 2.0
+
+### Configuration
+
+Avant de lancer, assurez-vous que le fichier `apps/backend/.env` existe avec la configuration LLM :
+
+```env
+LLM_PROVIDER=anthropic          # ou "openai", "openai-compatible"
+LLM_API_KEY=votre-cle-api
+LLM_MODEL=claude-sonnet-4-5-20250929   # optionnel
+LLM_BASE_URL=                   # requis uniquement pour "openai-compatible"
+```
+
+### Lancement rapide
+
+```bash
+# Construire et demarrer les deux services
+docker compose up --build
+
+# Ou en arriere-plan
+docker compose up --build -d
+```
+
+L'application est accessible sur **http://localhost**.
+
+### Commandes utiles
+
+```bash
+# Voir les logs en temps reel
+docker compose logs -f
+
+# Logs d'un seul service
+docker compose logs -f backend
+docker compose logs -f frontend
+
+# Arreter les services
+docker compose down
+
+# Arreter et supprimer les volumes (reset de la base de donnees)
+docker compose down -v
+
+# Reconstruire apres une modification de code
+docker compose up --build
+```
+
+### Variables d'environnement
+
+| Variable | Service | Defaut | Description |
+|----------|---------|--------|-------------|
+| `PORT` | backend | `3002` | Port d'ecoute Express |
+| `LLM_PROVIDER` | backend (.env) | — | Fournisseur LLM (`anthropic`, `openai`, `openai-compatible`) |
+| `LLM_API_KEY` | backend (.env) | — | Cle API du fournisseur LLM |
+| `LLM_BASE_URL` | backend (.env) | — | URL de base pour `openai-compatible` |
+| `LLM_MODEL` | backend (.env) | — | Nom du modele |
+| `REACT_APP_API_URL` | frontend (build) | `http://localhost:3002` | URL de l'API integree dans le bundle JS |
+| `BACKEND_URL` | frontend (runtime) | `http://backend:3002` | Cible du reverse-proxy nginx |
+
+### Personnalisation
+
+**Changer le port expose :**
+
+```bash
+# Exposer sur le port 8080 au lieu de 80
+docker compose up --build -p 8080:80
+```
+
+Ou modifier `docker-compose.yml` :
+
+```yaml
+frontend:
+  ports:
+    - "8080:80"
+```
+
+**Pointer nginx vers un backend externe :**
+
+```bash
+BACKEND_URL=http://mon-serveur:9000 docker compose up frontend
+```
+
+### Persistance des donnees
+
+La base de donnees SQLite est stockee dans le volume Docker `backend-data`, monte sur `/app/data` dans le conteneur backend. Les donnees persistent entre les redemarrages. Pour reinitialiser :
+
+```bash
+docker compose down -v
+```
+
+### Differences entre dev local et Docker
+
+| | Dev local (`make start`) | Docker (`docker compose up`) |
+|---|---|---|
+| Frontend | Dev server CRA sur `:3000` | nginx sur `:80` |
+| Backend | `ts-node` sur `:3002` | `node dist/index.js` sur `:3002` |
+| API URL | `http://localhost:3002` (hardcode) | Meme origine via reverse-proxy nginx |
+| Base de donnees | `apps/backend/data/factly.db` | Volume Docker `backend-data` |
+| Hot reload | Oui | Non (rebuild necessaire) |
+
 ## Project Structure
 
 | Path | Purpose |

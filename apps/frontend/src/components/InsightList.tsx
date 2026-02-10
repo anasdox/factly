@@ -7,6 +7,7 @@ import InsightModal from './InsightModal';
 import SuggestionsPanel from './SuggestionsPanel';
 import RecommendationModal from './RecommendationModal';
 import { useItemSelection } from '../hooks/useItemSelection';
+import { API_URL } from '../config';
 
 type Props = {
   insightRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -91,7 +92,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
 
     setExtractingRecommendations(true);
     try {
-      const response = await fetch('http://localhost:3002/extract/recommendations', {
+      const response = await fetch(`${API_URL}/extract/recommendations`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

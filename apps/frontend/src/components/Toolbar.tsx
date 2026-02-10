@@ -8,6 +8,7 @@ import StartEventRoomModal from './StartEventRoomModal';
 import { StringParam, useQueryParam } from "use-query-params";
 import { useLocalStorage } from 'usehooks-ts'
 import { isObjectEmpty } from "../lib";
+import { API_URL } from "../config";
 
 
 type Props = {
@@ -32,7 +33,7 @@ const Toolbar = ({ data, setData, onError }: Props) => {
   useEffect(() => {
     let cancelled = false;
     const check = () => {
-      fetch('http://localhost:3002/status')
+      fetch(`${API_URL}/status`)
         .then((res) => { if (!cancelled) setBackendAvailable(res.ok); })
         .catch(() => { if (!cancelled) setBackendAvailable(false); });
     };
@@ -118,7 +119,7 @@ const Toolbar = ({ data, setData, onError }: Props) => {
   const handleStartEventRoom = async () => {
     try {
       if (data && data.discovery_id) {
-        const response = await fetch('http://localhost:3002/rooms', {
+        const response = await fetch(`${API_URL}/rooms`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -144,7 +145,7 @@ const Toolbar = ({ data, setData, onError }: Props) => {
       // Fetch room data
       const fetchRoomData = async () => {
         try {
-          const response = await fetch(`http://localhost:3002/rooms/${roomId}`);
+          const response = await fetch(`${API_URL}/rooms/${roomId}`);
           if (!response.ok) {
             const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
             onError(errorBody.error || 'Failed to fetch room data');
@@ -156,7 +157,7 @@ const Toolbar = ({ data, setData, onError }: Props) => {
             setData(roomData);
           }
 
-          let esurl = `http://localhost:3002/events/${roomId}?`;
+          let esurl = `${API_URL}/events/${roomId}?`;
           if (uuid) {
             esurl += `uuid=${uuid}&`;
           }
@@ -209,7 +210,7 @@ const Toolbar = ({ data, setData, onError }: Props) => {
     if (!roomId) return;
     const poll = setInterval(async () => {
       try {
-        const response = await fetch(`http://localhost:3002/rooms/${roomId}`);
+        const response = await fetch(`${API_URL}/rooms/${roomId}`);
         if (!response.ok) return;
         const roomData = await response.json();
         if (roomData && Object.keys(roomData).length !== 0) {
@@ -235,7 +236,7 @@ const Toolbar = ({ data, setData, onError }: Props) => {
       return;
     }
     if (roomId && uuidRef.current && usernameRef.current && !isObjectEmpty(data)) {
-      fetch(`http://localhost:3002/rooms/${roomId}/update`, {
+      fetch(`${API_URL}/rooms/${roomId}/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

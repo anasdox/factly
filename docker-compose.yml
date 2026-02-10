@@ -1,0 +1,22 @@
+services:
+  backend:
+    build: ./apps/backend
+    env_file: ./apps/backend/.env
+    environment:
+      - PORT=3002
+    volumes:
+      - backend-data:/app/data
+    expose:
+      - "3002"
+
+  frontend:
+    build: ./apps/frontend
+    environment:
+      - BACKEND_URL=http://backend:3002
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  backend-data:
