@@ -106,10 +106,16 @@
   box-shadow: 0 0 0 2px var(--color-accent);
 }
 
-.traceability-item .fact-item:hover,
-.traceability-item .insight-item:hover,
-.traceability-item .recommendation-item:hover {
+.traceability-item:not(.traceability-item-origin) .fact-item:hover,
+.traceability-item:not(.traceability-item-origin) .insight-item:hover,
+.traceability-item:not(.traceability-item-origin) .recommendation-item:hover {
   box-shadow: none;
+}
+
+.traceability-item-origin .fact-item:hover,
+.traceability-item-origin .insight-item:hover,
+.traceability-item-origin .recommendation-item:hover {
+  box-shadow: 0 0 0 2px var(--color-accent);
 }
 
 .traceability-item .fact-item,
