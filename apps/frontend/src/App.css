@@ -146,7 +146,7 @@ input[type=text], select, textarea {
   border-radius: 10px;
   margin: 5px;
   min-height: 36px;
-  width: 100%;
+  width: calc(100% - 10px);
 }
 
 .wrapper-item-toolbar {
@@ -272,7 +272,6 @@ dialog label {
   background: var(--bg-selection-toolbar);
   border-radius: 10px;
   font-size: 0.85em;
-  width: 100%;
   box-sizing: border-box;
   flex-wrap: wrap;
   overflow: hidden;
