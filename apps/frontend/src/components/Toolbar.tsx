@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { faEdit, faFileDownload, faPlus, faUpload, faPlayCircle, faMoon, faSun } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faFileDownload, faPlus, faUpload, faPlayCircle, faPalette } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./Toolbar.css";
 
@@ -29,17 +29,30 @@ const Toolbar = ({ data, setData, onError, backendAvailable }: Props) => {
   const isRemoteUpdate = useRef(false);
   const uuidRef = useRef<string | null>(uuid);
   const usernameRef = useRef<string | null>(username);
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
+  const THEMES = ['light', 'dark', 'colorful-light', 'colorful-dark'] as const;
+  type Theme = typeof THEMES[number];
+  const THEME_LABELS: Record<Theme, string> = {
+    'light': 'B&W Light',
+    'dark': 'B&W Dark',
+    'colorful-light': 'Color Light',
+    'colorful-dark': 'Color Dark',
+  };
+
+  const [theme, setTheme] = useState<Theme>(() => {
+    const saved = localStorage.getItem('theme') as Theme;
+    return THEMES.includes(saved) ? saved : 'light';
   });
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
+    document.documentElement.dataset.theme = theme === 'light' ? '' : theme;
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  const cycleTheme = () => {
+    setTheme(prev => {
+      const idx = THEMES.indexOf(prev);
+      return THEMES[(idx + 1) % THEMES.length];
+    });
   };
 
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -277,8 +290,8 @@ const Toolbar = ({ data, setData, onError, backendAvailable }: Props) => {
       >
         <FontAwesomeIcon icon={faPlayCircle} size='lg' />
       </div>
-      <div title="Toggle Dark Mode" onClick={toggleTheme}>
-        <FontAwesomeIcon icon={theme === 'light' ? faMoon : faSun} size='lg' />
+      <div title={`Theme: ${THEME_LABELS[theme]}`} onClick={cycleTheme}>
+        <FontAwesomeIcon icon={faPalette} size='lg' />
       </div>
 
       <StartEventRoomModal

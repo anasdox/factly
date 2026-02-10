@@ -1,4 +1,133 @@
+/* ── Black & White Light (default) ── */
 :root {
+  --bg-page: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-item: #f0f0f0;
+  --bg-item-fact: #e8e8e8;
+  --bg-item-insight: #e8e8e8;
+  --bg-item-recommendation: #e8e8e8;
+  --bg-item-output: #e8e8e8;
+  --text-primary: #000000;
+  --text-secondary: #555555;
+  --text-output-badge: #333333;
+  --border-color: #cccccc;
+  --border-dialog: #bbbbbb;
+  --border-input: #cccccc;
+  --bg-toolbar-btn: #ffffff;
+  --bg-toolbar-btn-hover: #e0e0e0;
+  --bg-selection-toolbar: #f0f0f0;
+  --border-selection: #999999;
+  --color-accent: #000000;
+  --color-highlight: #000000;
+  --line-color: #999999;
+  --bg-suggestion-card: #f5f5f5;
+  --border-suggestion-card: #dddddd;
+  --bg-modal: #ffffff;
+  --bg-add-btn: #e0e0e0;
+  --bg-btn: #ffffff;
+  --border-btn: #cccccc;
+  --border-btn-hover: #000000;
+  --bg-code: #f3f3f3;
+  --bg-code-block: #1a1a1a;
+  --color-code-block: #f0f0f0;
+  --bg-blockquote: #f5f5f5;
+  --color-blockquote: #333333;
+  --border-blockquote: #999999;
+  --bg-table-header: #f0f0f0;
+  --border-table: #cccccc;
+  --color-heading-1: #000000;
+  --color-heading-2: #1a1a1a;
+  --color-heading-3: #333333;
+  --color-body-text: #333333;
+  --color-strong: #000000;
+  --border-hr: #dddddd;
+  --bg-preview-btn-hover: #f0f0f0;
+  --color-preview-btn: #666666;
+  --border-preview-btn: #cccccc;
+  --color-close-btn: #555555;
+  --color-close-btn-hover: #000000;
+  --bg-suggestion-blockquote: #f0f0f0;
+  --border-suggestion-blockquote: #666666;
+  --bg-suggestion-table-header: #e0e0e0;
+  --color-welcome-text: #666666;
+  --bg-welcome-btn: #ffffff;
+  --border-welcome-btn: #333333;
+  --bg-welcome-btn-hover: #333333;
+  --color-welcome-btn-hover: #ffffff;
+  --color-suggestion-accept: #222222;
+  --bg-suggestion-accept-hover: #e8e8e8;
+  --color-suggestion-edit: #444444;
+  --bg-suggestion-edit-hover: #eeeeee;
+  --color-suggestion-reject: #555555;
+  --bg-suggestion-reject-hover: #f0f0f0;
+}
+
+/* ── Black & White Dark ── */
+[data-theme="dark"] {
+  --bg-page: #0a0a0a;
+  --bg-surface: #111111;
+  --bg-item: #1a1a1a;
+  --bg-item-fact: #222222;
+  --bg-item-insight: #222222;
+  --bg-item-recommendation: #222222;
+  --bg-item-output: #222222;
+  --text-primary: #e0e0e0;
+  --text-secondary: #999999;
+  --text-output-badge: #cccccc;
+  --border-color: #333333;
+  --border-dialog: #444444;
+  --border-input: #333333;
+  --bg-toolbar-btn: #1a1a1a;
+  --bg-toolbar-btn-hover: #2a2a2a;
+  --bg-selection-toolbar: #1a1a1a;
+  --border-selection: #555555;
+  --color-accent: #ffffff;
+  --color-highlight: #ffffff;
+  --line-color: #555555;
+  --bg-suggestion-card: #1a1a1a;
+  --border-suggestion-card: #333333;
+  --bg-modal: #111111;
+  --bg-add-btn: #333333;
+  --bg-btn: #1a1a1a;
+  --border-btn: #444444;
+  --border-btn-hover: #e0e0e0;
+  --bg-code: #1a1a1a;
+  --bg-code-block: #050505;
+  --color-code-block: #e0e0e0;
+  --bg-blockquote: #1a1a1a;
+  --color-blockquote: #cccccc;
+  --border-blockquote: #555555;
+  --bg-table-header: #1a1a1a;
+  --border-table: #333333;
+  --color-heading-1: #e0e0e0;
+  --color-heading-2: #cccccc;
+  --color-heading-3: #bbbbbb;
+  --color-body-text: #bbbbbb;
+  --color-strong: #e0e0e0;
+  --border-hr: #333333;
+  --bg-preview-btn-hover: #1a1a1a;
+  --color-preview-btn: #999999;
+  --border-preview-btn: #333333;
+  --color-close-btn: #999999;
+  --color-close-btn-hover: #e0e0e0;
+  --bg-suggestion-blockquote: #1a1a1a;
+  --border-suggestion-blockquote: #999999;
+  --bg-suggestion-table-header: #1a1a1a;
+  --color-welcome-text: #999999;
+  --bg-welcome-btn: #1a1a1a;
+  --border-welcome-btn: #555555;
+  --bg-welcome-btn-hover: #555555;
+  --color-welcome-btn-hover: #e0e0e0;
+  --color-suggestion-accept: #cccccc;
+  --bg-suggestion-accept-hover: #222222;
+  --color-suggestion-edit: #bbbbbb;
+  --bg-suggestion-edit-hover: #1a1a1a;
+  --color-suggestion-reject: #aaaaaa;
+  --bg-suggestion-reject-hover: #222222;
+}
+
+/* ── Colorful Light ── */
+[data-theme="colorful-light"] {
   --bg-page: #ffffff;
   --bg-surface: #ffffff;
   --bg-item: #c7c7c7;
@@ -61,7 +190,8 @@
   --bg-suggestion-reject-hover: #ffebee;
 }
 
-[data-theme="dark"] {
+/* ── Colorful Dark ── */
+[data-theme="colorful-dark"] {
   --bg-page: #1a1a2e;
   --bg-surface: #16213e;
   --bg-item: #2a2a4a;
