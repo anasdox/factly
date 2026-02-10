@@ -29,6 +29,8 @@
   align-items: center;
   padding-left: 2em;
   padding-right: 2em;
+  flex: 1;
+  min-width: 0;
 }
 .column > h2,
 .column-header h2 {
