@@ -15,6 +15,7 @@ type Props = {
   handleMouseEnter: (entityType: string, entityId: string, data: DiscoveryData) => void;
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
   onError: (msg: string) => void;
+  onViewTraceability: (entityType: string, entityId: string) => void;
 };
 
 type SuggestionData = {
@@ -22,7 +23,7 @@ type SuggestionData = {
   inputId: string;
 };
 
-const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter, handleMouseLeave, onError }) => {
+const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onViewTraceability }) => {
 
   const [isInputDialogVisible, setIsInputDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -148,6 +149,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
           handleMouseEnter={() => handleMouseEnter("input", input.input_id, data)}
           handleMouseLeave={() => handleMouseLeave("input", input.input_id, data)}
           openEditModal={openEditModal}
+          onViewTraceability={() => onViewTraceability("input", input.input_id)}
           onExtractFacts={input.type === 'text' || input.type === 'web' ? () => handleExtractFacts(input) : undefined}
           extractDisabled={
             (input.type === 'text' && (!input.text || input.text.trim() === '')) ||

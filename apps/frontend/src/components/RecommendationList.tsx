@@ -16,6 +16,7 @@ type Props = {
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
   onError: (msg: string) => void;
   backendAvailable: boolean;
+  onViewTraceability: (entityType: string, entityId: string) => void;
 };
 
 type OutputSuggestionData = {
@@ -30,7 +31,7 @@ const OUTPUT_TYPES = [
   { value: 'brief', label: 'Brief' },
 ] as const;
 
-const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, backendAvailable }) => {
+const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, backendAvailable, onViewTraceability }) => {
 
   const [isRecommendationDialogVisible, setIsRecommendationDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -212,6 +213,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
             handleMouseEnter={() => handleMouseEnter("recommendation", recommendation.recommendation_id, data)}
             handleMouseLeave={() => handleMouseLeave("recommendation", recommendation.recommendation_id, data)}
             openEditModal={openEditModal}
+            onViewTraceability={() => onViewTraceability("recommendation", recommendation.recommendation_id)}
           >
             <RecommendationItem
               recommendation={recommendation}

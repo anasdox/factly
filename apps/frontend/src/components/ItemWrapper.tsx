@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencil, faWandMagicSparkles, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faPencil, faWandMagicSparkles, faSpinner, faDiagramProject } from '@fortawesome/free-solid-svg-icons';
 
 
 type Props = {
@@ -15,6 +15,7 @@ type Props = {
   onExtractFacts?: () => void;
   extractDisabled?: boolean;
   extractLoading?: boolean;
+  onViewTraceability?: () => void;
 };
 
 const ItemWrapper: React.FC<Props> = ({
@@ -28,7 +29,8 @@ const ItemWrapper: React.FC<Props> = ({
   openEditModal,
   onExtractFacts,
   extractDisabled,
-  extractLoading}) => {
+  extractLoading,
+  onViewTraceability}) => {
 
   return (
     <div
@@ -47,6 +49,11 @@ const ItemWrapper: React.FC<Props> = ({
             title="Extract Facts"
           >
             <FontAwesomeIcon size={'sm'} icon={extractLoading ? faSpinner : faWandMagicSparkles} spin={extractLoading} />
+          </div>
+        )}
+        {onViewTraceability && (
+          <div onClick={(e) => { e.stopPropagation(); onViewTraceability(); }} title="View traceability">
+            <FontAwesomeIcon size={'sm'} icon={faDiagramProject} />
           </div>
         )}
         <div onClick={() => openEditModal ? openEditModal(item): null} title="Edit">

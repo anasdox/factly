@@ -16,6 +16,7 @@ type Props = {
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
   onError: (msg: string) => void;
   backendAvailable: boolean;
+  onViewTraceability: (entityType: string, entityId: string) => void;
 };
 
 type RecommendationSuggestionData = {
@@ -23,7 +24,7 @@ type RecommendationSuggestionData = {
   insightIds: string[];
 };
 
-const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, backendAvailable }) => {
+const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, backendAvailable, onViewTraceability }) => {
 
   const [isInsightDialogVisible, setIsInsightDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -181,6 +182,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
             handleMouseEnter={() => handleMouseEnter("insight", insight.insight_id, data)}
             handleMouseLeave={() => handleMouseLeave("insight", insight.insight_id, data)}
             openEditModal={openEditModal}
+            onViewTraceability={() => onViewTraceability("insight", insight.insight_id)}
           >
             <InsightItem insight={insight} />
           </ItemWrapper>

@@ -10,6 +10,7 @@ import { handleMouseEnter, handleMouseLeave } from './lib';
 import ToolBar from './components/Toolbar';
 import Toast from './components/Toast';
 import DiscoveryModal from './components/DiscoveryModal';
+import TraceabilityModal from './components/TraceabilityModal';
 import { API_URL } from './config';
 
 const STORAGE_KEY = 'factly_last_discovery';
@@ -99,6 +100,8 @@ const App: React.FC = () => {
   const handleError = useCallback((msg: string) => setErrorMessage(msg), []);
   const clearError = useCallback(() => setErrorMessage(null), []);
   const [backendAvailable, setBackendAvailable] = useState(false);
+  const [traceabilityTarget, setTraceabilityTarget] = useState<{ type: string; id: string } | null>(null);
+  const openTraceability = useCallback((type: string, id: string) => setTraceabilityTarget({ type, id }), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -293,7 +296,8 @@ const App: React.FC = () => {
             handleMouseLeave={handleMouseLeave}
             setData={setData}
             data={data}
-            onError={handleError} />
+            onError={handleError}
+            onViewTraceability={openTraceability} />
           : ""}
         {
           factRefs ?
@@ -304,7 +308,8 @@ const App: React.FC = () => {
               setData={setData}
               data={data}
               onError={handleError}
-              backendAvailable={backendAvailable} />
+              backendAvailable={backendAvailable}
+              onViewTraceability={openTraceability} />
             : ""}
         {
           insightRefs ?
@@ -315,7 +320,8 @@ const App: React.FC = () => {
               setData={setData}
               data={data}
               onError={handleError}
-              backendAvailable={backendAvailable} />
+              backendAvailable={backendAvailable}
+              onViewTraceability={openTraceability} />
             : ""
         }
         {
@@ -327,7 +333,8 @@ const App: React.FC = () => {
               setData={setData}
               data={data}
               onError={handleError}
-              backendAvailable={backendAvailable} />
+              backendAvailable={backendAvailable}
+              onViewTraceability={openTraceability} />
             : ""
         }
         {
@@ -337,10 +344,20 @@ const App: React.FC = () => {
               handleMouseEnter={handleMouseEnter}
               handleMouseLeave={handleMouseLeave}
               setData={setData}
-              data={data} />
+              data={data}
+              onViewTraceability={openTraceability} />
             : ""
         }
       </main >
+      {traceabilityTarget && (
+        <TraceabilityModal
+          isVisible={true}
+          onClose={() => setTraceabilityTarget(null)}
+          entityType={traceabilityTarget.type}
+          entityId={traceabilityTarget.id}
+          data={data}
+        />
+      )}
     </div >
   );
 };

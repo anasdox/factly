@@ -16,6 +16,7 @@ type Props = {
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
   onError: (msg: string) => void;
   backendAvailable: boolean;
+  onViewTraceability: (entityType: string, entityId: string) => void;
 };
 
 type InsightSuggestionData = {
@@ -23,7 +24,7 @@ type InsightSuggestionData = {
   factIds: string[];
 };
 
-const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, backendAvailable }) => {
+const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, backendAvailable, onViewTraceability }) => {
 
   const [isFactDialogVisible, setIsFactDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -180,6 +181,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
             handleMouseEnter={() => handleMouseEnter("fact", fact.fact_id, data)}
             handleMouseLeave={() => handleMouseLeave("fact", fact.fact_id, data)}
             openEditModal={openEditModal}
+            onViewTraceability={() => onViewTraceability("fact", fact.fact_id)}
           >
             <FactItem fact={fact} />
           </ItemWrapper>

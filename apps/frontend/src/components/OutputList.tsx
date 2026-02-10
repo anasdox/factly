@@ -11,9 +11,10 @@ type Props = {
   setData: React.Dispatch<React.SetStateAction<DiscoveryData | null>>;
   handleMouseEnter: (entityType: string, entityId: string, data: DiscoveryData) => void;
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
+  onViewTraceability: (entityType: string, entityId: string) => void;
 };
 
-const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnter, handleMouseLeave }) => {
+const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnter, handleMouseLeave, onViewTraceability }) => {
 
   const [isOutputDialogVisible, setIsOutputDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -84,6 +85,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
           handleMouseEnter={() => handleMouseEnter("output", output.output_id, data)}
           handleMouseLeave={() => handleMouseLeave("output", output.output_id, data)}
           openEditModal={openEditModal}
+          onViewTraceability={() => onViewTraceability("output", output.output_id)}
         >
           <OutputItem
             output={output}

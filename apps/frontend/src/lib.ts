@@ -1,4 +1,4 @@
-function getRelatedEntities(entityType: string, entityId: string, data: DiscoveryData) {
+export function getRelatedEntities(entityType: string, entityId: string, data: DiscoveryData) {
   let relatedEntities: { type: string; id: string; }[] = [];
 
   const addRelatedEntities = (type: string, id: string) => {
@@ -46,7 +46,7 @@ function getRelatedEntities(entityType: string, entityId: string, data: Discover
   return relatedEntities;
 }
 
-function getParentRelatedEntities(entityType: string, entityId: string, data: DiscoveryData) {
+export function getParentRelatedEntities(entityType: string, entityId: string, data: DiscoveryData) {
   let parentRelatedEntities: { type: string; id: string; }[] = [];
 
   const addParentRelatedEntities = (type: string, id: string) => {
