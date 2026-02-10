@@ -1,3 +1,7 @@
+# Use bash + nvm so all recipes use the nvm-managed Node.js version
+SHELL := /bin/bash
+.SHELLFLAGS := -c '. "$$HOME/.nvm/nvm.sh" && eval "$$@"' bash
+
 BACKEND_DIR  := apps/backend
 FRONTEND_DIR := apps/frontend
 TESTS_DIR    := tests/acceptance
