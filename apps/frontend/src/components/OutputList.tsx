@@ -66,7 +66,10 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
 
   return (
     <div className="column outputs">
-      <h2>📤Outputs</h2>
+      <div className="column-header">
+        <h2>📤Outputs</h2>
+        <button className="header-add-button" onClick={openAddModal} title="Add Output"><FontAwesomeIcon icon={faAdd} /></button>
+      </div>
       {data.outputs.length === 0 && (
         <p className="empty-state-hint">Select recommendations to formulate deliverables.</p>
       )}
@@ -88,7 +91,6 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
         </ItemWrapper>
 
       ))}
-      <button className="add-button output-add-button" onClick={openAddModal} title="Add Output"><FontAwesomeIcon icon={faAdd} /></button>
       <OutputModal
         mode={modalMode}
         isDialogVisible={isOutputDialogVisible}

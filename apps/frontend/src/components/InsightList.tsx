@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import InsightItem from './InsightItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faClipboardList, faXmark, faSpinner, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faXmark, faSpinner, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import InsightModal from './InsightModal';
 import SuggestionsPanel from './SuggestionsPanel';
-import RecommendationModal from './RecommendationModal';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { API_URL } from '../config';
 
@@ -16,6 +15,7 @@ type Props = {
   handleMouseEnter: (entityType: string, entityId: string, data: DiscoveryData) => void;
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
   onError: (msg: string) => void;
+  backendAvailable: boolean;
 };
 
 type RecommendationSuggestionData = {
@@ -23,7 +23,7 @@ type RecommendationSuggestionData = {
   insightIds: string[];
 };
 
-const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseEnter, handleMouseLeave, onError }) => {
+const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, backendAvailable }) => {
 
   const [isInsightDialogVisible, setIsInsightDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -38,9 +38,6 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
   useEffect(() => { clearSelection(); }, [data.discovery_id, clearSelection]);
   const [recommendationSuggestionData, setRecommendationSuggestionData] = useState<RecommendationSuggestionData | null>(null);
 
-  // Manual recommendation creation from selection
-  const [isRecommendationModalVisible, setIsRecommendationModalVisible] = useState(false);
-  const [prefilledRelatedInsights, setPrefilledRelatedInsights] = useState<string[]>([]);
 
   const openAddModal = () => {
     setModalMode('add');
@@ -142,16 +139,6 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     setRecommendationSuggestionData(null);
   }, []);
 
-  // Manual recommendation creation with pre-filled related_insights
-  const handleAddRecommendationFromSelection = () => {
-    setPrefilledRelatedInsights(Array.from(selectedInsightIds));
-    setIsRecommendationModalVisible(true);
-  };
-
-  const saveRecommendationFromSelection = (recommendationData: RecommendationType) => {
-    addRecommendationToData(recommendationData.text, recommendationData.related_insights);
-    setIsRecommendationModalVisible(false);
-  };
 
   return (
     <div className="column insights">
@@ -162,17 +149,14 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
             <FontAwesomeIcon icon={faCheckDouble} /> Select All
           </button>
         )}
+        <button className="header-add-button" onClick={openAddModal} title="Add Insight"><FontAwesomeIcon icon={faAdd} /></button>
       </div>
       <div className={`toolbar-wrapper${selectedInsightIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
         <div className="selection-toolbar">
           <span>{selectedInsightIds.size} insight(s) selected</span>
-          <button onClick={handleExtractRecommendations} disabled={extractingRecommendations}>
+          <button onClick={handleExtractRecommendations} disabled={extractingRecommendations || !backendAvailable} title={!backendAvailable ? 'Backend unavailable' : ''}>
             <FontAwesomeIcon icon={extractingRecommendations ? faSpinner : faWandMagicSparkles} spin={extractingRecommendations} />
             {' '}Generate Recommendations
-          </button>
-          <button onClick={handleAddRecommendationFromSelection}>
-            <FontAwesomeIcon icon={faClipboardList} />
-            {' '}Add Recommendation
           </button>
           <button onClick={clearSelection}>
             <FontAwesomeIcon icon={faXmark} />
@@ -202,7 +186,6 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
           </ItemWrapper>
         </div>
       ))}
-      <button className="add-button insight-add-button" onClick={openAddModal} title="Add Insight"><FontAwesomeIcon icon={faAdd} /></button>
       <InsightModal
         mode={modalMode}
         isDialogVisible={isInsightDialogVisible}
@@ -221,15 +204,6 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
           onClose={handleCloseSuggestions}
         />
       )}
-      <RecommendationModal
-        mode="add"
-        isDialogVisible={isRecommendationModalVisible}
-        closeDialog={() => setIsRecommendationModalVisible(false)}
-        saveRecommendation={saveRecommendationFromSelection}
-        deleteRecommendation={() => {}}
-        recommendationData={{ recommendation_id: '', text: '', related_insights: prefilledRelatedInsights } as RecommendationType}
-        insights={data.insights}
-      />
     </div>
   );
 };

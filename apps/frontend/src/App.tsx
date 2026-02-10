@@ -98,6 +98,19 @@ const App: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const handleError = useCallback((msg: string) => setErrorMessage(msg), []);
   const clearError = useCallback(() => setErrorMessage(null), []);
+  const [backendAvailable, setBackendAvailable] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const check = () => {
+      fetch(`${API_URL}/status`)
+        .then((res) => { if (!cancelled) setBackendAvailable(res.ok); })
+        .catch(() => { if (!cancelled) setBackendAvailable(false); });
+    };
+    check();
+    const interval = setInterval(check, 30000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
   const inputRefs = useRef<(HTMLDivElement | null)[]>([]);
   const factRefs = useRef<(HTMLDivElement | null)[]>([]);
   const insightRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -269,6 +282,7 @@ const App: React.FC = () => {
           data={data}
           setData={setData}
           onError={handleError}
+          backendAvailable={backendAvailable}
         />
       </header>
       <main className="discovery-grid">
@@ -289,7 +303,8 @@ const App: React.FC = () => {
               handleMouseLeave={handleMouseLeave}
               setData={setData}
               data={data}
-              onError={handleError} />
+              onError={handleError}
+              backendAvailable={backendAvailable} />
             : ""}
         {
           insightRefs ?
@@ -299,7 +314,8 @@ const App: React.FC = () => {
               handleMouseLeave={handleMouseLeave}
               setData={setData}
               data={data}
-              onError={handleError} />
+              onError={handleError}
+              backendAvailable={backendAvailable} />
             : ""
         }
         {
@@ -310,7 +326,8 @@ const App: React.FC = () => {
               handleMouseLeave={handleMouseLeave}
               setData={setData}
               data={data}
-              onError={handleError} />
+              onError={handleError}
+              backendAvailable={backendAvailable} />
             : ""
         }
         {
@@ -329,4 +346,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-

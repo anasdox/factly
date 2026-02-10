@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import RecommendationItem from './RecommendationItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faClipboardList, faXmark, faSpinner, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faXmark, faSpinner, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import RecommendationModal from './RecommendationModal';
 import SuggestionsPanel from './SuggestionsPanel';
-import OutputModal from './OutputModal';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { API_URL } from '../config';
 
@@ -16,6 +15,7 @@ type Props = {
   handleMouseEnter: (entityType: string, entityId: string, data: DiscoveryData) => void;
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
   onError: (msg: string) => void;
+  backendAvailable: boolean;
 };
 
 type OutputSuggestionData = {
@@ -30,7 +30,7 @@ const OUTPUT_TYPES = [
   { value: 'brief', label: 'Brief' },
 ] as const;
 
-const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData, handleMouseEnter, handleMouseLeave, onError }) => {
+const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, backendAvailable }) => {
 
   const [isRecommendationDialogVisible, setIsRecommendationDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -46,9 +46,6 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
   const [extractingOutputs, setExtractingOutputs] = useState(false);
   const [outputSuggestionData, setOutputSuggestionData] = useState<OutputSuggestionData | null>(null);
 
-  // Manual output creation from selection
-  const [isOutputModalVisible, setIsOutputModalVisible] = useState(false);
-  const [prefilledRelatedRecommendations, setPrefilledRelatedRecommendations] = useState<string[]>([]);
 
   const openAddModal = () => {
     setModalMode('add');
@@ -165,16 +162,6 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
     setOutputSuggestionData(null);
   }, []);
 
-  // Manual output creation with pre-filled related_recommendations
-  const handleAddOutputFromSelection = () => {
-    setPrefilledRelatedRecommendations(Array.from(selectedRecommendationIds));
-    setIsOutputModalVisible(true);
-  };
-
-  const saveOutputFromSelection = (outputData: OutputType) => {
-    addOutputToData(outputData.text, outputData.related_recommendations, outputData.type);
-    setIsOutputModalVisible(false);
-  };
 
   return (
     <div className="column recommendations">
@@ -185,6 +172,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
             <FontAwesomeIcon icon={faCheckDouble} /> Select All
           </button>
         )}
+        <button className="header-add-button" onClick={openAddModal} title="Add Recommendation"><FontAwesomeIcon icon={faAdd} /></button>
       </div>
       <div className={`toolbar-wrapper${selectedRecommendationIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
         <div className="selection-toolbar">
@@ -197,13 +185,9 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
               <option key={ot.value} value={ot.value}>{ot.label}</option>
             ))}
           </select>
-          <button onClick={handleFormulateOutputs} disabled={extractingOutputs}>
+          <button onClick={handleFormulateOutputs} disabled={extractingOutputs || !backendAvailable} title={!backendAvailable ? 'Backend unavailable' : ''}>
             <FontAwesomeIcon icon={extractingOutputs ? faSpinner : faWandMagicSparkles} spin={extractingOutputs} />
             {' '}Formulate Outputs
-          </button>
-          <button onClick={handleAddOutputFromSelection}>
-            <FontAwesomeIcon icon={faClipboardList} />
-            {' '}Add Output
           </button>
           <button onClick={clearSelection}>
             <FontAwesomeIcon icon={faXmark} />
@@ -235,7 +219,6 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
           </ItemWrapper>
         </div>
       ))}
-      <button className="add-button recommendation-add-button" onClick={openAddModal} title="Add Recommendation"><FontAwesomeIcon icon={faAdd} /></button>
       <RecommendationModal
         mode={modalMode}
         isDialogVisible={isRecommendationDialogVisible}
@@ -255,15 +238,6 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
           renderMarkdown
         />
       )}
-      <OutputModal
-        mode="add"
-        isDialogVisible={isOutputModalVisible}
-        closeDialog={() => setIsOutputModalVisible(false)}
-        saveOutput={saveOutputFromSelection}
-        deleteOutput={() => {}}
-        outputData={{ output_id: '', text: '', related_recommendations: prefilledRelatedRecommendations, type: selectedOutputType } as OutputType}
-        recommendations={data.recommendations}
-      />
     </div>
   );
 };

@@ -15,9 +15,10 @@ type Props = {
   data: DiscoveryData;
   setData: React.Dispatch<React.SetStateAction<DiscoveryData | null>>;
   onError: (msg: string) => void;
+  backendAvailable: boolean;
 };
 
-const Toolbar = ({ data, setData, onError }: Props) => {
+const Toolbar = ({ data, setData, onError, backendAvailable }: Props) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [isStartEventRoomModalVisible, setIsStartEventRoomModalVisible] = useState(false);
@@ -28,20 +29,6 @@ const Toolbar = ({ data, setData, onError }: Props) => {
   const isRemoteUpdate = useRef(false);
   const uuidRef = useRef<string | null>(uuid);
   const usernameRef = useRef<string | null>(username);
-  const [backendAvailable, setBackendAvailable] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    const check = () => {
-      fetch(`${API_URL}/status`)
-        .then((res) => { if (!cancelled) setBackendAvailable(res.ok); })
-        .catch(() => { if (!cancelled) setBackendAvailable(false); });
-    };
-    check();
-    const interval = setInterval(check, 30000);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, []);
-
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
   });

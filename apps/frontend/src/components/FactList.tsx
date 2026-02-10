@@ -1,11 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import FactItem from './FactItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faLightbulb, faXmark, faSpinner, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faXmark, faSpinner, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import FactModal from './FactModal';
 import SuggestionsPanel from './SuggestionsPanel';
-import InsightModal from './InsightModal';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { API_URL } from '../config';
 
@@ -16,6 +15,7 @@ type Props = {
   handleMouseEnter: (entityType: string, entityId: string, data: DiscoveryData) => void;
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
   onError: (msg: string) => void;
+  backendAvailable: boolean;
 };
 
 type InsightSuggestionData = {
@@ -23,7 +23,7 @@ type InsightSuggestionData = {
   factIds: string[];
 };
 
-const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, handleMouseLeave, onError }) => {
+const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, backendAvailable }) => {
 
   const [isFactDialogVisible, setIsFactDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -38,9 +38,6 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
   useEffect(() => { clearSelection(); }, [data.discovery_id, clearSelection]);
   const [insightSuggestionData, setInsightSuggestionData] = useState<InsightSuggestionData | null>(null);
 
-  // Manual insight creation from selection
-  const [isInsightModalVisible, setIsInsightModalVisible] = useState(false);
-  const [prefilledRelatedFacts, setPrefilledRelatedFacts] = useState<string[]>([]);
 
   const openAddModal = () => {
     setModalMode('add');
@@ -141,16 +138,6 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     setInsightSuggestionData(null);
   }, []);
 
-  // Manual insight creation with pre-filled related_facts
-  const handleAddInsightFromSelection = () => {
-    setPrefilledRelatedFacts(Array.from(selectedFactIds));
-    setIsInsightModalVisible(true);
-  };
-
-  const saveInsightFromSelection = (insightData: InsightType) => {
-    addInsightToData(insightData.text, insightData.related_facts);
-    setIsInsightModalVisible(false);
-  };
 
   return (
     <div className="column facts">
@@ -161,17 +148,14 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
             <FontAwesomeIcon icon={faCheckDouble} /> Select All
           </button>
         )}
+        <button className="header-add-button" onClick={openAddModal} title="Add Fact"><FontAwesomeIcon icon={faAdd} /></button>
       </div>
       <div className={`toolbar-wrapper${selectedFactIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
         <div className="selection-toolbar">
           <span>{selectedFactIds.size} fact(s) selected</span>
-          <button onClick={handleExtractInsights} disabled={extractingInsights}>
+          <button onClick={handleExtractInsights} disabled={extractingInsights || !backendAvailable} title={!backendAvailable ? 'Backend unavailable' : ''}>
             <FontAwesomeIcon icon={extractingInsights ? faSpinner : faWandMagicSparkles} spin={extractingInsights} />
             {' '}Generate Insights
-          </button>
-          <button onClick={handleAddInsightFromSelection}>
-            <FontAwesomeIcon icon={faLightbulb} />
-            {' '}Add Insight
           </button>
           <button onClick={clearSelection}>
             <FontAwesomeIcon icon={faXmark} />
@@ -201,7 +185,6 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           </ItemWrapper>
         </div>
       ))}
-      <button className="add-button fact-add-button" onClick={openAddModal} title="Add Fact"><FontAwesomeIcon icon={faAdd} /></button>
       <FactModal
         mode={modalMode}
         isDialogVisible={isFactDialogVisible}
@@ -220,15 +203,6 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           onClose={handleCloseSuggestions}
         />
       )}
-      <InsightModal
-        mode="add"
-        isDialogVisible={isInsightModalVisible}
-        closeDialog={() => setIsInsightModalVisible(false)}
-        saveInsight={saveInsightFromSelection}
-        deleteInsight={() => {}}
-        insightData={{ insight_id: '', text: '', related_facts: prefilledRelatedFacts } as InsightType}
-        facts={data.facts}
-      />
     </div>
   );
 };

@@ -68,7 +68,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
     }
     setIsInputDialogVisible(false);
   };
-  
+
   const handleExtractFacts = async (input: InputType) => {
     setExtractingInputId(input.input_id);
     try {
@@ -131,7 +131,10 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
 
   return (
     <div className="column inputs">
-      <h2>📥Inputs</h2>
+      <div className="column-header">
+        <h2>📥Inputs</h2>
+        <button className="header-add-button" onClick={openAddModal} title="Add Input"><FontAwesomeIcon icon={faAdd} /></button>
+      </div>
       {data.inputs.length === 0 && (
         <p className="empty-state-hint">Add a text or web URL to start collecting sources.</p>
       )}
@@ -155,7 +158,6 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
           <InputItem input={input} />
         </ItemWrapper>
       ))}
-      <button className="add-button" onClick={openAddModal} title="Add Input"><FontAwesomeIcon icon={faAdd} /></button >
       <InputModal
         mode={modalMode}
         isDialogVisible={isInputDialogVisible}
