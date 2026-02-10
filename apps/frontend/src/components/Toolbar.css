@@ -8,7 +8,7 @@
   border-radius: 5px;
   cursor: pointer;
   display: inline-flex;
-  background-color: var(--bg-toolbar-btn);
+  background-color: transparent;
   align-items: center;
   border: none;
   text-decoration: none;

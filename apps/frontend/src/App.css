@@ -58,7 +58,7 @@
 
 .select-all-button:hover {
   background: var(--color-accent);
-  color: #ffffff;
+  color: var(--bg-page);
   transition: 0.2s;
 }
 
@@ -304,7 +304,7 @@ dialog label {
 
 .selection-toolbar button:hover {
   background: var(--color-accent);
-  color: #ffffff;
+  color: var(--bg-page);
   transition: 0.2s;
 }
 
