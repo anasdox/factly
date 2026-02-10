@@ -24,9 +24,9 @@ const RecommendationModal: React.FC<Props> = ({
   const [currentRecommendationRelatedInsights, setCurrentRelatedInsights] = useState<string[]>([]);
 
   useEffect(() => {
-    if (mode === 'edit' && recommendationData) {
-      setCurrentRecommendationText(recommendationData.text);
-      setCurrentRelatedInsights(recommendationData.related_insights);
+    if (recommendationData) {
+      setCurrentRecommendationText(recommendationData.text || '');
+      setCurrentRelatedInsights(recommendationData.related_insights || []);
     } else {
       setCurrentRecommendationText('');
       setCurrentRelatedInsights([]);

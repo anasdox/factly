@@ -24,9 +24,9 @@ const InsightModal: React.FC<Props> = ({
   const [currentInsightRelatedFacts, setCurrentRelatedFacts] = useState<string[]>([]);
 
   useEffect(() => {
-    if (mode === 'edit' && insightData) {
-      setCurrentInsightText(insightData.text);
-      setCurrentRelatedFacts(insightData.related_facts);
+    if (insightData) {
+      setCurrentInsightText(insightData.text || '');
+      setCurrentRelatedFacts(insightData.related_facts || []);
     } else {
       setCurrentInsightText('');
       setCurrentRelatedFacts([]);
