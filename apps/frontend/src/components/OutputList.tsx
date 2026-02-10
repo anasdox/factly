@@ -67,6 +67,9 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
   return (
     <div className="column outputs">
       <h2>📤Outputs</h2>
+      {data.outputs.length === 0 && (
+        <p className="empty-state-hint">Select recommendations to formulate deliverables.</p>
+      )}
       {data.outputs.map((output, index) => (
 
         <ItemWrapper

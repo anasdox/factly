@@ -14,6 +14,72 @@ import { API_URL } from './config';
 
 const STORAGE_KEY = 'factly_last_discovery';
 
+const EXAMPLE_DISCOVERY: DiscoveryData = {
+  discovery_id: 'example-001',
+  title: 'Customer Churn Analysis Q4',
+  goal: 'Understand why customer churn increased by 15% in Q4 and identify actionable retention strategies',
+  date: new Date().toISOString().split('T')[0],
+  inputs: [
+    {
+      input_id: 'ex-input-1',
+      type: 'text',
+      title: 'Q4 Customer Survey Results',
+      text: 'Survey of 500 customers who cancelled in Q4: 42% cited poor support response times (avg 48h vs 24h SLA), 31% found cheaper alternatives, 18% said the product lacked features they needed, 9% had billing issues.',
+    },
+    {
+      input_id: 'ex-input-2',
+      type: 'text',
+      title: 'Support Ticket Analysis',
+      text: 'Support ticket volume increased 60% in Q4 due to v3.0 migration issues. Average first-response time rose from 12h to 52h. CSAT dropped from 4.2 to 3.1. Top complaint categories: data migration errors (35%), UI confusion (28%), missing features from v2 (22%).',
+    },
+  ],
+  facts: [
+    {
+      fact_id: 'ex-fact-1',
+      text: '42% of churned customers cited poor support response times as their primary reason for leaving.',
+      related_inputs: ['ex-input-1'],
+      source_excerpt: '42% cited poor support response times (avg 48h vs 24h SLA)',
+    },
+    {
+      fact_id: 'ex-fact-2',
+      text: 'Support ticket volume increased 60% in Q4, causing average first-response time to rise from 12h to 52h.',
+      related_inputs: ['ex-input-2'],
+      source_excerpt: 'Support ticket volume increased 60% in Q4 due to v3.0 migration issues. Average first-response time rose from 12h to 52h.',
+    },
+    {
+      fact_id: 'ex-fact-3',
+      text: '31% of churned customers found cheaper alternatives in the market.',
+      related_inputs: ['ex-input-1'],
+      source_excerpt: '31% found cheaper alternatives',
+    },
+  ],
+  insights: [
+    {
+      insight_id: 'ex-insight-1',
+      text: 'The v3.0 migration created a support bottleneck that directly drove the largest segment of churn. Support capacity did not scale with the migration-induced ticket surge.',
+      related_facts: ['ex-fact-1', 'ex-fact-2'],
+    },
+    {
+      insight_id: 'ex-insight-2',
+      text: 'Price sensitivity is the second driver of churn, suggesting the current pricing does not clearly communicate value differentiation vs. competitors.',
+      related_facts: ['ex-fact-3'],
+    },
+  ],
+  recommendations: [
+    {
+      recommendation_id: 'ex-rec-1',
+      text: 'Implement a dedicated migration support team with a 12h SLA for v3.0-related tickets, and proactively reach out to customers who experienced migration issues.',
+      related_insights: ['ex-insight-1'],
+    },
+    {
+      recommendation_id: 'ex-rec-2',
+      text: 'Introduce a competitive retention offer for at-risk customers and revise pricing page to highlight unique value propositions vs. top 3 competitors.',
+      related_insights: ['ex-insight-2'],
+    },
+  ],
+  outputs: [],
+};
+
 function getRoomIdFromURL(): string | null {
   const params = new URLSearchParams(window.location.search);
   return params.get('room');
@@ -28,7 +94,7 @@ const App: React.FC = () => {
     return null;
   });
   const [loadingRoom, setLoadingRoom] = useState(!!getRoomIdFromURL());
-  const [showNewDiscoveryModal, setShowNewDiscoveryModal] = useState(!data && !getRoomIdFromURL());
+  const [showNewDiscoveryModal, setShowNewDiscoveryModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const handleError = useCallback((msg: string) => setErrorMessage(msg), []);
   const clearError = useCallback(() => setErrorMessage(null), []);
@@ -124,19 +190,11 @@ const App: React.FC = () => {
   }, [data, calculateAndDrawLines]);
 
   const handleNewDiscoveryFromWelcome = () => {
-    const emptyDiscovery: DiscoveryData = {
-      discovery_id: '',
-      title: '',
-      goal: '',
-      date: '',
-      inputs: [],
-      facts: [],
-      insights: [],
-      recommendations: [],
-      outputs: [],
-    };
-    setData(emptyDiscovery);
     setShowNewDiscoveryModal(true);
+  };
+
+  const handleTryExample = () => {
+    setData({ ...EXAMPLE_DISCOVERY });
   };
 
   if (loadingRoom) return (
@@ -152,8 +210,42 @@ const App: React.FC = () => {
     <div className="App">
       <div className="welcome-screen">
         <h1>Factly</h1>
-        <p>Start a new discovery to begin extracting facts.</p>
-        <button className="welcome-new-discovery" onClick={handleNewDiscoveryFromWelcome}>New Discovery</button>
+        <p className="welcome-subtitle">Structure your research with the Facts &rarr; Insights &rarr; Recommendations approach.</p>
+        <div className="welcome-flow">
+          <div className="welcome-flow-step">
+            <span className="welcome-flow-icon">📥</span>
+            <strong>Inputs</strong>
+            <span className="welcome-flow-desc">Collect texts and URLs</span>
+          </div>
+          <span className="welcome-flow-arrow">&rarr;</span>
+          <div className="welcome-flow-step">
+            <span className="welcome-flow-icon">📊</span>
+            <strong>Facts</strong>
+            <span className="welcome-flow-desc">Extract verified facts</span>
+          </div>
+          <span className="welcome-flow-arrow">&rarr;</span>
+          <div className="welcome-flow-step">
+            <span className="welcome-flow-icon">💡</span>
+            <strong>Insights</strong>
+            <span className="welcome-flow-desc">Derive patterns and meaning</span>
+          </div>
+          <span className="welcome-flow-arrow">&rarr;</span>
+          <div className="welcome-flow-step">
+            <span className="welcome-flow-icon">👍</span>
+            <strong>Recommendations</strong>
+            <span className="welcome-flow-desc">Formulate action items</span>
+          </div>
+          <span className="welcome-flow-arrow">&rarr;</span>
+          <div className="welcome-flow-step">
+            <span className="welcome-flow-icon">📤</span>
+            <strong>Outputs</strong>
+            <span className="welcome-flow-desc">Create deliverables</span>
+          </div>
+        </div>
+        <div className="welcome-actions">
+          <button className="welcome-new-discovery" onClick={handleNewDiscoveryFromWelcome}>New Discovery</button>
+          <button className="welcome-example-btn" onClick={handleTryExample}>Try with an Example</button>
+        </div>
       </div>
       <DiscoveryModal
         mode="add"

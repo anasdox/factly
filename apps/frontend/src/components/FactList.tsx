@@ -179,6 +179,9 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           </button>
         </div>
       </div>
+      {data.facts.length === 0 && (
+        <p className="empty-state-hint">Extract facts from your inputs, or add them manually.</p>
+      )}
       {data.facts.map((fact, index) => (
         <div
           key={fact.fact_id}

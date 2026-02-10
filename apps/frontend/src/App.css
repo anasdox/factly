@@ -172,11 +172,16 @@ input[type=text], select, textarea {
   border: var(--border-btn) solid 2px;
 }
 
-.modal-actions button:hover {
+.modal-actions button:hover:not(:disabled) {
   border: var(--border-btn-hover) solid 2px;
   cursor: pointer;
   transition: 0.2s;
   outline: none;
+}
+
+.modal-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .modal-action-group-left {
@@ -228,11 +233,13 @@ dialog label {
   transition: grid-template-rows 0.25s ease;
   overflow: hidden;
   width: 100%;
+  max-height: 0;
 }
 
 .toolbar-wrapper-open {
   grid-template-rows: 1fr;
   margin-bottom: 0.5em;
+  max-height: none;
 }
 
 .selection-toolbar {
@@ -307,4 +314,90 @@ dialog label {
   background: var(--bg-welcome-btn-hover);
   color: var(--color-welcome-btn-hover);
   transition: 0.2s;
+}
+
+.welcome-subtitle {
+  font-size: 1.1em;
+  max-width: 500px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.welcome-flow {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 1em 0;
+}
+
+.welcome-flow-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25em;
+  padding: 0.75em 1em;
+  border: 1px solid var(--border-input);
+  border-radius: 10px;
+  background: var(--bg-surface);
+  min-width: 100px;
+}
+
+.welcome-flow-icon {
+  font-size: 1.5em;
+}
+
+.welcome-flow-step strong {
+  font-size: 0.9em;
+}
+
+.welcome-flow-desc {
+  font-size: 0.75em;
+  color: var(--color-welcome-text);
+  text-align: center;
+}
+
+.welcome-flow-arrow {
+  font-size: 1.5em;
+  color: var(--color-welcome-text);
+}
+
+.welcome-actions {
+  display: flex;
+  gap: 1em;
+  margin-top: 0.5em;
+}
+
+.welcome-example-btn {
+  padding: 12px 24px;
+  border: 2px solid var(--border-welcome-btn);
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1em;
+  color: var(--text-primary);
+}
+
+.welcome-example-btn:hover {
+  background: var(--bg-welcome-btn-hover);
+  color: var(--color-welcome-btn-hover);
+  transition: 0.2s;
+}
+
+.empty-state-hint {
+  color: var(--color-welcome-text);
+  text-align: center;
+  font-size: 0.85em;
+  padding: 1em;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.discovery-modal-help {
+  font-size: 0.8em;
+  color: var(--color-welcome-text);
+  margin-top: -12px;
+  margin-bottom: 12px;
+  line-height: 1.4;
 }

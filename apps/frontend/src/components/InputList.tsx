@@ -132,6 +132,9 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
   return (
     <div className="column inputs">
       <h2>📥Inputs</h2>
+      {data.inputs.length === 0 && (
+        <p className="empty-state-hint">Add a text or web URL to start collecting sources.</p>
+      )}
       {data.inputs.map((input, index) => (
         <ItemWrapper
           id={"input-" + input.input_id}

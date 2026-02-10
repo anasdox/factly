@@ -180,6 +180,9 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
           </button>
         </div>
       </div>
+      {data.insights.length === 0 && (
+        <p className="empty-state-hint">Select facts and generate insights, or add them manually.</p>
+      )}
       {data.insights.map((insight, index) => (
         <div
           key={insight.insight_id}

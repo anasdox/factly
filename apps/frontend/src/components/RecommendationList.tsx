@@ -211,6 +211,9 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
           </button>
         </div>
       </div>
+      {data.recommendations.length === 0 && (
+        <p className="empty-state-hint">Select insights and generate recommendations, or add them manually.</p>
+      )}
       {data.recommendations.map((recommendation, index) => (
         <div
           key={recommendation.recommendation_id}

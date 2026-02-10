@@ -29,7 +29,7 @@ const DiscoveryModal: React.FC<Props> = ({
       // Reset fields for new discovery creation
       setTitle('');
       setGoal('');
-      setDate('');
+      setDate(new Date().toISOString().split('T')[0]);
     }
   }, [mode, discoveryData]);
 
@@ -60,6 +60,7 @@ const DiscoveryModal: React.FC<Props> = ({
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          placeholder="e.g. Customer Churn Analysis Q4"
         />
         <label htmlFor="discovery-goal">Goal</label>
         <textarea
@@ -67,20 +68,13 @@ const DiscoveryModal: React.FC<Props> = ({
           rows={10}
           value={goal}
           onChange={(e) => setGoal(e.target.value)}
+          placeholder="e.g. Understand why customer churn increased by 15% in Q4 and identify actionable retention strategies"
         />
-        <div>
-          <label htmlFor="discovery-date">Date</label>
-        </div>
-        <input
-          id="discovery-date"
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
+        <p className="discovery-modal-help">Describe what you want to discover. The AI uses this goal to guide fact extraction and insight generation.</p>
       </form>
       <div className='modal-actions'>
         <div className="modal-action-group-left">
-          <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? '➕Add' : '💾Save'}</button>
+          <button className='modal-action-save' onClick={handleSave} disabled={!title.trim() || !goal.trim()}>{mode === 'add' ? '➕Add' : '💾Save'}</button>
         </div>
         <div className="modal-action-group-right">
           <button className='modal-action-close' onClick={closeDialog}>🗙Cancel</button>
