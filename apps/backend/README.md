@@ -10,7 +10,47 @@ To run the Factly backend, make sure you have Node.js installed on your system. 
 
 1. Clone this repository to your local machine.
 2. Run `npm install` in the project directory to install all dependencies.
-3. Run `npm start` to start the server. The server will listen on port 3002 by default.
+3. Copy `.env.example` to `.env` and fill in your configuration (see [LLM Configuration](#llm-configuration) below).
+4. Run `npm start` to start the server. The server will listen on port 3002 by default.
+
+LLM Configuration
+-----------------
+
+Factly uses an LLM to extract facts, insights, and recommendations. Configure your provider in the `.env` file at the project root (`apps/backend/.env`).
+
+### OpenAI
+
+```env
+LLM_PROVIDER=openai
+LLM_API_KEY=sk-...
+LLM_MODEL=gpt-4o          # optional, defaults to gpt-4o
+```
+
+### Anthropic
+
+```env
+LLM_PROVIDER=anthropic
+LLM_API_KEY=sk-ant-...
+LLM_MODEL=claude-sonnet-4-5-20250929   # optional
+```
+
+### OpenAI-Compatible (OVHcloud, Ollama, LM Studio, Groq, Together AI, etc.)
+
+Any service that exposes an OpenAI-compatible chat completions endpoint can be used with the `openai-compatible` provider.
+
+```env
+LLM_PROVIDER=openai-compatible
+LLM_API_KEY=<your-token>
+LLM_BASE_URL=https://oai.endpoints.kepler.ai.cloud.ovh.net/v1
+LLM_MODEL=gpt-oss-120b    # optional, defaults to gpt-4o
+```
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `LLM_PROVIDER` | yes | One of `openai`, `anthropic`, or `openai-compatible` |
+| `LLM_API_KEY` | yes | API key / access token for the chosen provider |
+| `LLM_BASE_URL` | only for `openai-compatible` | Base URL of the OpenAI-compatible API (e.g. `https://api.groq.com/openai/v1`) |
+| `LLM_MODEL` | no | Model identifier to use (each provider has its own default) |
 
 API Endpoints
 -------------

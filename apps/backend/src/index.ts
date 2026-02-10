@@ -308,12 +308,22 @@ const users: Map<string, Set<string>> = new Map();
 
 app.get('/events/:roomId', async (req, res) => {
   const roomId = req.params.roomId;
+
+  // Disable timeouts and buffering for SSE
+  req.setTimeout(0);
+  if (res.socket) {
+    res.socket.setNoDelay(true);
+    res.socket.setTimeout(0);
+  }
+
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
-    Connection: 'keep-alive',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no',
     'Access-Control-Allow-Origin': '*'
   });
+  res.flushHeaders();
 
   if (!roomId || !isRoomValid(roomId)) {
     logger.error(`Invalid or missing room ID for SSE: ${roomId}`);
@@ -339,7 +349,19 @@ app.get('/events/:roomId', async (req, res) => {
 
   res.write(`data: {"type": "credentials", "uuid": "${socket.uuid}", "username": "${socket.username}"}\n\n`);
 
+  // Send current room data so the new subscriber is immediately in sync
+  const roomData = await loadRoom(roomId);
+  if (roomData) {
+    res.write(`data: ${JSON.stringify({ type: 'init', payload: roomData })}\n\n`);
+  }
+
+  // Heartbeat to keep the connection alive
+  const heartbeat = setInterval(() => {
+    res.write(`:heartbeat\n\n`);
+  }, 30000);
+
   req.on('close', () => {
+    clearInterval(heartbeat);
     logger.debug(`Client with uuid: ${socket.uuid} and username: ${socket.username} disconnected`);
     if (socket.username && socket.roomId) {
       subscribers.get(socket.roomId)?.delete(socket);
@@ -388,14 +410,22 @@ async function stopRoom(id: string) {
 function broadcastUpdate(roomId: string, payload: any, senderUuid: string, username?: string) {
   const sockets = subscribers.get(roomId);
   if (sockets) {
-    logger.debug(`Broadcasting update to ${sockets.size} clients in room: ${roomId}`);
+    logger.info(`Broadcasting update to ${sockets.size} clients in room: ${roomId} (sender: ${senderUuid})`);
+    const message = `data: ${JSON.stringify({ type: 'update', payload })}\n\n`;
     for (const socket of sockets) {
       // Send update to all clients except the one who sent the update
       if (socket.uuid !== senderUuid || !username || socket.username !== username) {
-        logger.debug(`Sending update to client with uuid: ${socket.uuid} and username: ${socket.username}`);
-        socket.write(`data: ${JSON.stringify({ type: 'update', payload })}\n\n`);
+        logger.info(`Sending update to client uuid=${socket.uuid} username=${socket.username}`);
+        const ok = socket.write(message);
+        if (!ok) {
+          logger.warn(`Write buffer full for client uuid=${socket.uuid}`);
+        }
+      } else {
+        logger.debug(`Skipping sender socket uuid=${socket.uuid} username=${socket.username}`);
       }
     }
+  } else {
+    logger.warn(`No subscribers found for room ${roomId}`);
   }
 }
 

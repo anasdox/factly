@@ -1,4 +1,5 @@
 import { AnthropicProvider } from './anthropic-provider';
+import { OpenAICompatibleProvider } from './openai-compatible-provider';
 import { OpenAIProvider } from './openai-provider';
 import { ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext } from './prompts';
 
@@ -25,6 +26,14 @@ export function createProvider(): LLMProvider | null {
 
   if (providerName === 'openai') {
     return new OpenAIProvider(apiKey, process.env.LLM_MODEL);
+  }
+
+  if (providerName === 'openai-compatible') {
+    const baseUrl = process.env.LLM_BASE_URL;
+    if (!baseUrl) {
+      throw new Error('LLM_BASE_URL is required when using the openai-compatible provider');
+    }
+    return new OpenAICompatibleProvider(apiKey, baseUrl, process.env.LLM_MODEL);
   }
 
   return null;

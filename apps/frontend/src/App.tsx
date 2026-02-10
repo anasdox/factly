@@ -13,6 +13,11 @@ import DiscoveryModal from './components/DiscoveryModal';
 
 const STORAGE_KEY = 'factly_last_discovery';
 
+function getRoomIdFromURL(): string | null {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('room');
+}
+
 const App: React.FC = () => {
   const [data, setData] = useState<DiscoveryData | null>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -21,7 +26,8 @@ const App: React.FC = () => {
     }
     return null;
   });
-  const [showNewDiscoveryModal, setShowNewDiscoveryModal] = useState(!data);
+  const [loadingRoom, setLoadingRoom] = useState(!!getRoomIdFromURL());
+  const [showNewDiscoveryModal, setShowNewDiscoveryModal] = useState(!data && !getRoomIdFromURL());
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const handleError = useCallback((msg: string) => setErrorMessage(msg), []);
   const clearError = useCallback(() => setErrorMessage(null), []);
@@ -37,6 +43,31 @@ const App: React.FC = () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
   }, [data]);
+
+  useEffect(() => {
+    const roomId = getRoomIdFromURL();
+    if (!roomId) return;
+
+    const fetchRoomData = async () => {
+      try {
+        const response = await fetch(`http://localhost:3002/rooms/${roomId}`);
+        if (!response.ok) {
+          setLoadingRoom(false);
+          return;
+        }
+        const roomData = await response.json();
+        if (roomData && Object.keys(roomData).length !== 0) {
+          setData(roomData);
+        }
+      } catch {
+        // Toolbar will retry once it mounts
+      } finally {
+        setLoadingRoom(false);
+      }
+    };
+
+    fetchRoomData();
+  }, []);
 
   useEffect(() => {
     if (data) {
@@ -106,6 +137,15 @@ const App: React.FC = () => {
     setData(emptyDiscovery);
     setShowNewDiscoveryModal(true);
   };
+
+  if (loadingRoom) return (
+    <div className="App">
+      <div className="welcome-screen">
+        <h1>Factly</h1>
+        <p>Joining room...</p>
+      </div>
+    </div>
+  );
 
   if (!data) return (
     <div className="App">

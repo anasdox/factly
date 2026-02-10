@@ -25,6 +25,21 @@ const Toolbar = ({ data, setData, onError }: Props) => {
   const [username, setUsername] = useLocalStorage('username', null);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
   const isRemoteUpdate = useRef(false);
+  const uuidRef = useRef<string | null>(uuid);
+  const usernameRef = useRef<string | null>(username);
+  const [backendAvailable, setBackendAvailable] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const check = () => {
+      fetch('http://localhost:3002/status')
+        .then((res) => { if (!cancelled) setBackendAvailable(res.ok); })
+        .catch(() => { if (!cancelled) setBackendAvailable(false); });
+    };
+    check();
+    const interval = setInterval(check, 30000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
 
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
@@ -155,6 +170,8 @@ const Toolbar = ({ data, setData, onError }: Props) => {
             console.log("Receive sse message:", message);
 
             if (message.type === 'credentials') {
+              uuidRef.current = message.uuid;
+              usernameRef.current = message.username;
               setUsername(message.username);
               setUuid(message.uuid);
             }
@@ -166,8 +183,9 @@ const Toolbar = ({ data, setData, onError }: Props) => {
           };
 
           newEventSource.onerror = () => {
-            onError('Lost connection to the room');
-            newEventSource.close();
+            if (newEventSource.readyState === EventSource.CLOSED) {
+              onError('Lost connection to the room');
+            }
           };
           setEventSource(newEventSource);
 
@@ -186,13 +204,37 @@ const Toolbar = ({ data, setData, onError }: Props) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomId]);
 
+  // Polling fallback: fetch latest room data periodically in case SSE misses updates
+  useEffect(() => {
+    if (!roomId) return;
+    const poll = setInterval(async () => {
+      try {
+        const response = await fetch(`http://localhost:3002/rooms/${roomId}`);
+        if (!response.ok) return;
+        const roomData = await response.json();
+        if (roomData && Object.keys(roomData).length !== 0) {
+          // Only update if the data actually changed (compare stringified)
+          const remote = JSON.stringify(roomData);
+          const local = JSON.stringify(data);
+          if (remote !== local) {
+            isRemoteUpdate.current = true;
+            setData(roomData);
+          }
+        }
+      } catch {
+        // ignore polling errors
+      }
+    }, 5000);
+    return () => clearInterval(poll);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId, data]);
 
   useEffect(() => {
     if (isRemoteUpdate.current) {
       isRemoteUpdate.current = false;
       return;
     }
-    if (roomId && !isObjectEmpty(data)) {
+    if (roomId && uuidRef.current && usernameRef.current && !isObjectEmpty(data)) {
       fetch(`http://localhost:3002/rooms/${roomId}/update`, {
         method: 'POST',
         headers: {
@@ -200,8 +242,8 @@ const Toolbar = ({ data, setData, onError }: Props) => {
         },
         body: JSON.stringify({
           payload: data,
-          username: username,
-          senderUuid: uuid,
+          username: usernameRef.current,
+          senderUuid: uuidRef.current,
         })
       }).then((response) => {
         if (!response.ok) {
@@ -213,7 +255,8 @@ const Toolbar = ({ data, setData, onError }: Props) => {
         onError('Network error: could not reach the server');
       });
     }
-  }, [data, roomId, username, uuid]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, roomId]);
 
 
   return (
@@ -239,7 +282,11 @@ const Toolbar = ({ data, setData, onError }: Props) => {
       <div title="New Discovery" onClick={handleNewDiscovery}>
         <FontAwesomeIcon icon={faPlus} size='lg' />
       </div>
-      <div title="Start Event Room" onClick={handleStartEventRoom}>
+      <div
+        title={backendAvailable ? "Start Event Room" : "Backend unavailable"}
+        onClick={backendAvailable ? handleStartEventRoom : undefined}
+        className={backendAvailable ? '' : 'toolbar-disabled'}
+      >
         <FontAwesomeIcon icon={faPlayCircle} size='lg' />
       </div>
       <div title="Toggle Dark Mode" onClick={toggleTheme}>
