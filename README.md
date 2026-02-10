@@ -81,98 +81,98 @@ LLM_MODEL=claude-sonnet-4-5-20250929  # optional, provider default used if omitt
 | `make logs-backend` | Tail the backend log file |
 | `make clean` | Remove all `node_modules` and build artifacts |
 
-## Deploiement avec Docker Compose
+## Deployment with Docker Compose
 
-Docker Compose permet de deployer factly en un seul commande. Le frontend est servi par nginx (port 80) qui fait aussi office de reverse-proxy vers le backend. Le backend tourne sur Express avec une base SQLite persistee dans un volume Docker.
+Docker Compose lets you deploy factly with a single command. The frontend is served by nginx (port 80) which also acts as a reverse-proxy to the backend. The backend runs on Express with a SQLite database persisted in a Docker volume.
 
-### Architecture Docker
+### Docker Architecture
 
 ```
                     ┌──────────────────────────────┐
                     │      docker-compose.yml       │
                     │                               │
    :80 ────────────►│  frontend (nginx)             │
-                    │    - fichiers statiques React  │
+                    │    - React static files        │
                     │    - reverse-proxy /status,    │
                     │      /rooms, /events,          │
                     │      /extract → backend        │
                     │                               │
                     │  backend (node)               │
-                    │    - Express sur :3002         │
-                    │    - volume SQLite             │
+                    │    - Express on :3002          │
+                    │    - SQLite volume             │
                     └──────────────────────────────┘
 ```
 
-### Pre-requis
+### Prerequisites
 
 - Docker >= 20.10
 - Docker Compose >= 2.0
 
 ### Configuration
 
-Avant de lancer, assurez-vous que le fichier `apps/backend/.env` existe avec la configuration LLM :
+Before starting, make sure the file `apps/backend/.env` exists with the LLM configuration:
 
 ```env
-LLM_PROVIDER=anthropic          # ou "openai", "openai-compatible"
-LLM_API_KEY=votre-cle-api
-LLM_MODEL=claude-sonnet-4-5-20250929   # optionnel
-LLM_BASE_URL=                   # requis uniquement pour "openai-compatible"
+LLM_PROVIDER=anthropic          # or "openai", "openai-compatible"
+LLM_API_KEY=your-api-key
+LLM_MODEL=claude-sonnet-4-5-20250929   # optional
+LLM_BASE_URL=                   # required only for "openai-compatible"
 ```
 
-### Lancement rapide
+### Quick Start
 
 ```bash
-# Construire et demarrer les deux services
+# Build and start both services
 docker compose up --build
 
-# Ou en arriere-plan
+# Or run in the background
 docker compose up --build -d
 ```
 
-L'application est accessible sur **http://localhost**.
+The application is available at **http://localhost**.
 
-### Commandes utiles
+### Useful Commands
 
 ```bash
-# Voir les logs en temps reel
+# View logs in real time
 docker compose logs -f
 
-# Logs d'un seul service
+# Logs for a single service
 docker compose logs -f backend
 docker compose logs -f frontend
 
-# Arreter les services
+# Stop services
 docker compose down
 
-# Arreter et supprimer les volumes (reset de la base de donnees)
+# Stop and remove volumes (reset the database)
 docker compose down -v
 
-# Reconstruire apres une modification de code
+# Rebuild after a code change
 docker compose up --build
 ```
 
-### Variables d'environnement
+### Environment Variables
 
-| Variable | Service | Defaut | Description |
-|----------|---------|--------|-------------|
-| `PORT` | backend | `3002` | Port d'ecoute Express |
-| `LLM_PROVIDER` | backend (.env) | — | Fournisseur LLM (`anthropic`, `openai`, `openai-compatible`) |
-| `LLM_API_KEY` | backend (.env) | — | Cle API du fournisseur LLM |
-| `LLM_BASE_URL` | backend (.env) | — | URL de base pour `openai-compatible` |
-| `LLM_MODEL` | backend (.env) | — | Nom du modele |
-| `REACT_APP_API_URL` | frontend (build) | `http://localhost:3002` | URL de l'API integree dans le bundle JS |
-| `BACKEND_URL` | frontend (runtime) | `http://backend:3002` | Cible du reverse-proxy nginx |
+| Variable | Service | Default | Description |
+|----------|---------|---------|-------------|
+| `PORT` | backend | `3002` | Express listen port |
+| `LLM_PROVIDER` | backend (.env) | — | LLM provider (`anthropic`, `openai`, `openai-compatible`) |
+| `LLM_API_KEY` | backend (.env) | — | LLM provider API key |
+| `LLM_BASE_URL` | backend (.env) | — | Base URL for `openai-compatible` |
+| `LLM_MODEL` | backend (.env) | — | Model name |
+| `REACT_APP_API_URL` | frontend (build) | `http://localhost:3002` | API URL baked into the JS bundle |
+| `BACKEND_URL` | frontend (runtime) | `http://backend:3002` | nginx reverse-proxy target |
 
-### Personnalisation
+### Customization
 
-**Changer le port expose :**
+**Change the exposed port:**
 
 ```bash
-# Exposer sur le port 8080 au lieu de 80
+# Expose on port 8080 instead of 80
 docker compose up --build -p 8080:80
 ```
 
-Ou modifier `docker-compose.yml` :
+Or edit `docker-compose.yml`:
 
 ```yaml
 frontend:
@@ -180,29 +180,29 @@ frontend:
     - "8080:80"
 ```
 
-**Pointer nginx vers un backend externe :**
+**Point nginx to an external backend:**
 
 ```bash
-BACKEND_URL=http://mon-serveur:9000 docker compose up frontend
+BACKEND_URL=http://my-server:9000 docker compose up frontend
 ```
 
-### Persistance des donnees
+### Data Persistence
 
-La base de donnees SQLite est stockee dans le volume Docker `backend-data`, monte sur `/app/data` dans le conteneur backend. Les donnees persistent entre les redemarrages. Pour reinitialiser :
+The SQLite database is stored in the Docker volume `backend-data`, mounted at `/app/data` inside the backend container. Data persists across restarts. To reset:
 
 ```bash
 docker compose down -v
 ```
 
-### Differences entre dev local et Docker
+### Local Dev vs Docker
 
-| | Dev local (`make start`) | Docker (`docker compose up`) |
+| | Local dev (`make start`) | Docker (`docker compose up`) |
 |---|---|---|
-| Frontend | Dev server CRA sur `:3000` | nginx sur `:80` |
-| Backend | `ts-node` sur `:3002` | `node dist/index.js` sur `:3002` |
-| API URL | `http://localhost:3002` (hardcode) | Meme origine via reverse-proxy nginx |
-| Base de donnees | `apps/backend/data/factly.db` | Volume Docker `backend-data` |
-| Hot reload | Oui | Non (rebuild necessaire) |
+| Frontend | CRA dev server on `:3000` | nginx on `:80` |
+| Backend | `ts-node` on `:3002` | `node dist/index.js` on `:3002` |
+| API URL | `http://localhost:3002` (hardcoded) | Same origin via nginx reverse-proxy |
+| Database | `apps/backend/data/factly.db` | Docker volume `backend-data` |
+| Hot reload | Yes | No (rebuild required) |
 
 ## Project Structure
 
