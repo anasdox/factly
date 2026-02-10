@@ -250,10 +250,8 @@ const Toolbar = ({ data, setData, onError, backendAvailable }: Props) => {
 
   return (
     <div className="toolbar">
-      <div title="Open Discovery">
-        <label htmlFor="file-input">
-          <FontAwesomeIcon icon={faUpload} size='lg' />
-        </label>
+      <label htmlFor="file-input" className="toolbar-upload" title="Open Discovery">
+        <FontAwesomeIcon icon={faUpload} size='lg' />
         <input
           id="file-input"
           type="file"
@@ -261,7 +259,7 @@ const Toolbar = ({ data, setData, onError, backendAvailable }: Props) => {
           onChange={handleFileInputChange}
           style={{ display: 'none' }}
         />
-      </div>
+      </label>
       <div title="Save Discovery" onClick={handleExport}>
         <FontAwesomeIcon icon={faFileDownload} size='lg' />
       </div>

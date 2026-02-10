@@ -154,9 +154,9 @@ input[type=text], select, textarea {
   align-items: center;
   justify-content: space-between;
   flex-direction: row;
-  color: var(--text-primary);
+  color: var(--bg-page);
   position: absolute;
-  background: var(--bg-surface);
+  background: var(--text-primary);
   z-index: 3;
   top: 2px;
   right: 2px;

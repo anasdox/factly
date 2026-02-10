@@ -3,7 +3,8 @@
   justify-content: flex-end;
 }
 
-.toolbar > div {
+.toolbar > div,
+.toolbar > label {
   padding: 8px 16px;
   border-radius: 5px;
   cursor: pointer;
@@ -16,7 +17,8 @@
   color: var(--text-primary);
 }
 
-.toolbar > div:hover {
+.toolbar > div:hover,
+.toolbar > label:hover {
   background-color: var(--bg-toolbar-btn-hover);
   color: var(--text-primary);
 }
