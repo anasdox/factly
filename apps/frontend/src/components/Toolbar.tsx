@@ -278,7 +278,16 @@ const Toolbar = ({ data, setData, onError, backendAvailable, onStartTour }: Prop
         <FontAwesomeIcon icon={faPlayCircle} size='lg' />
       </div>
       {onStartTour && (
-        <div title="Guided Tour" onClick={onStartTour}>
+        <div title="Guided Tour" onClick={() => {
+          if (roomId) {
+            if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
+              eventSource.close();
+            }
+            setEventSource(null);
+            setRoomId(undefined);
+          }
+          onStartTour();
+        }}>
           <FontAwesomeIcon icon={faRoute} size='lg' />
         </div>
       )}

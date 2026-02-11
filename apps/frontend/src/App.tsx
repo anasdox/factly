@@ -313,7 +313,14 @@ const App: React.FC = () => {
           onError={handleError}
           backendAvailable={backendAvailable}
           onStartTour={() => {
-            setTourMode(backendAvailable ? 'interactive' : 'passive');
+            if (!window.confirm('This will load the example discovery and start the guided tour. Continue?')) return;
+            if (backendAvailable) {
+              setData({ ...EXAMPLE_DISCOVERY });
+              setTourMode('interactive');
+            } else {
+              setData({ ...EXAMPLE_DISCOVERY_FULL });
+              setTourMode('passive');
+            }
             setTourActive(true);
           }}
         />
