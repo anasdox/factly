@@ -1,93 +1,138 @@
-# factly
+# Factly Frontend
 
-## Why ?
-
-
-The FIR approach `Facts => Insights => Recommendations` is very helpful in my daily **decision making**, it provides a structured approach to **extracting unbiased facts related to a problem**, **identifying key insights**, and **formulating actionable recommendations**. This systematic method helps me navigate complex problems more efficiently, ensuring that decisions are grounded in evidence and data-driven insights.
-
-While Excalidraw is a useful tool for visualizing concepts and ideas, It's not adapted for accelerating the execution of the FIR approach. Excalidraw focuses more on visual representation and lacks the specialized features needed to streamline the FIR process. In contrast, a dedicated tool like factly is designed specifically for that, making it more effective for accelerating the execution of the FIR approach and enhancing overall productivity.
-
-## Vision
-
-factly aims to hamonize the way organizations and individuals conduct discoveries and make decisions. factly provides a web tool for extracting actionable insights from multiples types of inputs using The FIR approach `Facts => Insights => Recommendations`. 
-
-The vision is to create a tool that not only simplifies facts extractions but also empowers users to make informed decisions based on reliable insights.
+A React-TypeScript single-page application implementing the **FIR methodology** (Facts, Insights, Recommendations) for structured discovery and decision-making.
 
 ![UI Capture](./public/ui-capture.png)
-*An early capture of the factly UI in action.*
+
+## Overview
+
+Factly provides a 5-column interactive workspace where users create **discoveries** and progressively build a traceability chain:
+
+**Inputs** → **Facts** → **Insights** → **Recommendations** → **Outputs**
+
+Each entity links to its predecessors, forming a fully traceable path from raw data to actionable deliverables.
+
+## Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| Framework | React 18 + TypeScript 5 |
+| Build | Create React App (react-scripts) |
+| Routing | React Router v6, use-query-params |
+| Icons | FontAwesome v6 |
+| Markdown | react-markdown |
+| Styling | CSS custom properties (light/dark themes) |
+
+## Project Structure
+
+```
+src/
+├── App.tsx                  # Main app: discovery grid layout, state management
+├── types.ts                 # Domain types (Input, Fact, Insight, Recommendation, Output)
+├── config.ts                # API URL configuration
+├── lib.ts                   # Utility functions (relations, highlighting)
+├── components/
+│   ├── *Item.tsx            # Individual entity cards (Input, Fact, Insight, etc.)
+│   ├── *List.tsx            # Column containers for each entity type
+│   ├── *Modal.tsx           # Create/edit dialogs for each entity type
+│   ├── Toolbar.tsx          # Header toolbar (new/edit/import/export/room/theme)
+│   ├── ItemWrapper.tsx      # Selection and hover highlighting wrapper
+│   ├── TraceabilityModal.tsx # Full traceability chain viewer
+│   ├── SuggestionsPanel.tsx # AI-powered suggestions (backend integration)
+│   ├── Lines.ts             # SVG connection lines between entities
+│   ├── Toast.tsx            # Notification component
+│   └── ...
+├── hooks/
+│   └── useItemSelection.ts  # Multi-select state management
+└── renderers/
+    ├── MarkdownRenderer.tsx # Markdown-to-React rendering
+    └── OutputRenderer.ts    # Output document generation
+```
 
 ## Getting Started
 
+### Prerequisites
+
+- Node.js (LTS recommended)
+- npm
+
 ### Installation
 
-Clone the repository and install its dependencies:
-
 ```bash
-git clone https://github.com/anasdox/factly.git
-cd factly
-npm install --force
+cd apps/frontend
+npm install
 ```
 
-### Running the Application
-
-To start the application, run the following command in the terminal:
+### Development
 
 ```bash
 npm start
 ```
 
-This will launch the factly web application on `http://localhost:3000`.
+Starts the development server at `http://localhost:3000` with hot reload.
 
-## Note on MVP Status
-As of now, the MVP of factly is a work in progress. It's not functional yet, but Iam getting there. So, stay tuned for updates, and feel free to contribute if you're up for a bit of a challenge!
+### Build
 
-### Journey
-Ah, the joys of programming! When I first started working on factly, I had this brilliant idea to use React. Little did I know that my useRef hook would become my best friend and my weard nightmare, as I tried to track the positions of cards like a detective on a stakeout.
+```bash
+npm run build
+```
 
-Then there were the lines, oh the lines! Not the poetic kind, but divs stretched out across the screen, which turned out to be quite the ordeal to manage.
+Produces an optimized production build in the `build/` directory.
 
-And let's not forget my decision to put all the code into a single file, App.tsx. Some call it madness; I call it focused chaos. Maintenability? Pfft, that's a problem for Future Me. For now, I relish in the simplicity of a single-file symphony, a cacophony of code that somehow harmonizes into a working application.
+### Test
 
-So, come join me in this quirky quest, and let's make factly not just functional, but fun!
+```bash
+npm test
+```
 
-### Todo
-- [x] Create UI skeleton
-- [x] Manage Links
-- [x] Load Discovery in json format
-- [x] Save Discovery in json format
-- [x] Add Entities: Input, Facts, Insights, Recommendations, Outputs
-- [x] Time to make it look nice
-- [x] Time for code refactoring (Component Breakdown, Use Custom Hooks)
-- [x] Edit entities
-- [x] Remove entities
-- [x] Create New discovery
-- [x] Create a new link between entites
-- [x] Remove a link between entites
+Runs tests in interactive watch mode using Jest and React Testing Library.
 
-### Future Todo
-- [ ] Auto Facts extracttion from Text
-- [ ] Auto Insights extraction
-- [ ] Auto Recomendations extraction
-- [ ] Auto Outputs Formulation
-- [ ] Manage collaborative discovery live sessions
-- [ ] Auto Facts extracttion from WEB
-- [ ] Auto Facts extracttion from PDF
-- [ ] Auto Facts extracttion from CSV
-- [ ] Auto Facts extracttion from Image
-- [ ] Auto Facts extracttion from Video
-- [ ] Auto Facts extracttion from Audio
+## Environment Variables
 
-## Contributing
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `REACT_APP_API_URL` | `http://localhost:3002` | Backend API endpoint |
 
-We welcome contributions from the community! Whether you're fixing a bug, adding a feature, or improving the documentation, your help is appreciated. Here’s how you can contribute:
+No `.env` file is required for local development -- defaults are applied in `src/config.ts`.
 
-1. **Fork the Repository:** Click the fork button on the top right corner of the factly GitHub page.
-2. **Clone Your Fork:** Get a copy of your fork on your machine.
-3. **Create a Branch:** Create a branch for your modifications.
-4. **Make Changes:** Add your changes to your branch.
-5. **Test Your Changes:** Ensure your changes do not break any existing functionality.
-6. **Submit a Pull Request:** Push your changes to your fork and then submit a pull request to the factly repository.
+## Features
+
+### Discovery Management
+- Create, edit, and manage discoveries with title, goal, and date
+- Import/export discoveries as JSON files
+- Example discovery available for new users
+
+### Entity Operations
+- Add, edit, and delete inputs, facts, insights, recommendations, and outputs
+- Create and remove relationships between entities
+- Multi-select items with per-column selection toolbars
+
+### Traceability
+- Visual SVG connection lines between related entities
+- Hover an item to highlight its full traceability chain
+- Traceability modal shows backward and forward relationships for any item
+
+### Collaboration
+- Create live shared rooms for real-time collaborative sessions
+- Join rooms via URL with unique user identity
+- Real-time sync via Server-Sent Events (SSE)
+
+### Theming
+- Light and dark mode toggle
+- CSS custom properties for consistent theming across all components
+
+## Docker
+
+The app includes a multi-stage Dockerfile (Node.js build, then nginx for serving).
+
+**Runtime environment variable:**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BACKEND_URL` | `http://backend:3002` | Backend service URL for nginx reverse proxy |
+
+nginx proxies `/status`, `/rooms`, `/events`, and `/extract` to the backend.
 
 ## License
 
-factly is open source software [licensed as MIT](./LICENCE).
+[MIT](./LICENCE)
