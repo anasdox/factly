@@ -78,11 +78,6 @@ const InputModal: React.FC<Props> = ({
           }}>
           <option value="text">Text</option>
           <option value="web">Web</option>
-          <option value="image">Image</option>
-          <option value="video">Video</option>
-          <option value="audio">Audio</option>
-          <option value="pdf">Pdf</option>
-          <option value="csv">CSV</option>
         </select>
         {currentInputType === 'text' ? (
           <>
