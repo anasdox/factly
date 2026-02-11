@@ -11,6 +11,7 @@ import ToolBar from './components/Toolbar';
 import Toast from './components/Toast';
 import DiscoveryModal from './components/DiscoveryModal';
 import TraceabilityModal from './components/TraceabilityModal';
+import GuidedTour from './components/GuidedTour';
 import { API_URL } from './config';
 
 const STORAGE_KEY = 'factly_last_discovery';
@@ -34,6 +35,14 @@ const EXAMPLE_DISCOVERY: DiscoveryData = {
       text: 'Support ticket volume increased 60% in Q4 due to v3.0 migration issues. Average first-response time rose from 12h to 52h. CSAT dropped from 4.2 to 3.1. Top complaint categories: data migration errors (35%), UI confusion (28%), missing features from v2 (22%).',
     },
   ],
+  facts: [],
+  insights: [],
+  recommendations: [],
+  outputs: [],
+};
+
+const EXAMPLE_DISCOVERY_FULL: DiscoveryData = {
+  ...EXAMPLE_DISCOVERY,
   facts: [
     {
       fact_id: 'ex-fact-1',
@@ -102,6 +111,8 @@ const App: React.FC = () => {
   const [backendAvailable, setBackendAvailable] = useState(false);
   const [traceabilityTarget, setTraceabilityTarget] = useState<{ type: string; id: string } | null>(null);
   const openTraceability = useCallback((type: string, id: string) => setTraceabilityTarget({ type, id }), []);
+  const [tourActive, setTourActive] = useState(false);
+  const [tourMode, setTourMode] = useState<'interactive' | 'passive'>('interactive');
 
   useEffect(() => {
     let cancelled = false;
@@ -210,7 +221,14 @@ const App: React.FC = () => {
   };
 
   const handleTryExample = () => {
-    setData({ ...EXAMPLE_DISCOVERY });
+    if (backendAvailable) {
+      setData({ ...EXAMPLE_DISCOVERY });
+      setTourMode('interactive');
+    } else {
+      setData({ ...EXAMPLE_DISCOVERY_FULL });
+      setTourMode('passive');
+    }
+    setTourActive(true);
   };
 
   if (loadingRoom) return (
@@ -275,8 +293,15 @@ const App: React.FC = () => {
   );
 
   return (
-    <div className="App">
+    <div className={`App${tourActive ? ' tour-active' : ''}`}>
       <Toast message={errorMessage} onClose={clearError} />
+      {tourActive && data && (
+        <GuidedTour
+          mode={tourMode}
+          data={data}
+          onClose={() => setTourActive(false)}
+        />
+      )}
       <header className='discovery-header'>
         <div className='discovery-details'>
           <div><h1>🔍{data.title}</h1></div>
@@ -287,6 +312,10 @@ const App: React.FC = () => {
           setData={setData}
           onError={handleError}
           backendAvailable={backendAvailable}
+          onStartTour={() => {
+            setTourMode(backendAvailable ? 'interactive' : 'passive');
+            setTourActive(true);
+          }}
         />
       </header>
       <main className="discovery-grid">

@@ -1,0 +1,104 @@
+/* GuidedTour.css */
+
+.tour-spotlight {
+  position: fixed;
+  z-index: 10000;
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease;
+  pointer-events: none;
+}
+
+.tour-tooltip {
+  position: fixed;
+  z-index: 10003;
+  background: var(--bg-modal);
+  color: var(--text-primary);
+  border: 2px solid var(--border-dialog);
+  border-radius: 12px;
+  padding: 1.25em 1.5em;
+  max-width: 340px;
+  min-width: 260px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+  transition: top 0.3s ease, left 0.3s ease;
+}
+
+.tour-tooltip-title {
+  font-size: 1.05em;
+  font-weight: bold;
+  margin-bottom: 0.5em;
+}
+
+.tour-tooltip-content {
+  font-size: 0.9em;
+  line-height: 1.5;
+  margin-bottom: 1em;
+}
+
+.tour-tooltip-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tour-step-indicator {
+  font-size: 0.8em;
+  color: var(--color-welcome-text);
+}
+
+.tour-tooltip-actions {
+  display: flex;
+  gap: 0.5em;
+}
+
+.tour-btn-next {
+  padding: 6px 16px;
+  border: 2px solid var(--border-welcome-btn);
+  border-radius: 8px;
+  background: var(--bg-welcome-btn);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.tour-btn-next:hover:not(:disabled) {
+  background: var(--bg-welcome-btn-hover);
+  color: var(--color-welcome-btn-hover);
+  transition: 0.2s;
+}
+
+.tour-btn-next:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.tour-btn-skip {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--color-welcome-text);
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
+.tour-btn-skip:hover {
+  text-decoration: underline;
+}
+
+/* During tour: highlighted items above overlay */
+.tour-active .highlighted {
+  z-index: 10001 !important;
+  position: relative;
+}
+
+/* During tour: connection lines above overlay */
+.tour-active .link-highlighted {
+  z-index: 10002 !important;
+}
+
+/* During tour: item toolbars clickable above overlay */
+.tour-active .wrapper-item-toolbar {
+  z-index: 10001 !important;
+}

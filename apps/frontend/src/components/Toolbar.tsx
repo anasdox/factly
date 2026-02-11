@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { faEdit, faFileDownload, faPlus, faUpload, faPlayCircle, faMoon, faSun } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faFileDownload, faPlus, faUpload, faPlayCircle, faMoon, faSun, faRoute } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./Toolbar.css";
 
@@ -16,9 +16,10 @@ type Props = {
   setData: React.Dispatch<React.SetStateAction<DiscoveryData | null>>;
   onError: (msg: string) => void;
   backendAvailable: boolean;
+  onStartTour?: () => void;
 };
 
-const Toolbar = ({ data, setData, onError, backendAvailable }: Props) => {
+const Toolbar = ({ data, setData, onError, backendAvailable, onStartTour }: Props) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [isStartEventRoomModalVisible, setIsStartEventRoomModalVisible] = useState(false);
@@ -276,6 +277,11 @@ const Toolbar = ({ data, setData, onError, backendAvailable }: Props) => {
       >
         <FontAwesomeIcon icon={faPlayCircle} size='lg' />
       </div>
+      {onStartTour && (
+        <div title="Guided Tour" onClick={onStartTour}>
+          <FontAwesomeIcon icon={faRoute} size='lg' />
+        </div>
+      )}
       <div title={theme === 'light' ? 'Dark mode' : 'Light mode'} onClick={toggleTheme}>
         <FontAwesomeIcon icon={theme === 'light' ? faMoon : faSun} size='lg' />
       </div>

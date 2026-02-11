@@ -257,6 +257,10 @@ dialog label {
   box-shadow: 0 0 0 2px var(--color-accent);
 }
 
+.item-selectable.selected .item {
+  border-left: 3px solid var(--color-accent);
+}
+
 
 .toolbar-wrapper {
   display: grid;
@@ -289,7 +293,7 @@ dialog label {
 
 .selection-toolbar span {
   font-weight: bold;
-  margin-right: 0.5em;
+  width: 100%;
 }
 
 .selection-toolbar button,
@@ -443,4 +447,27 @@ dialog label {
   margin-top: -12px;
   margin-bottom: 12px;
   line-height: 1.4;
+}
+
+/* Tour-active overrides: elevate highlighted items above the spotlight overlay */
+.tour-active .column {
+  position: relative;
+}
+
+.tour-active .highlighted {
+  z-index: 10001 !important;
+  position: relative;
+}
+
+.tour-active .link-highlighted {
+  z-index: 10002 !important;
+}
+
+.tour-active .wrapper-item-toolbar {
+  z-index: 10001 !important;
+}
+
+.tour-active .suggestions-overlay,
+.tour-active .traceability-overlay {
+  z-index: 10004 !important;
 }
