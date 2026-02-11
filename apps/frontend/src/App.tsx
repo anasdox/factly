@@ -258,6 +258,7 @@ const App: React.FC = () => {
             <span className="welcome-flow-desc">Create deliverables</span>
           </div>
         </div>
+        <p className="welcome-usecases">Start a discovery to explore a new domain, analyze a complex problem, audit an existing situation, or prepare a decision.</p>
         <div className="welcome-actions">
           <button className="welcome-new-discovery" onClick={handleNewDiscoveryFromWelcome}>New Discovery</button>
           <button className="welcome-example-btn" onClick={handleTryExample}>Try with an Example</button>

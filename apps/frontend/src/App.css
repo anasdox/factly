@@ -393,10 +393,23 @@ dialog label {
   color: var(--color-welcome-text);
 }
 
+.welcome-usecases {
+  margin-top: 1.5em;
+  font-size: 1.05em;
+  color: var(--text-primary);
+  max-width: 500px;
+  line-height: 1.6;
+  text-align: center;
+  font-weight: 500;
+  padding: 1em 1.5em;
+  border-left: 3px solid var(--border-welcome-btn);
+  background: color-mix(in srgb, var(--border-welcome-btn) 8%, transparent);
+}
+
 .welcome-actions {
   display: flex;
   gap: 1em;
-  margin-top: 0.5em;
+  margin-top: 1em;
 }
 
 .welcome-example-btn {
