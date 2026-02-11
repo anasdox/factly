@@ -9,6 +9,7 @@ type TourStep = {
   passiveContent?: string;
   actionRequired: boolean;
   advancesOn?: 'facts' | 'insights' | 'recommendations' | 'outputs';
+  interactiveSelector?: string;
 };
 
 const TOUR_STEPS: TourStep[] = [
@@ -32,6 +33,7 @@ const TOUR_STEPS: TourStep[] = [
     passiveContent: 'In this example, facts have already been extracted from the inputs. Hover over an input to see which facts it produced.',
     actionRequired: true,
     advancesOn: 'facts',
+    interactiveSelector: '#input-ex-input-1',
   },
   {
     target: '.column.facts',
@@ -40,6 +42,7 @@ const TOUR_STEPS: TourStep[] = [
     passiveContent: 'Facts are verified statements extracted from your inputs. Each fact links back to its source. Select facts and click "Generate Insights" to find patterns.',
     actionRequired: true,
     advancesOn: 'insights',
+    interactiveSelector: '.column.facts',
   },
   {
     target: '.column.insights',
@@ -48,6 +51,7 @@ const TOUR_STEPS: TourStep[] = [
     passiveContent: 'Insights identify patterns and meaning across multiple facts. Select insights and click "Generate Recommendations" to get action items.',
     actionRequired: true,
     advancesOn: 'recommendations',
+    interactiveSelector: '.column.insights',
   },
   {
     target: '.column.recommendations',
@@ -56,13 +60,15 @@ const TOUR_STEPS: TourStep[] = [
     passiveContent: 'Recommendations are concrete action items derived from your insights. Select them, choose an output type, and click "Formulate Outputs".',
     actionRequired: true,
     advancesOn: 'outputs',
+    interactiveSelector: '.column.recommendations',
   },
   {
     target: '.column.outputs',
     title: 'Step 5: Outputs',
-    content: 'Your deliverable is ready! Every item traces back to its source. Hover over any item or click the tree icon to explore the full chain.',
-    passiveContent: 'Outputs are your final deliverables — reports, action plans, or briefs. Every item traces back through the full chain. Hover over any item to see its connections.',
+    content: 'Your deliverable is ready! Click on an output to preview it, or hover over items and click the tree icon to explore the full traceability chain.',
+    passiveContent: 'Outputs are your final deliverables — reports, action plans, or briefs. Click on an output to preview it, or hover over any item to see its connections.',
     actionRequired: false,
+    interactiveSelector: '.column.outputs',
   },
   {
     target: '.toolbar',
@@ -198,6 +204,16 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ mode, data, onClose }) => {
     }
   }, [currentStep, isInteractive, data]);
 
+  // Elevate only the interactive area for the current step
+  useEffect(() => {
+    const selector = isInteractive ? step.interactiveSelector : undefined;
+    if (!selector) return;
+    const el = document.querySelector(selector);
+    if (!el) return;
+    el.classList.add('tour-step-interactive');
+    return () => { el.classList.remove('tour-step-interactive'); };
+  }, [currentStep, isInteractive, step.interactiveSelector]);
+
   // Show the wand toolbar for step 3 in interactive mode
   useEffect(() => {
     if (isInteractive && currentStep === 2) {
@@ -222,6 +238,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ mode, data, onClose }) => {
 
   return (
     <>
+      <div className="tour-blocker" />
       {spotlightRect && (
         <div
           className="tour-spotlight"

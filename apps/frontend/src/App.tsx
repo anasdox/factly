@@ -221,11 +221,12 @@ const App: React.FC = () => {
   };
 
   const handleTryExample = () => {
+    const freshId = 'example-' + Date.now();
     if (backendAvailable) {
-      setData({ ...EXAMPLE_DISCOVERY });
+      setData({ ...EXAMPLE_DISCOVERY, discovery_id: freshId });
       setTourMode('interactive');
     } else {
-      setData({ ...EXAMPLE_DISCOVERY_FULL });
+      setData({ ...EXAMPLE_DISCOVERY_FULL, discovery_id: freshId });
       setTourMode('passive');
     }
     setTourActive(true);
@@ -314,11 +315,12 @@ const App: React.FC = () => {
           backendAvailable={backendAvailable}
           onStartTour={() => {
             if (!window.confirm('This will load the example discovery and start the guided tour. Continue?')) return;
+            const freshId = 'example-' + Date.now();
             if (backendAvailable) {
-              setData({ ...EXAMPLE_DISCOVERY });
+              setData({ ...EXAMPLE_DISCOVERY, discovery_id: freshId });
               setTourMode('interactive');
             } else {
-              setData({ ...EXAMPLE_DISCOVERY_FULL });
+              setData({ ...EXAMPLE_DISCOVERY_FULL, discovery_id: freshId });
               setTourMode('passive');
             }
             setTourActive(true);

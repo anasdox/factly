@@ -471,3 +471,11 @@ dialog label {
 .tour-active .traceability-overlay {
   z-index: 10004 !important;
 }
+
+.tour-active dialog[open] {
+  z-index: 10004 !important;
+}
+
+.tour-active dialog[open]::backdrop {
+  z-index: 10003 !important;
+}
