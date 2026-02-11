@@ -10,7 +10,6 @@ const InputItem: React.FC<Props> = ({ input }) => {
   return (
     <div
       className="input-item item"
-      onClick={() => window.open(input.url, '_blank', 'noopener')}
     >
       <div>
         <FontAwesomeIcon className="input-icon" size={'2xl'} icon={
