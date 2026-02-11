@@ -22,6 +22,8 @@ Deliver M13: Auto Outputs Formulation — AI-assisted formulation of structured 
 
 ## Hotfixes
 - [x] Retry OpenAI chat completions with `max_completion_tokens` when `max_tokens` is unsupported
+- [x] Prevent guided tour tooltip from covering column headers
+- [x] Keep guided tour tooltip from covering suggestions panel
 
 ## Validation
 - All acceptance tests pass

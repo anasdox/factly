@@ -135,26 +135,80 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ mode, data, onClose }) => {
     const tooltipRect = tooltip.getBoundingClientRect();
     const viewportW = window.innerWidth;
     const viewportH = window.innerHeight;
+    const margin = 16;
+    const gap = SPOTLIGHT_PAD + 12;
 
-    // Preferred: below the spotlight
-    let top = spotlightRect.bottom + SPOTLIGHT_PAD + 12;
-    let left = spotlightRect.left + spotlightRect.width / 2 - tooltipRect.width / 2;
+    const centeredLeft = spotlightRect.left + spotlightRect.width / 2 - tooltipRect.width / 2;
+    const centeredTop = spotlightRect.top + spotlightRect.height / 2 - tooltipRect.height / 2;
 
-    // If tooltip would go below viewport, place above
-    if (top + tooltipRect.height > viewportH - 16) {
-      top = spotlightRect.top - SPOTLIGHT_PAD - tooltipRect.height - 12;
+    const candidates = [
+      { top: spotlightRect.bottom + gap, left: centeredLeft }, // below
+      { top: spotlightRect.top - gap - tooltipRect.height, left: centeredLeft }, // above
+      { top: centeredTop, left: spotlightRect.right + gap }, // right
+      { top: centeredTop, left: spotlightRect.left - gap - tooltipRect.width }, // left
+    ];
+
+    const fitsViewport = (top: number, left: number) =>
+      top >= margin &&
+      left >= margin &&
+      top + tooltipRect.height <= viewportH - margin &&
+      left + tooltipRect.width <= viewportW - margin;
+
+    const forbiddenRects: Array<{ top: number; left: number; right: number; bottom: number }> = [
+      {
+        top: spotlightRect.top - 4,
+        left: spotlightRect.left - 4,
+        right: spotlightRect.right + 4,
+        bottom: spotlightRect.bottom + 4,
+      },
+    ];
+
+    const suggestionsPanel = document.querySelector('.suggestions-panel');
+    if (suggestionsPanel) {
+      const panelRect = suggestionsPanel.getBoundingClientRect();
+      forbiddenRects.push({
+        top: panelRect.top - 8,
+        left: panelRect.left - 8,
+        right: panelRect.right + 8,
+        bottom: panelRect.bottom + 8,
+      });
     }
 
-    // If still out of bounds (above), clamp to top
-    if (top < 16) top = 16;
+    const overlapsForbidden = (top: number, left: number) => {
+      const right = left + tooltipRect.width;
+      const bottom = top + tooltipRect.height;
+      return forbiddenRects.some((rect) =>
+        !(
+          right < rect.left ||
+          left > rect.right ||
+          bottom < rect.top ||
+          top > rect.bottom
+        ),
+      );
+    };
 
-    // Clamp left to viewport
-    if (left < 16) left = 16;
-    if (left + tooltipRect.width > viewportW - 16) {
-      left = viewportW - tooltipRect.width - 16;
+    let chosen = candidates.find(
+      (candidate) => fitsViewport(candidate.top, candidate.left) && !overlapsForbidden(candidate.top, candidate.left),
+    );
+
+    if (!chosen) {
+      // Fallback: clamp the below position to viewport
+      let top = candidates[0].top;
+      let left = candidates[0].left;
+
+      if (top + tooltipRect.height > viewportH - margin) {
+        top = viewportH - tooltipRect.height - margin;
+      }
+      if (top < margin) top = margin;
+      if (left < margin) left = margin;
+      if (left + tooltipRect.width > viewportW - margin) {
+        left = viewportW - tooltipRect.width - margin;
+      }
+
+      chosen = { top, left };
     }
 
-    setTooltipPos({ top, left });
+    setTooltipPos({ top: chosen.top, left: chosen.left });
   }, [spotlightRect, currentStep]);
 
   // Auto-advance when data changes (interactive mode, steps 3-6)
