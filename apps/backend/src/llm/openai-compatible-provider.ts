@@ -5,6 +5,7 @@ import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTE
 export class OpenAICompatibleProvider implements LLMProvider {
   private client: OpenAI;
   private model: string;
+  private readonly maxCompletionTokens = 4096;
 
   constructor(apiKey: string, baseUrl: string, model?: string) {
     this.client = new OpenAI({ apiKey, baseURL: baseUrl });
@@ -19,10 +20,42 @@ export class OpenAICompatibleProvider implements LLMProvider {
     return content;
   }
 
+  private isUnsupportedParamError(err: any, param: string): boolean {
+    const message = typeof err?.message === 'string' ? err.message : '';
+    return message.includes(`Unsupported parameter: '${param}'`);
+  }
+
+  private async createChatCompletion(
+    params: Omit<OpenAI.Chat.ChatCompletionCreateParamsNonStreaming, 'max_tokens' | 'max_completion_tokens'>,
+  ): Promise<OpenAI.Chat.ChatCompletion> {
+    const withMaxTokens = {
+      ...params,
+      stream: false,
+      max_tokens: this.maxCompletionTokens,
+    };
+
+    try {
+      return await this.client.chat.completions.create(
+        withMaxTokens as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
+      );
+    } catch (err: any) {
+      if (this.isUnsupportedParamError(err, 'max_tokens')) {
+        const withMaxCompletionTokens = {
+          ...params,
+          stream: false,
+          max_completion_tokens: this.maxCompletionTokens,
+        };
+        return await this.client.chat.completions.create(
+          withMaxCompletionTokens as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
+        );
+      }
+      throw err;
+    }
+  }
+
   async extractFacts(text: string, goal: string): Promise<ExtractedFact[]> {
-    const response = await this.client.chat.completions.create({
+    const response = await this.createChatCompletion({
       model: this.model,
-      max_tokens: 4096,
       temperature: 0.2,
       messages: [
         { role: 'system', content: EXTRACTION_SYSTEM_PROMPT },
@@ -38,9 +71,8 @@ export class OpenAICompatibleProvider implements LLMProvider {
 
   async extractInsights(facts: string[], goal: string): Promise<ExtractedInsight[]> {
     const numberedFacts = facts.map((f, i) => `${i + 1}. ${f}`).join('\n');
-    const response = await this.client.chat.completions.create({
+    const response = await this.createChatCompletion({
       model: this.model,
-      max_tokens: 4096,
       temperature: 0.2,
       messages: [
         { role: 'system', content: INSIGHTS_SYSTEM_PROMPT },
@@ -56,9 +88,8 @@ export class OpenAICompatibleProvider implements LLMProvider {
 
   async extractRecommendations(insights: string[], goal: string): Promise<ExtractedRecommendation[]> {
     const numberedInsights = insights.map((ins, i) => `${i + 1}. ${ins}`).join('\n');
-    const response = await this.client.chat.completions.create({
+    const response = await this.createChatCompletion({
       model: this.model,
-      max_tokens: 4096,
       temperature: 0.2,
       messages: [
         { role: 'system', content: RECOMMENDATIONS_SYSTEM_PROMPT },
@@ -73,9 +104,8 @@ export class OpenAICompatibleProvider implements LLMProvider {
   }
 
   async formulateOutputs(recommendations: string[], goal: string, outputType: string, context?: OutputTraceabilityContext): Promise<string[]> {
-    const response = await this.client.chat.completions.create({
+    const response = await this.createChatCompletion({
       model: this.model,
-      max_tokens: 4096,
       temperature: 0.2,
       messages: [
         { role: 'system', content: buildOutputsPrompt(outputType) },

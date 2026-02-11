@@ -20,6 +20,9 @@ Deliver M13: Auto Outputs Formulation — AI-assisted formulation of structured 
 - [x] Refactoring phase
 - [x] Demo and user validation
 
+## Hotfixes
+- [x] Retry OpenAI chat completions with `max_completion_tokens` when `max_tokens` is unsupported
+
 ## Validation
 - All acceptance tests pass
 - TypeScript compiles cleanly (frontend + backend)
