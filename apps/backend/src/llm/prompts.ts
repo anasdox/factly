@@ -60,23 +60,23 @@ export const VALID_OUTPUT_TYPES = ['report', 'presentation', 'action_plan', 'bri
 
 export const OUTPUT_TYPE_INSTRUCTIONS: Record<string, string> = {
   report: `Produce a structured report section in Markdown with:
-- A clear ## heading
+- A clear # heading
 - An executive summary paragraph
 - Detailed findings with supporting evidence cited as blockquotes
 - A "### Sources & Traceability" subsection mapping each conclusion to its recommendation → insight → fact chain`,
   presentation: `Produce a presentation slide content in Markdown with:
-- A clear ## slide title
+- A clear # slide title
 - 3-5 bullet points as key takeaways
 - Supporting evidence cited as blockquotes
 - Speaker notes in a "### Notes" subsection with traceability to recommendations and facts`,
   action_plan: `Produce an action plan item in Markdown with:
-- A clear ## action title
+- A clear # action title
 - **Objective**, **Timeline**, **Owner** fields
 - Detailed steps as a numbered list
 - Supporting rationale with evidence cited as blockquotes
 - A "### Traceability" subsection linking to recommendations → insights → facts`,
   brief: `Produce an executive brief section in Markdown with:
-- A clear ## heading
+- A clear # heading
 - A concise summary (2-3 sentences)
 - Key data points highlighted in **bold**
 - Supporting evidence cited as blockquotes
