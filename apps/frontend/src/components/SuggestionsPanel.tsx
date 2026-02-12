@@ -106,7 +106,7 @@ const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, in
                     <p className="suggestion-text">{suggestion.text}</p>
                   )}
                   {suggestion.source_excerpt && (
-                    <blockquote className="suggestion-excerpt">{suggestion.source_excerpt}</blockquote>
+                    <div className="suggestion-excerpt">{markdownRenderer.render(suggestion.source_excerpt)}</div>
                   )}
                   <div className="suggestion-actions">
                     <button className="suggestion-accept" onClick={() => handleAccept(index)}>Accept</button>

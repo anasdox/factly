@@ -1,5 +1,5 @@
 .output-item {
-  font-size: 0.7em;
+  font-size: 0.8em;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -9,7 +9,10 @@
 .output-text {
   flex: 1;
   overflow: hidden;
-  text-overflow: ellipsis;
+  max-height: 8em;
+  width: 100%;
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
 }
 
 .output-type-badge {
@@ -182,6 +185,29 @@
   border-left: 3px solid var(--border-blockquote);
   background: var(--bg-blockquote);
   color: var(--color-blockquote);
-  font-style: italic;
   font-size: 0.9em;
+}
+
+.suggestion-excerpt > p {
+  margin: 2px 0;
+  font-style: italic;
+}
+
+.suggestion-excerpt table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 4px 0;
+  font-style: normal;
+}
+
+.suggestion-excerpt th,
+.suggestion-excerpt td {
+  border: 1px solid var(--border-table, var(--border-blockquote));
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.suggestion-excerpt th {
+  background: var(--bg-table-header, var(--bg-blockquote));
+  font-weight: 600;
 }

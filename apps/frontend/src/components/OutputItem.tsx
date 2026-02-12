@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import OutputPreviewModal from './OutputPreviewModal';
+import { markdownRenderer } from '../renderers/MarkdownRenderer';
 import './OutputItem.css';
 
 type Props = {
@@ -19,7 +20,7 @@ const OutputItem: React.FC<Props> = ({ output }) => {
   return (
     <div className="output-item item" onClick={() => setPreviewOpen(true)} title="Click to preview">
       {output.type && <span className="output-type-badge">{TYPE_LABELS[output.type] || output.type}</span>}
-      <span className="output-text">{output.text.length > 150 ? output.text.slice(0, 150) + '...' : output.text}</span>
+      <div className="output-text markdown-body">{markdownRenderer.render(output.text)}</div>
       <OutputPreviewModal
         isVisible={previewOpen}
         onClose={() => setPreviewOpen(false)}
