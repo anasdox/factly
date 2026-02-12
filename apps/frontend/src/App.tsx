@@ -245,7 +245,7 @@ const App: React.FC = () => {
     <div className="App">
       <div className="welcome-screen">
         <h1>Factly</h1>
-        <p className="welcome-subtitle">Structure your research with the Facts &rarr; Insights &rarr; Recommendations approach.</p>
+        <p className="welcome-subtitle">From raw information to evidence-based decisions.</p>
         <div className="welcome-flow">
           <div className="welcome-flow-step">
             <span className="welcome-flow-icon">📥</span>
