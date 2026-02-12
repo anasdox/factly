@@ -7,6 +7,7 @@ type Suggestion = {
   source_excerpt?: string;
   related_fact_ids?: string[];
   related_insight_ids?: string[];
+  inputId?: string;
 };
 
 type Props = {

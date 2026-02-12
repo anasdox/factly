@@ -336,6 +336,7 @@ const App: React.FC = () => {
             setData={setData}
             data={data}
             onError={handleError}
+            backendAvailable={backendAvailable}
             onViewTraceability={openTraceability} />
           : ""}
         {

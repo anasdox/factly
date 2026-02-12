@@ -24,7 +24,7 @@ const FactModal: React.FC<Props> = ({
   const [currentFactRelatedInputs, setCurrentRelatedInputs] = useState<string[]>([]);
 
   useEffect(() => {
-    if (mode === 'edit' && factData) {
+    if (factData) {
       setCurrentFactText(factData.text);
       setCurrentRelatedInputs(factData.related_inputs);
     } else {

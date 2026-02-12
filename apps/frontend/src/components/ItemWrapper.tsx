@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencil, faWandMagicSparkles, faSpinner, faDiagramProject } from '@fortawesome/free-solid-svg-icons';
+import { faPencil, faDiagramProject } from '@fortawesome/free-solid-svg-icons';
 
 
 type Props = {
@@ -12,9 +12,6 @@ type Props = {
   item: ItemType;
   index: number;
   openEditModal: OpenEditModalFunction | null;
-  onExtractFacts?: () => void;
-  extractDisabled?: boolean;
-  extractLoading?: boolean;
   onViewTraceability?: () => void;
 };
 
@@ -27,9 +24,6 @@ const ItemWrapper: React.FC<Props> = ({
   item,
   index,
   openEditModal,
-  onExtractFacts,
-  extractDisabled,
-  extractLoading,
   onViewTraceability}) => {
 
   return (
@@ -42,15 +36,6 @@ const ItemWrapper: React.FC<Props> = ({
     >
       {React.cloneElement(children, { item })}
       <div id={`${id}-toolbar`} className='wrapper-item-toolbar'>
-        {onExtractFacts !== undefined && (
-          <div
-            onClick={() => !extractDisabled && !extractLoading && onExtractFacts ? onExtractFacts() : null}
-            style={{ opacity: extractDisabled ? 0.3 : 1, cursor: extractDisabled ? 'not-allowed' : 'pointer' }}
-            title="Extract Facts"
-          >
-            <FontAwesomeIcon size={'sm'} icon={extractLoading ? faSpinner : faWandMagicSparkles} spin={extractLoading} />
-          </div>
-        )}
         {onViewTraceability && (
           <div onClick={(e) => { e.stopPropagation(); onViewTraceability(); }} title="View traceability">
             <FontAwesomeIcon size={'sm'} icon={faDiagramProject} />

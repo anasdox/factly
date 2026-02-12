@@ -27,13 +27,13 @@ const TOUR_STEPS: TourStep[] = [
     actionRequired: false,
   },
   {
-    target: '#input-ex-input-1',
+    target: '.column.inputs',
     title: 'Extract Facts',
-    content: 'Click the wand icon on this input to extract facts using AI.',
+    content: 'Click on an input to select it, then click "Generate Facts" in the toolbar to extract facts using AI.',
     passiveContent: 'In this example, facts have already been extracted from the inputs. Hover over an input to see which facts it produced.',
     actionRequired: true,
     advancesOn: 'facts',
-    interactiveSelector: '#input-ex-input-1',
+    interactiveSelector: '.column.inputs',
   },
   {
     target: '.column.facts',
@@ -267,17 +267,6 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ mode, data, onClose }) => {
     el.classList.add('tour-step-interactive');
     return () => { el.classList.remove('tour-step-interactive'); };
   }, [currentStep, isInteractive, step.interactiveSelector]);
-
-  // Show the wand toolbar for step 3 in interactive mode
-  useEffect(() => {
-    if (isInteractive && currentStep === 2) {
-      const toolbar = document.getElementById('input-ex-input-1-toolbar');
-      if (toolbar) {
-        toolbar.style.display = 'flex';
-        return () => { toolbar.style.display = ''; };
-      }
-    }
-  }, [currentStep, isInteractive]);
 
   const handleNext = () => {
     if (isLastStep) {
