@@ -46,6 +46,8 @@ Inputs → Facts → Insights → Recommendations → Outputs
 
 Relationships are explicit and visual.
 
+![factly-screenshot](./factly-screenshot.png)
+
 ## 🚀 Features
 
 * 5-column discovery grid
