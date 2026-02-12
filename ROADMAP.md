@@ -56,6 +56,7 @@
 ## Future Milestones
 
 ### M6: Fix Room Lifecycle Bugs
+**Status:** Delivered
 **Outcome:** Room creation, deletion, and SSE subscription work correctly.
 - Fix `stopRoom` to delete only the target room (BUG-01)
 - Initialize subscribers Set when a room is created (BUG-02)
@@ -64,6 +65,7 @@
 - Align README with actual port (BUG-05)
 
 ### M7: Real-Time Collaborative Sessions
+**Status:** Delivered
 **Outcome:** Multiple analysts joining the same room see each other's changes in real time.
 - Backend broadcasts room updates to all connected SSE clients
 - Frontend applies received updates to local state
@@ -132,6 +134,24 @@
 - Markdown preview modal on output items (click anywhere on output to preview)
 - OutputRenderer abstraction for future format extensibility (HTML, PDF, audio)
 
+### M14: Staleness Propagation on Edit
+**Status:** Planned
+**Outcome:** When an analyst modifies an upstream item (input, fact, insight), downstream items that depend on it are flagged as potentially stale. The analyst controls whether to re-generate, manually update, or dismiss the staleness.
+- On save, the analyst indicates if the edit changes meaning (substance) or only wording (form)
+- Form-only edits: no cascade, no staleness
+- Substance edits: all directly and transitively dependent items are marked stale (input → facts → insights → recommendations → outputs)
+- Visual indicator (warning icon) on stale items
+- Stale items can be: re-generated via AI, manually updated, or confirmed as still valid
+- Staleness clears when the item is re-generated, updated, or explicitly confirmed
+
+### M15: Semantic Deduplication
+**Status:** Planned
+**Outcome:** The system detects and prevents semantically duplicate items (facts, insights, recommendations) even when worded differently.
+- At suggestion time: existing items are included in the LLM prompt so it avoids generating duplicates
+- If a suggestion is too close to an existing item, it is flagged as a potential duplicate with a reference to the existing item
+- The analyst decides: merge, keep both, or reject
+- On-demand "Detect Duplicates" action per column: sends all items to the LLM to identify semantically similar groups, and proposes merges
+
 ## Risks and Dependencies
 
 | Risk | Mitigation |
@@ -143,6 +163,9 @@
 | LLM API cost per request (M10-M13) | Monitor usage; consider caching repeated extractions |
 | LLM hallucination risk (M10-M13) | Human-in-the-loop validation mandatory; no auto-commit to pipeline |
 | API key security (M10-M13) | Keys stored server-side only; never exposed to frontend |
+| Staleness noise (M14) | Too many stale markers may overwhelm the analyst | Allow bulk confirm/dismiss; clear staleness per column |
+| Deduplication false positives (M15) | LLM may flag non-duplicates as similar | Human-in-the-loop: analyst always decides; never auto-merge |
+| LLM cost for deduplication (M15) | Sending all existing items per extraction increases token usage | Include only same-column items; cap context size |
 
 ## Non-Goals (Project-Wide)
 
