@@ -17,11 +17,12 @@ type Props = {
   setData: React.Dispatch<React.SetStateAction<DiscoveryData | null>>;
   onError: (msg: string) => void;
   onInfo: (msg: string) => void;
+  onWaiting: (msg: string) => void;
   backendAvailable: boolean;
   onStartTour?: () => void;
 };
 
-const Toolbar = ({ data, setData, onError, onInfo, backendAvailable, onStartTour }: Props) => {
+const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, onStartTour }: Props) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [isStartEventRoomModalVisible, setIsStartEventRoomModalVisible] = useState(false);
@@ -53,6 +54,7 @@ const Toolbar = ({ data, setData, onError, onInfo, backendAvailable, onStartTour
 
   const handleScanDuplicates = async () => {
     setScanning(true);
+    onWaiting('Scanning for duplicates...');
     const allGroups: DuplicateGroup[] = [];
 
     const scanItems = async (
@@ -93,6 +95,7 @@ const Toolbar = ({ data, setData, onError, onInfo, backendAvailable, onStartTour
     if (allGroups.length === 0) {
       onInfo('No duplicates detected.');
     } else {
+      onInfo(`Found ${allGroups.length} group(s).`);
       setScanGroups(allGroups);
       setShowScanResults(true);
     }
@@ -192,6 +195,7 @@ const Toolbar = ({ data, setData, onError, onInfo, backendAvailable, onStartTour
   const handleStartEventRoom = async () => {
     try {
       if (data && data.discovery_id) {
+        onWaiting('Creating event room...');
         const response = await fetch(`${API_URL}/rooms`, {
           method: 'POST',
           headers: {
@@ -207,6 +211,7 @@ const Toolbar = ({ data, setData, onError, onInfo, backendAvailable, onStartTour
         const roomData = await response.json();
         setRoomId(roomData.roomId);
         setIsStartEventRoomModalVisible(true);
+        onInfo('Event room created.');
       }
     } catch (error) {
       onError('Network error: could not reach the server');
@@ -309,25 +314,28 @@ const Toolbar = ({ data, setData, onError, onInfo, backendAvailable, onStartTour
       return;
     }
     if (roomId && uuidRef.current && usernameRef.current && !isObjectEmpty(data)) {
-      fetch(`${API_URL}/rooms/${roomId}/update`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          payload: data,
-          username: usernameRef.current,
-          senderUuid: uuidRef.current,
-        })
-      }).then((response) => {
-        if (!response.ok) {
-          response.json().catch(() => ({ error: 'Unknown error' })).then((body) => {
-            onError(body.error || 'Failed to update room');
-          });
-        }
-      }).catch(() => {
-        onError('Network error: could not reach the server');
-      });
+      const timer = setTimeout(() => {
+        fetch(`${API_URL}/rooms/${roomId}/update`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            payload: data,
+            username: usernameRef.current,
+            senderUuid: uuidRef.current,
+          })
+        }).then((response) => {
+          if (!response.ok) {
+            response.json().catch(() => ({ error: 'Unknown error' })).then((body) => {
+              onError(body.error || 'Failed to update room');
+            });
+          }
+        }).catch(() => {
+          onError('Network error: could not reach the server');
+        });
+      }, 1000);
+      return () => clearTimeout(timer);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, roomId]);

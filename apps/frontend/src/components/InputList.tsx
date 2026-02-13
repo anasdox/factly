@@ -6,9 +6,9 @@ import ItemWrapper from './ItemWrapper';
 import InputModal from './InputModal';
 import FactModal from './FactModal';
 import SuggestionsPanel from './SuggestionsPanel';
-import MergeDialog from './MergeDialog';
+import BatchDedupReviewPanel from './BatchDedupReviewPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
-import { useMergeDialog } from '../hooks/useMergeDialog';
+import { useBatchDedupQueue } from '../hooks/useBatchDedupQueue';
 import { API_URL } from '../config';
 import { createNewVersion, propagateImpact, clearStatus, getDirectChildren } from '../lib';
 import { findDuplicates } from '../dedup';
@@ -49,8 +49,8 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
   const [suggestionData, setSuggestionData] = useState<FactSuggestionData | null>(null);
   const [isFactModalVisible, setIsFactModalVisible] = useState(false);
 
-  // Dedup merge dialog for accepted suggestions
-  const suggestionMergeDialog = useMergeDialog<FactType>();
+  // Batch dedup queue for accepted suggestions
+  const dedupQueue = useBatchDedupQueue<FactType>();
 
   const openAddModal = () => {
     setModalMode('add');
@@ -114,6 +114,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
     if (selected.length === 0) return;
 
     setExtractingFacts(true);
+    onWaiting('Extracting facts...');
     try {
       const promises = selected.map(input => {
         const payload: Record<string, string> = {
@@ -165,6 +166,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
         onError(`${errors.length} input(s) failed, but facts were extracted from the rest.`);
       }
 
+      onInfo(`Extracted ${allSuggestions.length} suggestion(s).`);
       setSuggestionData({ suggestions: allSuggestions });
     } catch (err: any) {
       onError(err.message || 'Extraction request failed');
@@ -194,15 +196,17 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
       related_inputs: relatedInputs,
       source_excerpt: suggestion.source_excerpt,
     };
+    dedupQueue.trackStart();
     const duplicates = await findDuplicates(
       suggestion.text,
       data.facts.map(f => ({ id: f.fact_id, text: f.text })),
       backendAvailable,
     );
     if (duplicates.length > 0) {
-      suggestionMergeDialog.show(newFact, duplicates[0]);
+      dedupQueue.enqueue(newFact, duplicates[0]);
       return;
     }
+    dedupQueue.trackComplete();
     addFactToData(suggestion.text, relatedInputs, suggestion.source_excerpt);
   };
 
@@ -212,7 +216,17 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
 
   const handleCloseSuggestions = useCallback(() => {
     setSuggestionData(null);
-  }, []);
+    if (dedupQueue.queue.length > 0 || dedupQueue.inflight > 0) {
+      dedupQueue.openReview();
+    }
+  }, [dedupQueue]);
+
+  // Show review panel once all inflight checks complete (after suggestions panel closed)
+  useEffect(() => {
+    if (dedupQueue.reviewVisible && dedupQueue.inflight === 0 && dedupQueue.queue.length === 0) {
+      dedupQueue.reset();
+    }
+  }, [dedupQueue.reviewVisible, dedupQueue.inflight, dedupQueue.queue.length, dedupQueue]);
 
   const handleAddFactFromSelection = () => {
     setIsFactModalVisible(true);
@@ -315,22 +329,27 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
           onClose={handleCloseSuggestions}
         />
       )}
-      <MergeDialog
-        isVisible={suggestionMergeDialog.visible}
-        newText={suggestionMergeDialog.pendingItem?.text || ''}
-        existingItem={suggestionMergeDialog.match || { id: '', text: '', similarity: 0 }}
-        onMerge={() => suggestionMergeDialog.handleMerge((pending, match) => {
-          setData(prev => prev ? {
-            ...prev,
-            facts: prev.facts.map(f => f.fact_id === match.id
-              ? { ...f, related_inputs: Array.from(new Set([...f.related_inputs, ...pending.related_inputs])) }
-              : f),
-          } : prev);
-        })}
-        onKeepAsVariant={() => suggestionMergeDialog.handleKeepAsVariant(addFactFromMerge)}
-        onForceAdd={() => suggestionMergeDialog.handleForceAdd(addFactFromMerge)}
-        onClose={suggestionMergeDialog.reset}
-      />
+      {dedupQueue.reviewVisible && dedupQueue.queue.length > 0 && (
+        <BatchDedupReviewPanel<FactType>
+          entries={dedupQueue.queue}
+          inflight={dedupQueue.inflight}
+          getText={(item) => item.text}
+          onResolve={dedupQueue.resolveEntry}
+          onResolveAll={dedupQueue.resolveAll}
+          onApply={() => dedupQueue.applyAll(
+            (pending, match) => {
+              setData(prev => prev ? {
+                ...prev,
+                facts: prev.facts.map(f => f.fact_id === match.id
+                  ? { ...f, related_inputs: Array.from(new Set([...f.related_inputs, ...pending.related_inputs])) }
+                  : f),
+              } : prev);
+            },
+            addFactFromMerge,
+          )}
+          onClose={dedupQueue.reset}
+        />
+      )}
     </div>
   );
 };

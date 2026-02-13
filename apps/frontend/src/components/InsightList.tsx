@@ -7,6 +7,7 @@ import InsightModal from './InsightModal';
 import RecommendationModal from './RecommendationModal';
 import SuggestionsPanel from './SuggestionsPanel';
 import MergeDialog from './MergeDialog';
+import BatchDedupReviewPanel from './BatchDedupReviewPanel';
 import ProposalPanel from './ProposalPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { API_URL } from '../config';
@@ -14,6 +15,7 @@ import { createNewVersion, propagateImpact, clearStatus, getDirectChildren } fro
 import { findDuplicates } from '../dedup';
 import { checkImpact } from '../impact';
 import { useMergeDialog } from '../hooks/useMergeDialog';
+import { useBatchDedupQueue } from '../hooks/useBatchDedupQueue';
 
 type Props = {
   insightRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -59,8 +61,8 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
   // Dedup merge dialog state
   const mergeDialog = useMergeDialog<InsightType>();
 
-  // Dedup merge dialog for accepted recommendation suggestions
-  const recommendationMergeDialog = useMergeDialog<RecommendationType>();
+  // Batch dedup queue for accepted recommendation suggestions
+  const recommendationDedupQueue = useBatchDedupQueue<RecommendationType>();
 
   // AI proposal state
   const [proposal, setProposal] = useState<ProposalState | null>(null);
@@ -175,6 +177,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     }
 
     setProposal({ insightId: insight.insight_id, proposedText: '', loading: true });
+    onWaiting('Generating update proposal...');
 
     try {
       const oldText = parentFact.versions && parentFact.versions.length > 0
@@ -204,6 +207,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
       }
 
       const result = await response.json();
+      onInfo('Update proposal ready.');
       setProposal({ insightId: insight.insight_id, proposedText: result.proposed_text || '', loading: false });
     } catch (err: any) {
       onError(err.message || 'Update proposal request failed');
@@ -258,6 +262,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     if (selected.length === 0) return;
 
     setExtractingRecommendations(true);
+    onWaiting('Generating recommendations...');
     try {
       const response = await fetch(`${API_URL}/extract/recommendations`, {
         method: 'POST',
@@ -277,6 +282,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
         onError('No recommendations could be formulated from the selected insights.');
         return;
       }
+      onInfo(`Generated ${result.suggestions.length} suggestion(s).`);
       setRecommendationSuggestionData({ suggestions: result.suggestions, insightIds: result.insight_ids });
     } catch (err: any) {
       onError(err.message || 'Recommendations extraction request failed');
@@ -307,15 +313,17 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
       text: suggestion.text,
       related_insights: relatedInsights,
     };
+    recommendationDedupQueue.trackStart();
     const duplicates = await findDuplicates(
       suggestion.text,
       data.recommendations.map(r => ({ id: r.recommendation_id, text: r.text })),
       backendAvailable,
     );
     if (duplicates.length > 0) {
-      recommendationMergeDialog.show(newRecommendation, duplicates[0]);
+      recommendationDedupQueue.enqueue(newRecommendation, duplicates[0]);
       return;
     }
+    recommendationDedupQueue.trackComplete();
     addRecommendationToData(suggestion.text, relatedInsights);
   };
 
@@ -325,7 +333,17 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
 
   const handleCloseSuggestions = useCallback(() => {
     setRecommendationSuggestionData(null);
-  }, []);
+    if (recommendationDedupQueue.queue.length > 0 || recommendationDedupQueue.inflight > 0) {
+      recommendationDedupQueue.openReview();
+    }
+  }, [recommendationDedupQueue]);
+
+  // Auto-close review panel if all inflight resolved and queue is empty
+  useEffect(() => {
+    if (recommendationDedupQueue.reviewVisible && recommendationDedupQueue.inflight === 0 && recommendationDedupQueue.queue.length === 0) {
+      recommendationDedupQueue.reset();
+    }
+  }, [recommendationDedupQueue.reviewVisible, recommendationDedupQueue.inflight, recommendationDedupQueue.queue.length, recommendationDedupQueue]);
 
   const handleAddRecommendationFromSelection = () => {
     setIsRecommendationModalVisible(true);
@@ -435,22 +453,27 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
           onClose={mergeDialog.reset}
         />
       )}
-      <MergeDialog
-        isVisible={recommendationMergeDialog.visible}
-        newText={recommendationMergeDialog.pendingItem?.text || ''}
-        existingItem={recommendationMergeDialog.match || { id: '', text: '', similarity: 0 }}
-        onMerge={() => recommendationMergeDialog.handleMerge((pending, match) => {
-          setData(prev => prev ? {
-            ...prev,
-            recommendations: prev.recommendations.map(r => r.recommendation_id === match.id
-              ? { ...r, related_insights: Array.from(new Set([...r.related_insights, ...pending.related_insights])) }
-              : r),
-          } : prev);
-        })}
-        onKeepAsVariant={() => recommendationMergeDialog.handleKeepAsVariant(addRecommendationFromMerge)}
-        onForceAdd={() => recommendationMergeDialog.handleForceAdd(addRecommendationFromMerge)}
-        onClose={recommendationMergeDialog.reset}
-      />
+      {recommendationDedupQueue.reviewVisible && recommendationDedupQueue.queue.length > 0 && (
+        <BatchDedupReviewPanel<RecommendationType>
+          entries={recommendationDedupQueue.queue}
+          inflight={recommendationDedupQueue.inflight}
+          getText={(item) => item.text}
+          onResolve={recommendationDedupQueue.resolveEntry}
+          onResolveAll={recommendationDedupQueue.resolveAll}
+          onApply={() => recommendationDedupQueue.applyAll(
+            (pending, match) => {
+              setData(prev => prev ? {
+                ...prev,
+                recommendations: prev.recommendations.map(r => r.recommendation_id === match.id
+                  ? { ...r, related_insights: Array.from(new Set([...r.related_insights, ...pending.related_insights])) }
+                  : r),
+              } : prev);
+            },
+            addRecommendationFromMerge,
+          )}
+          onClose={recommendationDedupQueue.reset}
+        />
+      )}
       {proposal && (
         <ProposalPanel
           currentText={data.insights.find(i => i.insight_id === proposal.insightId)?.text || ''}

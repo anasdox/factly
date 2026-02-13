@@ -26,13 +26,13 @@ const EXAMPLE_DISCOVERY: DiscoveryData = {
       input_id: 'ex-input-1',
       type: 'text',
       title: 'Q4 Customer Survey Results',
-      text: 'Survey of 500 customers who cancelled in Q4: 42% cited poor support response times (avg 48h vs 24h SLA), 31% found cheaper alternatives, 18% said the product lacked features they needed, 9% had billing issues.',
+      text: 'Survey of 500 customers who cancelled in Q4: 42% cited poor support response times (avg 48h vs 24h SLA), 31% found cheaper alternatives, 18% said the product lacked features they needed, 9% had billing issues. Customer satisfaction score fell to 3.1 out of 5. The v3.0 release was identified as a key frustration point, with 35% of respondents mentioning data migration problems.',
     },
     {
       input_id: 'ex-input-2',
       type: 'text',
       title: 'Support Ticket Analysis',
-      text: 'Support ticket volume increased 60% in Q4 due to v3.0 migration issues. Average first-response time rose from 12h to 52h. CSAT dropped from 4.2 to 3.1. Top complaint categories: data migration errors (35%), UI confusion (28%), missing features from v2 (22%).',
+      text: 'Support ticket volume increased 60% in Q4 due to v3.0 migration issues. Average first-response time rose from 12h to 52h. CSAT dropped from 4.2 to 3.1. Top complaint categories: data migration errors (35%), UI confusion (28%), missing features from v2 (22%). Nearly a third of churned users reported switching to lower-cost competitors. About 4 in 10 support escalations were linked to slow response times exceeding the 24-hour SLA.',
     },
   ],
   facts: [],
@@ -41,59 +41,6 @@ const EXAMPLE_DISCOVERY: DiscoveryData = {
   outputs: [],
 };
 
-const EXAMPLE_DISCOVERY_FULL: DiscoveryData = {
-  ...EXAMPLE_DISCOVERY,
-  facts: [
-    {
-      fact_id: 'ex-fact-1',
-      text: '42% of churned customers cited poor support response times as their primary reason for leaving.',
-      related_inputs: ['ex-input-1'],
-      source_excerpt: '42% cited poor support response times (avg 48h vs 24h SLA)',
-    },
-    {
-      fact_id: 'ex-fact-2',
-      text: 'Support ticket volume increased 60% in Q4, causing average first-response time to rise from 12h to 52h.',
-      related_inputs: ['ex-input-2'],
-      source_excerpt: 'Support ticket volume increased 60% in Q4 due to v3.0 migration issues. Average first-response time rose from 12h to 52h.',
-    },
-    {
-      fact_id: 'ex-fact-3',
-      text: '31% of churned customers found cheaper alternatives in the market.',
-      related_inputs: ['ex-input-1'],
-      source_excerpt: '31% found cheaper alternatives',
-    },
-  ],
-  insights: [
-    {
-      insight_id: 'ex-insight-1',
-      text: 'The v3.0 migration created a support bottleneck that directly drove the largest segment of churn. Support capacity did not scale with the migration-induced ticket surge.',
-      related_facts: ['ex-fact-1', 'ex-fact-2'],
-    },
-    {
-      insight_id: 'ex-insight-2',
-      text: 'Price sensitivity is the second driver of churn, suggesting the current pricing does not clearly communicate value differentiation vs. competitors.',
-      related_facts: ['ex-fact-3'],
-    },
-  ],
-  recommendations: [
-    {
-      recommendation_id: 'ex-rec-1',
-      text: 'Implement a dedicated migration support team with a 12h SLA for v3.0-related tickets, and proactively reach out to customers who experienced migration issues.',
-      related_insights: ['ex-insight-1'],
-    },
-    {
-      recommendation_id: 'ex-rec-2',
-      text: 'Introduce a competitive retention offer for at-risk customers and revise pricing page to highlight unique value propositions vs. top 3 competitors.',
-      related_insights: ['ex-insight-2'],
-    },
-  ],
-  outputs: [],
-};
-
-function getRoomIdFromURL(): string | null {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('room');
-}
 
 const App: React.FC = () => {
   const [data, setData] = useState<DiscoveryData | null>(() => {
@@ -103,7 +50,6 @@ const App: React.FC = () => {
     }
     return null;
   });
-  const [loadingRoom, setLoadingRoom] = useState(!!getRoomIdFromURL());
   const [showNewDiscoveryModal, setShowNewDiscoveryModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'error' | 'info' | 'waiting'>('error');
@@ -115,7 +61,6 @@ const App: React.FC = () => {
   const [traceabilityTarget, setTraceabilityTarget] = useState<{ type: string; id: string } | null>(null);
   const openTraceability = useCallback((type: string, id: string) => setTraceabilityTarget({ type, id }), []);
   const [tourActive, setTourActive] = useState(false);
-  const [tourMode, setTourMode] = useState<'interactive' | 'passive'>('interactive');
 
   useEffect(() => {
     let cancelled = false;
@@ -140,31 +85,6 @@ const App: React.FC = () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
   }, [data]);
-
-  useEffect(() => {
-    const roomId = getRoomIdFromURL();
-    if (!roomId) return;
-
-    const fetchRoomData = async () => {
-      try {
-        const response = await fetch(`${API_URL}/rooms/${roomId}`);
-        if (!response.ok) {
-          setLoadingRoom(false);
-          return;
-        }
-        const roomData = await response.json();
-        if (roomData && Object.keys(roomData).length !== 0) {
-          setData(roomData);
-        }
-      } catch {
-        // Toolbar will retry once it mounts
-      } finally {
-        setLoadingRoom(false);
-      }
-    };
-
-    fetchRoomData();
-  }, []);
 
   useEffect(() => {
     if (data) {
@@ -225,24 +145,9 @@ const App: React.FC = () => {
 
   const handleTryExample = () => {
     const freshId = 'example-' + Date.now();
-    if (backendAvailable) {
-      setData({ ...EXAMPLE_DISCOVERY, discovery_id: freshId });
-      setTourMode('interactive');
-    } else {
-      setData({ ...EXAMPLE_DISCOVERY_FULL, discovery_id: freshId });
-      setTourMode('passive');
-    }
+    setData({ ...EXAMPLE_DISCOVERY, discovery_id: freshId });
     setTourActive(true);
   };
-
-  if (loadingRoom) return (
-    <div className="App">
-      <div className="welcome-screen">
-        <h1>Factly</h1>
-        <p>Joining room...</p>
-      </div>
-    </div>
-  );
 
   if (!data) return (
     <div className="App">
@@ -301,7 +206,6 @@ const App: React.FC = () => {
       <Toast message={errorMessage} type={toastType} onClose={clearError} />
       {tourActive && data && (
         <GuidedTour
-          mode={tourMode}
           data={data}
           onClose={() => setTourActive(false)}
         />
@@ -316,17 +220,12 @@ const App: React.FC = () => {
           setData={setData}
           onError={handleError}
           onInfo={handleInfo}
+          onWaiting={handleWaiting}
           backendAvailable={backendAvailable}
           onStartTour={() => {
             if (!window.confirm('This will load the example discovery and start the guided tour. Continue?')) return;
             const freshId = 'example-' + Date.now();
-            if (backendAvailable) {
-              setData({ ...EXAMPLE_DISCOVERY, discovery_id: freshId });
-              setTourMode('interactive');
-            } else {
-              setData({ ...EXAMPLE_DISCOVERY_FULL, discovery_id: freshId });
-              setTourMode('passive');
-            }
+            setData({ ...EXAMPLE_DISCOVERY, discovery_id: freshId });
             setTourActive(true);
           }}
         />
@@ -397,6 +296,7 @@ const App: React.FC = () => {
               handleMouseLeave={handleMouseLeave}
               setData={setData}
               data={data}
+              onError={handleError}
               onInfo={handleInfo}
               onWaiting={handleWaiting}
               backendAvailable={backendAvailable}

@@ -148,10 +148,18 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
   // AI propose update
   const handleProposeUpdate = async (recommendation: RecommendationType) => {
     const parentInsightId = recommendation.related_insights[0];
-    if (!parentInsightId) return;
+    if (!parentInsightId) {
+      onError('No related insight found for this recommendation.');
+      return;
+    }
 
     const parentInsight = data.insights.find(i => i.insight_id === parentInsightId);
-    if (!parentInsight) return;
+    if (!parentInsight) {
+      onError('Related insight not found in data.');
+      return;
+    }
+
+    onWaiting('Generating update proposal...');
 
     const oldText = parentInsight.versions && parentInsight.versions.length > 0
       ? parentInsight.versions[parentInsight.versions.length - 1].text
@@ -168,11 +176,18 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
           goal: data.goal,
         }),
       });
-      if (!response.ok) return;
+      if (!response.ok) {
+        const body = await response.json();
+        onError(body.error || 'Proposal request failed');
+        return;
+      }
       const result = await response.json();
+      onInfo('Update proposal ready.');
       setProposalTarget(recommendation.recommendation_id);
       setProposalData(result);
-    } catch { /* ignore */ }
+    } catch (err: any) {
+      onError(err.message || 'Proposal request failed');
+    }
   };
 
   const acceptProposal = async (recommendationId: string, text: string) => {
@@ -213,6 +228,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
     const relatedInputs = data.inputs.filter(inp => relatedInputIds.has(inp.input_id));
 
     setExtractingOutputs(true);
+    onWaiting('Formulating outputs...');
     try {
       const response = await fetch(`${API_URL}/extract/outputs`, {
         method: 'POST',
@@ -236,6 +252,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
         onError('No outputs could be formulated from the selected recommendations.');
         return;
       }
+      onInfo(`Generated ${result.suggestions.length} suggestion(s).`);
       setOutputSuggestionData({ suggestions: result.suggestions, recommendationIds: result.recommendation_ids });
     } catch (err: any) {
       onError(err.message || 'Outputs formulation request failed');

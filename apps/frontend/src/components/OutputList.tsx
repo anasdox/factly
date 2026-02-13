@@ -14,13 +14,14 @@ type Props = {
   setData: React.Dispatch<React.SetStateAction<DiscoveryData | null>>;
   handleMouseEnter: (entityType: string, entityId: string, data: DiscoveryData) => void;
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
+  onError: (msg: string) => void;
   onInfo: (msg: string) => void;
   onWaiting: (msg: string) => void;
   backendAvailable: boolean;
   onViewTraceability: (entityType: string, entityId: string) => void;
 };
 
-const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnter, handleMouseLeave, onInfo, onWaiting, backendAvailable, onViewTraceability }) => {
+const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability }) => {
 
   const [isOutputDialogVisible, setIsOutputDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -89,7 +90,12 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
 
   const handleProposeUpdate = async (output: OutputType) => {
     const parentRec = data.recommendations.find(r => output.related_recommendations.includes(r.recommendation_id));
-    if (!parentRec) return;
+    if (!parentRec) {
+      onError('No related recommendation found for this output.');
+      return;
+    }
+
+    onWaiting('Generating update proposal...');
 
     const oldText = parentRec.versions && parentRec.versions.length > 0
       ? parentRec.versions[parentRec.versions.length - 1].text
@@ -107,11 +113,18 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
           output_type: output.type,
         }),
       });
-      if (!response.ok) return;
+      if (!response.ok) {
+        const body = await response.json();
+        onError(body.error || 'Proposal request failed');
+        return;
+      }
       const result = await response.json();
+      onInfo('Update proposal ready.');
       setProposalTarget(output.output_id);
       setProposalData(result);
-    } catch { /* ignore */ }
+    } catch (err: any) {
+      onError(err.message || 'Proposal request failed');
+    }
   };
 
   const acceptProposal = (outputId: string, text: string) => {

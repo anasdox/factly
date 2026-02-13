@@ -6,6 +6,7 @@ import ItemWrapper from './ItemWrapper';
 import FactModal from './FactModal';
 import InsightModal from './InsightModal';
 import MergeDialog from './MergeDialog';
+import BatchDedupReviewPanel from './BatchDedupReviewPanel';
 import ProposalPanel from './ProposalPanel';
 import SuggestionsPanel from './SuggestionsPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
@@ -14,6 +15,7 @@ import { createNewVersion, propagateImpact, clearStatus, getDirectChildren } fro
 import { findDuplicates } from '../dedup';
 import { checkImpact } from '../impact';
 import { useMergeDialog } from '../hooks/useMergeDialog';
+import { useBatchDedupQueue } from '../hooks/useBatchDedupQueue';
 
 type Props = {
   factRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -59,8 +61,8 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
   // Dedup / merge dialog state
   const mergeDialog = useMergeDialog<FactType>();
 
-  // Dedup merge dialog for accepted insight suggestions
-  const insightMergeDialog = useMergeDialog<InsightType>();
+  // Batch dedup queue for accepted insight suggestions
+  const insightDedupQueue = useBatchDedupQueue<InsightType>();
 
   // AI proposal state
   const [proposal, setProposal] = useState<ProposalState | null>(null);
@@ -169,6 +171,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     }
 
     setProposal({ factId: fact.fact_id, proposedText: '', loading: true });
+    onWaiting('Generating update proposal...');
 
     try {
       const oldText = parentInput.versions && parentInput.versions.length > 0
@@ -198,6 +201,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
       }
 
       const result = await response.json();
+      onInfo('Update proposal ready.');
       setProposal({ factId: fact.fact_id, proposedText: result.proposed_text || result.text || '', loading: false });
     } catch (err: any) {
       onError(err.message || 'Proposal request failed');
@@ -234,6 +238,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     if (selected.length === 0) return;
 
     setExtractingInsights(true);
+    onWaiting('Generating insights...');
     try {
       const response = await fetch(`${API_URL}/extract/insights`, {
         method: 'POST',
@@ -253,6 +258,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
         onError('No insights could be derived from the selected facts.');
         return;
       }
+      onInfo(`Generated ${result.suggestions.length} suggestion(s).`);
       setInsightSuggestionData({ suggestions: result.suggestions, factIds: result.fact_ids });
     } catch (err: any) {
       onError(err.message || 'Insights extraction request failed');
@@ -282,15 +288,17 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
       text: suggestion.text,
       related_facts: relatedFacts,
     };
+    insightDedupQueue.trackStart();
     const duplicates = await findDuplicates(
       suggestion.text,
       data.insights.map(i => ({ id: i.insight_id, text: i.text })),
       backendAvailable,
     );
     if (duplicates.length > 0) {
-      insightMergeDialog.show(newInsight, duplicates[0]);
+      insightDedupQueue.enqueue(newInsight, duplicates[0]);
       return;
     }
+    insightDedupQueue.trackComplete();
     addInsightToData(suggestion.text, relatedFacts);
   };
 
@@ -300,7 +308,17 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
 
   const handleCloseSuggestions = useCallback(() => {
     setInsightSuggestionData(null);
-  }, []);
+    if (insightDedupQueue.queue.length > 0 || insightDedupQueue.inflight > 0) {
+      insightDedupQueue.openReview();
+    }
+  }, [insightDedupQueue]);
+
+  // Auto-close review panel if all inflight resolved and queue is empty
+  useEffect(() => {
+    if (insightDedupQueue.reviewVisible && insightDedupQueue.inflight === 0 && insightDedupQueue.queue.length === 0) {
+      insightDedupQueue.reset();
+    }
+  }, [insightDedupQueue.reviewVisible, insightDedupQueue.inflight, insightDedupQueue.queue.length, insightDedupQueue]);
 
   const handleAddInsightFromSelection = () => {
     setIsInsightModalVisible(true);
@@ -408,22 +426,27 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
         onForceAdd={() => mergeDialog.handleForceAdd(addFactToState)}
         onClose={mergeDialog.reset}
       />
-      <MergeDialog
-        isVisible={insightMergeDialog.visible}
-        newText={insightMergeDialog.pendingItem?.text || ''}
-        existingItem={insightMergeDialog.match || { id: '', text: '', similarity: 0 }}
-        onMerge={() => insightMergeDialog.handleMerge((pending, match) => {
-          setData(prev => prev ? {
-            ...prev,
-            insights: prev.insights.map(i => i.insight_id === match.id
-              ? { ...i, related_facts: Array.from(new Set([...i.related_facts, ...pending.related_facts])) }
-              : i),
-          } : prev);
-        })}
-        onKeepAsVariant={() => insightMergeDialog.handleKeepAsVariant(addInsightFromMerge)}
-        onForceAdd={() => insightMergeDialog.handleForceAdd(addInsightFromMerge)}
-        onClose={insightMergeDialog.reset}
-      />
+      {insightDedupQueue.reviewVisible && insightDedupQueue.queue.length > 0 && (
+        <BatchDedupReviewPanel<InsightType>
+          entries={insightDedupQueue.queue}
+          inflight={insightDedupQueue.inflight}
+          getText={(item) => item.text}
+          onResolve={insightDedupQueue.resolveEntry}
+          onResolveAll={insightDedupQueue.resolveAll}
+          onApply={() => insightDedupQueue.applyAll(
+            (pending, match) => {
+              setData(prev => prev ? {
+                ...prev,
+                insights: prev.insights.map(i => i.insight_id === match.id
+                  ? { ...i, related_facts: Array.from(new Set([...i.related_facts, ...pending.related_facts])) }
+                  : i),
+              } : prev);
+            },
+            addInsightFromMerge,
+          )}
+          onClose={insightDedupQueue.reset}
+        />
+      )}
       {proposal && (
         <ProposalPanel
           currentText={data.facts.find(f => f.fact_id === proposal.factId)?.text || ''}
