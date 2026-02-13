@@ -1,5 +1,5 @@
 import React from 'react';
-import ModalDialog from 'react-basic-modal-dialog';
+import Modal from './Modal';
 import { markdownRenderer } from '../renderers/MarkdownRenderer';
 import './OutputItem.css';
 
@@ -19,7 +19,7 @@ const TYPE_LABELS: Record<string, string> = {
 
 const OutputPreviewModal: React.FC<Props> = ({ isVisible, onClose, content, outputType }) => {
   return (
-    <ModalDialog isDialogVisible={isVisible} closeDialog={onClose}>
+    <Modal isVisible={isVisible} onClose={onClose} maxWidth="900px">
       <div className="output-preview-modal">
         <div className="output-preview-header">
           <h2>{outputType ? TYPE_LABELS[outputType] || outputType : 'Output'} Preview</h2>
@@ -29,7 +29,7 @@ const OutputPreviewModal: React.FC<Props> = ({ isVisible, onClose, content, outp
           {markdownRenderer.render(content)}
         </div>
       </div>
-    </ModalDialog>
+    </Modal>
   );
 };
 

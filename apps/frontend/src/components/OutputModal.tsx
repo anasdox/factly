@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import ModalDialog from 'react-basic-modal-dialog';
+import Modal from './Modal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXmark, faPlus, faTrashCan, faFloppyDisk } from '@fortawesome/free-solid-svg-icons';
 
 type Props = {
   mode: 'add' | 'edit';
@@ -54,7 +56,7 @@ const OutputModal: React.FC<Props> = ({
   };
 
   return (
-    <ModalDialog isDialogVisible={isDialogVisible} closeDialog={closeDialog}>
+    <Modal isVisible={isDialogVisible} onClose={closeDialog}>
       <h2>{mode === 'add' ? 'Add Output' : 'Edit Output'}</h2>
       <form>
         <label htmlFor="output-text">Text</label>
@@ -94,17 +96,17 @@ const OutputModal: React.FC<Props> = ({
       </form>
       <div className='modal-actions'>
         <div className="modal-action-group-left">
-          <button className='modal-action-close' onClick={closeDialog}>🗙Cancel</button>
+          <button className='modal-action-close' onClick={closeDialog}><FontAwesomeIcon icon={faXmark} /> Cancel</button>
           {mode === 'edit' &&
-            <button className='modal-action-delete' onClick={handleDelete}>🗑️Delete</button>
+            <button className='modal-action-delete' onClick={handleDelete}><FontAwesomeIcon icon={faTrashCan} /> Delete</button>
           }
 
         </div>
         <div className="modal-action-group-right">
-          <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? '➕Add' : '💾Save'}</button>
+          <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? <><FontAwesomeIcon icon={faPlus} /> Add</> : <><FontAwesomeIcon icon={faFloppyDisk} /> Save</>}</button>
         </div>
       </div>
-    </ModalDialog>
+    </Modal>
   );
 };
 

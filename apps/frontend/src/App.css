@@ -187,16 +187,19 @@ input[type=text], select, textarea {
 
 
 .modal-actions button {
-  border-radius: 10px;
-  padding: 6px 6px;
+  border-radius: 8px;
+  padding: 8px 16px;
   background: var(--bg-btn);
   color: var(--text-primary);
   cursor: pointer;
-  border: var(--border-btn) solid 2px;
+  border: 1px solid var(--border-btn);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .modal-actions button:hover:not(:disabled) {
-  border: var(--border-btn-hover) solid 2px;
+  border-color: var(--border-btn-hover);
   cursor: pointer;
   transition: 0.2s;
   outline: none;
@@ -226,26 +229,39 @@ input[type=text], select, textarea {
   /* Additional styling for the close/delete buttons if needed */
 }
 
-dialog {
-  border-radius: 10px;
-  border: var(--border-dialog) solid 2px;
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+.modal-panel {
   background: var(--bg-modal);
-  color: var(--text-primary);
-  min-width: 500px;
-  max-width: 700px;
-  max-height: 85vh;
+  border: 1px solid var(--border-dialog);
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-height: 80vh;
   overflow-y: auto;
+  color: var(--text-primary);
 }
 
-dialog select[multiple] {
-  min-height: 120px;
+.modal-panel h2 {
+  margin-top: 0;
 }
 
-dialog label {
+.modal-panel label {
   margin-bottom: 0.5em;
   font-weight: bold;
-  color: var(--text-primary);
   font-size: 0.8em;
+}
+
+.modal-panel select[multiple] {
+  min-height: 120px;
 }
 
 .item-selectable {
@@ -472,12 +488,12 @@ dialog label {
   z-index: 10004 !important;
 }
 
-.tour-active dialog[open] {
-  z-index: 10004 !important;
+.tour-active .modal-overlay {
+  z-index: 10003 !important;
 }
 
-.tour-active dialog[open]::backdrop {
-  z-index: 10003 !important;
+.tour-active .modal-overlay .modal-panel {
+  z-index: 10004 !important;
 }
 
 /* ── Status indicators ── */

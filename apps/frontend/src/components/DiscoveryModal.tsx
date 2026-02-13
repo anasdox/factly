@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import ModalDialog from 'react-basic-modal-dialog';
+import Modal from './Modal';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faXmark, faPlus, faFloppyDisk } from '@fortawesome/free-solid-svg-icons';
 
 type Props = {
   mode: 'add' | 'edit';
@@ -51,7 +53,7 @@ const DiscoveryModal: React.FC<Props> = ({
   };
 
   return (
-    <ModalDialog isDialogVisible={isDialogVisible} closeDialog={closeDialog}>
+    <Modal isVisible={isDialogVisible} onClose={closeDialog}>
       <h2>{mode === 'add' ? 'Add New Discovery' : 'Edit Discovery'}</h2>
       <form>
         <label htmlFor="discovery-title">Title</label>
@@ -74,13 +76,13 @@ const DiscoveryModal: React.FC<Props> = ({
       </form>
       <div className='modal-actions'>
         <div className="modal-action-group-left">
-          <button className='modal-action-save' onClick={handleSave} disabled={!title.trim() || !goal.trim()}>{mode === 'add' ? '➕Add' : '💾Save'}</button>
+          <button className='modal-action-save' onClick={handleSave} disabled={!title.trim() || !goal.trim()}>{mode === 'add' ? <><FontAwesomeIcon icon={faPlus} /> Add</> : <><FontAwesomeIcon icon={faFloppyDisk} /> Save</>}</button>
         </div>
         <div className="modal-action-group-right">
-          <button className='modal-action-close' onClick={closeDialog}>🗙Cancel</button>
+          <button className='modal-action-close' onClick={closeDialog}><FontAwesomeIcon icon={faXmark} /> Cancel</button>
         </div>
       </div>
-    </ModalDialog>
+    </Modal>
   );
 };
 

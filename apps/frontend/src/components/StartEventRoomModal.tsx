@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import ModalDialog from 'react-basic-modal-dialog';
+import Modal from './Modal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCopy, faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faCheck, faXmark } from '@fortawesome/free-solid-svg-icons';
 
 type Props = {
   isDialogVisible: boolean;
@@ -21,27 +21,28 @@ const StartEventRoomModal = ({ isDialogVisible, closeDialog, roomId }: Props) =>
     });
   };
 
-  return isDialogVisible ? (
-    <ModalDialog isDialogVisible={isDialogVisible} closeDialog={closeDialog}>
-      <div className="modal-content">
-        <h2>Create Event Room</h2>
-        <form>
-          <label>Room URL</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <input type="text" value={roomUrl} readOnly style={{ flex: 1 }} />
-            <FontAwesomeIcon
-              icon={copied ? faCheck : faCopy}
-              style={{ cursor: 'pointer', color: copied ? 'var(--color-suggestion-accept)' : 'var(--text-secondary)' }}
-              title={copied ? 'Copied!' : 'Copy URL'}
-              onClick={handleCopy}
-            />
-          </div>
-          <button onClick={closeDialog}>Close</button>
-        </form>
-
+  return (
+    <Modal isVisible={isDialogVisible} onClose={closeDialog}>
+      <h2>Create Event Room</h2>
+      <form>
+        <label>Room URL</label>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input type="text" value={roomUrl} readOnly style={{ flex: 1 }} />
+          <FontAwesomeIcon
+            icon={copied ? faCheck : faCopy}
+            style={{ cursor: 'pointer', color: copied ? 'var(--color-suggestion-accept)' : 'var(--text-secondary)' }}
+            title={copied ? 'Copied!' : 'Copy URL'}
+            onClick={handleCopy}
+          />
+        </div>
+      </form>
+      <div className='modal-actions'>
+        <div className="modal-action-group-right">
+          <button className='modal-action-close' onClick={closeDialog}><FontAwesomeIcon icon={faXmark} /> Close</button>
+        </div>
       </div>
-    </ModalDialog>
-  ) : null;
+    </Modal>
+  );
 };
 
 export default StartEventRoomModal;
