@@ -3,7 +3,7 @@
   top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 10004;
+  z-index: 9997;
   animation: toast-slide-in 0.3s ease-out;
 }
 

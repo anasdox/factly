@@ -24,10 +24,10 @@ const StartEventRoomModal = ({ isDialogVisible, closeDialog, roomId }: Props) =>
   return (
     <Modal isVisible={isDialogVisible} onClose={closeDialog}>
       <h2>Create Event Room</h2>
-      <form>
+      <form style={{ paddingTop: '12px' }}>
         <label>Room URL</label>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <input type="text" value={roomUrl} readOnly style={{ flex: 1 }} />
+          <input type="text" value={roomUrl} readOnly style={{ flex: 1, margin: 0 }} />
           <FontAwesomeIcon
             icon={copied ? faCheck : faCopy}
             style={{ cursor: 'pointer', color: copied ? 'var(--color-suggestion-accept)' : 'var(--text-secondary)' }}
