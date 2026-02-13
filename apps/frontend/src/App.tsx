@@ -106,7 +106,10 @@ const App: React.FC = () => {
   const [loadingRoom, setLoadingRoom] = useState(!!getRoomIdFromURL());
   const [showNewDiscoveryModal, setShowNewDiscoveryModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const handleError = useCallback((msg: string) => setErrorMessage(msg), []);
+  const [toastType, setToastType] = useState<'error' | 'info' | 'waiting'>('error');
+  const handleError = useCallback((msg: string) => { setToastType('error'); setErrorMessage(msg); }, []);
+  const handleInfo = useCallback((msg: string) => { setToastType('info'); setErrorMessage(msg); }, []);
+  const handleWaiting = useCallback((msg: string) => { setToastType('waiting'); setErrorMessage(msg); }, []);
   const clearError = useCallback(() => setErrorMessage(null), []);
   const [backendAvailable, setBackendAvailable] = useState(false);
   const [traceabilityTarget, setTraceabilityTarget] = useState<{ type: string; id: string } | null>(null);
@@ -295,7 +298,7 @@ const App: React.FC = () => {
 
   return (
     <div className={`App${tourActive ? ' tour-active' : ''}`}>
-      <Toast message={errorMessage} onClose={clearError} />
+      <Toast message={errorMessage} type={toastType} onClose={clearError} />
       {tourActive && data && (
         <GuidedTour
           mode={tourMode}
@@ -312,6 +315,7 @@ const App: React.FC = () => {
           data={data}
           setData={setData}
           onError={handleError}
+          onInfo={handleInfo}
           backendAvailable={backendAvailable}
           onStartTour={() => {
             if (!window.confirm('This will load the example discovery and start the guided tour. Continue?')) return;
@@ -336,6 +340,8 @@ const App: React.FC = () => {
             setData={setData}
             data={data}
             onError={handleError}
+            onInfo={handleInfo}
+            onWaiting={handleWaiting}
             backendAvailable={backendAvailable}
             onViewTraceability={openTraceability} />
           : ""}
@@ -348,6 +354,8 @@ const App: React.FC = () => {
               setData={setData}
               data={data}
               onError={handleError}
+              onInfo={handleInfo}
+              onWaiting={handleWaiting}
               backendAvailable={backendAvailable}
               onViewTraceability={openTraceability} />
             : ""}
@@ -360,6 +368,8 @@ const App: React.FC = () => {
               setData={setData}
               data={data}
               onError={handleError}
+              onInfo={handleInfo}
+              onWaiting={handleWaiting}
               backendAvailable={backendAvailable}
               onViewTraceability={openTraceability} />
             : ""
@@ -373,6 +383,8 @@ const App: React.FC = () => {
               setData={setData}
               data={data}
               onError={handleError}
+              onInfo={handleInfo}
+              onWaiting={handleWaiting}
               backendAvailable={backendAvailable}
               onViewTraceability={openTraceability} />
             : ""
@@ -385,6 +397,9 @@ const App: React.FC = () => {
               handleMouseLeave={handleMouseLeave}
               setData={setData}
               data={data}
+              onInfo={handleInfo}
+              onWaiting={handleWaiting}
+              backendAvailable={backendAvailable}
               onViewTraceability={openTraceability} />
             : ""
         }

@@ -7,15 +7,24 @@
   animation: toast-slide-in 0.3s ease-out;
 }
 
-.toast-error {
-  background-color: #dc3545;
-  color: #fff;
+.toast {
+  background-color: var(--bg-toast-waiting);
+  color: var(--color-toast-waiting);
+  border: 1px solid var(--border-toast-waiting);
   padding: 12px 24px;
   border-radius: 8px;
   font-size: 14px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   max-width: 500px;
   word-wrap: break-word;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  font-size: 16px;
 }
 
 @keyframes toast-slide-in {

@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { LLMProvider } from './provider';
-import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext } from './prompts';
+import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseImpactCheckResult, ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult } from './prompts';
 
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic;
@@ -87,5 +87,65 @@ export class AnthropicProvider implements LLMProvider {
     });
 
     return parseStringArray(this.extractText(response));
+  }
+
+  async checkDuplicates(text: string, candidates: { id: string; text: string }[]): Promise<DedupResult[]> {
+    const response = await this.client.messages.create({
+      model: this.model,
+      max_tokens: 2048,
+      temperature: 0.1,
+      system: DEDUP_CHECK_SYSTEM_PROMPT,
+      messages: [
+        { role: 'user', content: buildDedupCheckUserContent(text, candidates) },
+      ],
+    });
+
+    return parseDedupCheckResult(this.extractText(response), candidates);
+  }
+
+  async scanDuplicates(items: { id: string; text: string }[]): Promise<DedupGroup[]> {
+    const response = await this.client.messages.create({
+      model: this.model,
+      max_tokens: 2048,
+      temperature: 0.1,
+      system: DEDUP_SCAN_SYSTEM_PROMPT,
+      messages: [
+        { role: 'user', content: buildDedupScanUserContent(items) },
+      ],
+    });
+
+    return parseDedupScanResult(this.extractText(response), items);
+  }
+
+  async proposeUpdate(entityType: string, currentText: string, upstreamOldText: string, upstreamNewText: string, upstreamEntityType: string, goal: string, outputType?: string): Promise<UpdateProposal> {
+    const systemPrompt = outputType
+      ? `${UPDATE_PROPOSAL_SYSTEM_PROMPT}\n\nThe entity is an output of type "${outputType}". Produce the proposed_text in professional Markdown format.`
+      : UPDATE_PROPOSAL_SYSTEM_PROMPT;
+
+    const response = await this.client.messages.create({
+      model: this.model,
+      max_tokens: 4096,
+      temperature: 0.3,
+      system: systemPrompt,
+      messages: [
+        { role: 'user', content: buildUpdateProposalUserContent(entityType, currentText, upstreamOldText, upstreamNewText, upstreamEntityType, goal) },
+      ],
+    });
+
+    return parseUpdateProposal(this.extractText(response));
+  }
+
+  async checkImpact(oldText: string, newText: string, children: { id: string; text: string }[]): Promise<ImpactCheckResult[]> {
+    const response = await this.client.messages.create({
+      model: this.model,
+      max_tokens: 2048,
+      temperature: 0.1,
+      system: IMPACT_CHECK_SYSTEM_PROMPT,
+      messages: [
+        { role: 'user', content: buildImpactCheckUserContent(oldText, newText, children) },
+      ],
+    });
+
+    return parseImpactCheckResult(this.extractText(response), children);
   }
 }

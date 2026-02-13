@@ -60,6 +60,19 @@
   --bg-suggestion-edit-hover: #eeeeee;
   --color-suggestion-reject: #555555;
   --bg-suggestion-reject-hover: #f0f0f0;
+  --color-status-needs-review: #b45309;
+  --border-status-needs-review: #b45309;
+  --color-status-needs-refresh: #c2410c;
+  --border-status-needs-refresh: #c2410c;
+  --color-status-unsupported: #dc2626;
+  --border-status-unsupported: #dc2626;
+  --color-status-weak: #a16207;
+  --border-status-weak: #a16207;
+  --color-status-risky: #991b1b;
+  --border-status-risky: #991b1b;
+  --bg-toast-waiting: #f0f0f0;
+  --color-toast-waiting: #333333;
+  --border-toast-waiting: #cccccc;
 }
 
 /* ── Black & White Dark ── */
@@ -124,6 +137,19 @@
   --bg-suggestion-edit-hover: #1a1a1a;
   --color-suggestion-reject: #aaaaaa;
   --bg-suggestion-reject-hover: #222222;
+  --color-status-needs-review: #f59e0b;
+  --border-status-needs-review: #f59e0b;
+  --color-status-needs-refresh: #fb923c;
+  --border-status-needs-refresh: #fb923c;
+  --color-status-unsupported: #ef4444;
+  --border-status-unsupported: #ef4444;
+  --color-status-weak: #eab308;
+  --border-status-weak: #eab308;
+  --color-status-risky: #f87171;
+  --border-status-risky: #f87171;
+  --bg-toast-waiting: #1a1a1a;
+  --color-toast-waiting: #e0e0e0;
+  --border-toast-waiting: #333333;
 }
 
 /* ── Colorful Light ── */
@@ -188,6 +214,19 @@
   --bg-suggestion-edit-hover: #e3f2fd;
   --color-suggestion-reject: #c62828;
   --bg-suggestion-reject-hover: #ffebee;
+  --color-status-needs-review: #d97706;
+  --border-status-needs-review: #d97706;
+  --color-status-needs-refresh: #ea580c;
+  --border-status-needs-refresh: #ea580c;
+  --color-status-unsupported: #dc2626;
+  --border-status-unsupported: #dc2626;
+  --color-status-weak: #ca8a04;
+  --border-status-weak: #ca8a04;
+  --color-status-risky: #b91c1c;
+  --border-status-risky: #b91c1c;
+  --bg-toast-waiting: #f0f0f0;
+  --color-toast-waiting: #333333;
+  --border-toast-waiting: #cccccc;
 }
 
 /* ── Colorful Dark ── */
@@ -252,6 +291,19 @@
   --bg-suggestion-edit-hover: #1a2a4a;
   --color-suggestion-reject: #ef5350;
   --bg-suggestion-reject-hover: #3a1a1a;
+  --color-status-needs-review: #fbbf24;
+  --border-status-needs-review: #fbbf24;
+  --color-status-needs-refresh: #fb923c;
+  --border-status-needs-refresh: #fb923c;
+  --color-status-unsupported: #f87171;
+  --border-status-unsupported: #f87171;
+  --color-status-weak: #facc15;
+  --border-status-weak: #facc15;
+  --color-status-risky: #fca5a5;
+  --border-status-risky: #fca5a5;
+  --bg-toast-waiting: #2a2a4a;
+  --color-toast-waiting: #e0e0e0;
+  --border-toast-waiting: #3a3a5a;
 }
 
 body {

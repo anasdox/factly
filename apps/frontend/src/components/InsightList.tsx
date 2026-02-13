@@ -6,8 +6,14 @@ import ItemWrapper from './ItemWrapper';
 import InsightModal from './InsightModal';
 import RecommendationModal from './RecommendationModal';
 import SuggestionsPanel from './SuggestionsPanel';
+import MergeDialog from './MergeDialog';
+import ProposalPanel from './ProposalPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { API_URL } from '../config';
+import { createNewVersion, propagateImpact, clearStatus, getDirectChildren } from '../lib';
+import { findDuplicates } from '../dedup';
+import { checkImpact } from '../impact';
+import { useMergeDialog } from '../hooks/useMergeDialog';
 
 type Props = {
   insightRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -16,6 +22,8 @@ type Props = {
   handleMouseEnter: (entityType: string, entityId: string, data: DiscoveryData) => void;
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
   onError: (msg: string) => void;
+  onInfo: (msg: string) => void;
+  onWaiting: (msg: string) => void;
   backendAvailable: boolean;
   onViewTraceability: (entityType: string, entityId: string) => void;
 };
@@ -25,7 +33,13 @@ type RecommendationSuggestionData = {
   insightIds: string[];
 };
 
-const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, backendAvailable, onViewTraceability }) => {
+type ProposalState = {
+  insightId: string;
+  proposedText: string;
+  loading: boolean;
+};
+
+const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability }) => {
 
   const [isInsightDialogVisible, setIsInsightDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -42,6 +56,15 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
 
   const [isRecommendationModalVisible, setIsRecommendationModalVisible] = useState(false);
 
+  // Dedup merge dialog state
+  const mergeDialog = useMergeDialog<InsightType>();
+
+  // Dedup merge dialog for accepted recommendation suggestions
+  const recommendationMergeDialog = useMergeDialog<RecommendationType>();
+
+  // AI proposal state
+  const [proposal, setProposal] = useState<ProposalState | null>(null);
+
   const openAddModal = () => {
     setModalMode('add');
     setEditingInsight(null);
@@ -54,18 +77,72 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     setIsInsightDialogVisible(true);
   };
 
-  const saveInsight = (insightData: InsightType) => {
+  const addInsightToData = useCallback((newInsight: InsightType) => {
+    setData((prevState) => prevState ? ({
+      ...prevState,
+      insights: [...prevState.insights, newInsight]
+    }) : prevState);
+  }, [setData]);
+
+  const saveInsight = async (insightData: InsightType) => {
     if (modalMode === 'add') {
       const newInsight: InsightType = {
         insight_id: Math.random().toString(16).slice(2),
         text: insightData.text,
         related_facts: insightData.related_facts,
+        version: 1,
+        status: 'draft',
+        created_at: new Date().toISOString(),
       };
-      setData((prevState) => prevState ? ({
-        ...prevState,
-        insights: [...prevState.insights, newInsight]
-      }) : prevState);
+
+      // Dedup guard: check for duplicates before adding
+      const duplicates = await findDuplicates(
+        insightData.text,
+        data.insights.map(i => ({ id: i.insight_id, text: i.text })),
+        backendAvailable,
+      );
+
+      if (duplicates.length > 0) {
+        mergeDialog.show(newInsight, duplicates[0]);
+        setIsInsightDialogVisible(false);
+        return;
+      }
+
+      addInsightToData(newInsight);
     } else if (modalMode === 'edit' && insightData.insight_id) {
+      const existing = data.insights.find(i => i.insight_id === insightData.insight_id);
+      const textChanged = existing && existing.text !== insightData.text;
+
+      if (textChanged && existing) {
+          onWaiting('Creating new version and analyzing impact on related recommendations...');
+          const versioned = createNewVersion(existing, insightData.text) as InsightType;
+          const updatedWithRelations: InsightType = {
+            ...versioned,
+            related_facts: insightData.related_facts,
+          };
+          const intermediateData = {
+            ...data,
+            insights: data.insights.map(i =>
+              i.insight_id === insightData.insight_id ? updatedWithRelations : i
+            ),
+          };
+          const children = getDirectChildren('insight', insightData.insight_id, intermediateData);
+          const { ids: impactedIds, usedFallback } = await checkImpact(existing.text, insightData.text, children, backendAvailable);
+          const { data: propagatedData, impactedCount } = propagateImpact(
+            intermediateData,
+            'insight',
+            insightData.insight_id,
+            'edited',
+            impactedIds,
+          );
+          setData(propagatedData);
+          const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
+          onInfo(`Updated to v${updatedWithRelations.version}. ${impactedCount} downstream item(s) marked for review.${fallbackHint}`);
+          setIsInsightDialogVisible(false);
+          return;
+      }
+
+      // No text change — just update relations or other fields
       const updatedInsights = data.insights.map((insight) =>
         insight.insight_id === insightData.insight_id ? { ...insight, ...insightData } : insight
       );
@@ -75,6 +152,96 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
       }) : prevState);
     }
     setIsInsightDialogVisible(false);
+  };
+
+  // MergeDialog callbacks use the hook
+
+  // Confirm valid: clear actionable status
+  const handleClearStatus = (insightId: string) => {
+    setData(prev => prev ? clearStatus(prev, 'insight', insightId) : prev);
+  };
+
+  // AI propose update
+  const handleProposeUpdate = async (insight: InsightType) => {
+    const parentFactId = insight.related_facts[0];
+    if (!parentFactId) {
+      onError('No related fact found to base the update proposal on.');
+      return;
+    }
+    const parentFact = data.facts.find(f => f.fact_id === parentFactId);
+    if (!parentFact) {
+      onError('Related fact not found in current data.');
+      return;
+    }
+
+    setProposal({ insightId: insight.insight_id, proposedText: '', loading: true });
+
+    try {
+      const oldText = parentFact.versions && parentFact.versions.length > 0
+        ? parentFact.versions[parentFact.versions.length - 1].text
+        : '';
+
+      const response = await fetch(`${API_URL}/propose/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entity_type: 'insight',
+          current_text: insight.text,
+          upstream_change: {
+            old_text: oldText,
+            new_text: parentFact.text,
+            entity_type: 'fact',
+          },
+          goal: data.goal,
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json();
+        onError(body.error || 'Update proposal failed');
+        setProposal(null);
+        return;
+      }
+
+      const result = await response.json();
+      setProposal({ insightId: insight.insight_id, proposedText: result.proposed_text || '', loading: false });
+    } catch (err: any) {
+      onError(err.message || 'Update proposal request failed');
+      setProposal(null);
+    }
+  };
+
+  const handleAcceptProposal = async (text: string) => {
+    if (!proposal) return;
+    const insight = data.insights.find(i => i.insight_id === proposal.insightId);
+    if (!insight) return;
+
+    const versioned = createNewVersion(insight, text) as InsightType;
+    let updatedData: DiscoveryData = {
+      ...data,
+      insights: data.insights.map(i =>
+        i.insight_id === proposal.insightId ? versioned : i
+      ),
+    };
+    updatedData = clearStatus(updatedData, 'insight', proposal.insightId);
+
+    const children = getDirectChildren('insight', proposal.insightId, updatedData);
+    const { ids: impactedIds, usedFallback } = await checkImpact(insight.text, text, children, backendAvailable);
+    const { data: propagatedData, impactedCount } = propagateImpact(
+      updatedData,
+      'insight',
+      proposal.insightId,
+      'edited',
+      impactedIds,
+    );
+    setData(propagatedData);
+    const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
+    onInfo(`Accepted proposal as v${versioned.version}. ${impactedCount} downstream item(s) marked for review.${fallbackHint}`);
+    setProposal(null);
+  };
+
+  const handleRejectProposal = () => {
+    setProposal(null);
   };
 
   const deleteInsight = (insightId: string) => {
@@ -131,12 +298,30 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     }) : prevState);
   }, [setData]);
 
-  const handleAcceptRecommendation = (suggestion: { text: string; related_insight_ids?: string[] }) => {
+  const handleAcceptRecommendation = async (suggestion: { text: string; related_insight_ids?: string[] }) => {
     const relatedInsights = suggestion.related_insight_ids && suggestion.related_insight_ids.length > 0
       ? suggestion.related_insight_ids
       : Array.from(selectedInsightIds);
+    const newRecommendation: RecommendationType = {
+      recommendation_id: Math.random().toString(16).slice(2),
+      text: suggestion.text,
+      related_insights: relatedInsights,
+    };
+    const duplicates = await findDuplicates(
+      suggestion.text,
+      data.recommendations.map(r => ({ id: r.recommendation_id, text: r.text })),
+      backendAvailable,
+    );
+    if (duplicates.length > 0) {
+      recommendationMergeDialog.show(newRecommendation, duplicates[0]);
+      return;
+    }
     addRecommendationToData(suggestion.text, relatedInsights);
   };
+
+  const addRecommendationFromMerge = useCallback((rec: RecommendationType) => {
+    setData(prev => prev ? { ...prev, recommendations: [...prev.recommendations, rec] } : prev);
+  }, [setData]);
 
   const handleCloseSuggestions = useCallback(() => {
     setRecommendationSuggestionData(null);
@@ -197,6 +382,9 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
             handleMouseLeave={() => handleMouseLeave("insight", insight.insight_id, data)}
             openEditModal={openEditModal}
             onViewTraceability={() => onViewTraceability("insight", insight.insight_id)}
+            onClearStatus={() => handleClearStatus(insight.insight_id)}
+            onProposeUpdate={() => handleProposeUpdate(insight)}
+            backendAvailable={backendAvailable}
           >
             <InsightItem insight={insight} />
           </ItemWrapper>
@@ -227,6 +415,50 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
           title="Suggested Recommendations"
           onAccept={(suggestion) => handleAcceptRecommendation(suggestion)}
           onClose={handleCloseSuggestions}
+        />
+      )}
+      {mergeDialog.match && (
+        <MergeDialog
+          isVisible={mergeDialog.visible}
+          newText={mergeDialog.pendingItem?.text || ''}
+          existingItem={mergeDialog.match}
+          onMerge={() => mergeDialog.handleMerge((pending, match) => {
+            setData(prev => prev ? {
+              ...prev,
+              insights: prev.insights.map(i => i.insight_id === match.id
+                ? { ...i, related_facts: Array.from(new Set([...i.related_facts, ...pending.related_facts])) }
+                : i),
+            } : prev);
+          })}
+          onKeepAsVariant={() => mergeDialog.handleKeepAsVariant(addInsightToData)}
+          onForceAdd={() => mergeDialog.handleForceAdd(addInsightToData)}
+          onClose={mergeDialog.reset}
+        />
+      )}
+      <MergeDialog
+        isVisible={recommendationMergeDialog.visible}
+        newText={recommendationMergeDialog.pendingItem?.text || ''}
+        existingItem={recommendationMergeDialog.match || { id: '', text: '', similarity: 0 }}
+        onMerge={() => recommendationMergeDialog.handleMerge((pending, match) => {
+          setData(prev => prev ? {
+            ...prev,
+            recommendations: prev.recommendations.map(r => r.recommendation_id === match.id
+              ? { ...r, related_insights: Array.from(new Set([...r.related_insights, ...pending.related_insights])) }
+              : r),
+          } : prev);
+        })}
+        onKeepAsVariant={() => recommendationMergeDialog.handleKeepAsVariant(addRecommendationFromMerge)}
+        onForceAdd={() => recommendationMergeDialog.handleForceAdd(addRecommendationFromMerge)}
+        onClose={recommendationMergeDialog.reset}
+      />
+      {proposal && (
+        <ProposalPanel
+          currentText={data.insights.find(i => i.insight_id === proposal.insightId)?.text || ''}
+          proposedText={proposal.proposedText}
+          loading={proposal.loading}
+          overlay
+          onAccept={handleAcceptProposal}
+          onReject={handleRejectProposal}
         />
       )}
     </div>

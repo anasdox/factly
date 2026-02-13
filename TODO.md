@@ -1,40 +1,38 @@
 # TODO
 
 ## Intent
-Deliver M13: Auto Outputs Formulation — AI-assisted formulation of structured outputs from selected recommendations, with selection mechanism reusable for manual creation.
+Deliver M14: Staleness Propagation on Edit + M15: Semantic Deduplication + AI-Assisted Update Proposals — complete update lifecycle with immutable versioning, status-based impact propagation, semantic deduplication, and AI-proposed downstream updates.
 
 ## Preconditions
-- M1–M12: Delivered (M12 demo validated 2026-02-07)
-- ROADMAP.md updated with M12 delivered status
+- M1–M13: Delivered (M13 demo validated 2026-02-08)
+- ROADMAP.md updated with M13 delivered status
 
 ## Tasks
-- [x] Write functional spec for M13 (16 FSIDs, with output types)
-- [x] UoR validation of functional spec
-- [x] Write technical spec for M13 (TS-AutoOutputsFormulation + POST /extract/outputs + output types)
-- [x] UoR validation of technical spec
-- [x] Write acceptance tests for M13 (14 backend HTTP + 12 frontend todo)
-- [x] UoR validation of acceptance tests
-- [x] Implement M13 backend
-- [x] Implement M13 frontend
-- [x] All M13 acceptance tests pass (16/16 suites, 63/63 tests)
-- [x] Refactoring phase
-- [x] Demo and user validation
-
-## Hotfixes
-- [x] Retry OpenAI chat completions with `max_completion_tokens` when `max_tokens` is unsupported
-- [x] Prevent guided tour tooltip from covering column headers
-- [x] Keep guided tour tooltip from covering suggestions panel
+- [x] Write functional specs for M14+M15 (52 scenarios: staleness-propagation, ai-assisted-updates, semantic-deduplication)
+- [x] UoR validation of functional specs
+- [x] Write technical specs for M14+M15 (TS-StalenessPropagation, TS-AiAssistedUpdates, TS-SemanticDeduplication)
+- [x] UoR validation of technical specs
+- [x] Create IMPLEMENTATION_PLAN.md (14 slices, 3 cross-feature dependencies)
+- [x] Write acceptance tests for M14+M15 (3 test files: staleness-propagation, ai-assisted-updates, semantic-deduplication)
+- [x] UoR validation of implementation plan + acceptance tests
+- [x] Implement M14+M15
+- [x] All acceptance tests pass (38/38 M14+M15, 101/101 full suite)
+- [x] Refactoring phase (ProposalPanel extraction, useMergeDialog hook, type safety fixes, backend validation helpers, constants, CSS standardization)
+- [ ] Demo and user validation
 
 ## Validation
 - All acceptance tests pass
 - TypeScript compiles cleanly (frontend + backend)
 
 ## Done when
-- Analyst can select 1+ recommendations in the Recommendations column
-- Selected recommendations can be used to trigger AI output formulation via LLM
-- Selected recommendations can be used to pre-fill related_recommendations when creating an output manually
-- Formulated outputs appear as suggestions the analyst can accept, edit, or reject
-- Accepted outputs are added to the pipeline with related_recommendations linked
-- No output enters the pipeline without explicit analyst validation
+- Editing an upstream entity creates a new version with history preserved
+- Downstream entities are marked with appropriate status (needs_review, needs_refresh, unsupported, weak, risky) based on the propagation matrix
+- Visual indicators (status chip, version badge, stale border) show on affected items
+- Analyst can confirm-valid to clear status, or trigger AI-assisted update proposals
+- Backend AI proposes updated text for stale downstream items based on the change
+- Analyst validates, edits, or rejects AI-proposed updates before they enter the pipeline
+- Adding or accepting an entity triggers deduplication check (LLM when backend available, trigram fallback when offline)
+- Merge dialog allows merge, keep-as-variant, or force-add for detected duplicates
+- On-demand "Detect Duplicates" per column sends items to LLM for semantic grouping
 - All CI gates green
 - User validation complete

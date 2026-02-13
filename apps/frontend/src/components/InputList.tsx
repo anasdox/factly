@@ -6,8 +6,13 @@ import ItemWrapper from './ItemWrapper';
 import InputModal from './InputModal';
 import FactModal from './FactModal';
 import SuggestionsPanel from './SuggestionsPanel';
+import MergeDialog from './MergeDialog';
 import { useItemSelection } from '../hooks/useItemSelection';
+import { useMergeDialog } from '../hooks/useMergeDialog';
 import { API_URL } from '../config';
+import { createNewVersion, propagateImpact, clearStatus, getDirectChildren } from '../lib';
+import { findDuplicates } from '../dedup';
+import { checkImpact } from '../impact';
 
 
 type Props = {
@@ -17,6 +22,8 @@ type Props = {
   handleMouseEnter: (entityType: string, entityId: string, data: DiscoveryData) => void;
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
   onError: (msg: string) => void;
+  onInfo: (msg: string) => void;
+  onWaiting: (msg: string) => void;
   backendAvailable: boolean;
   onViewTraceability: (entityType: string, entityId: string) => void;
 };
@@ -25,7 +32,7 @@ type FactSuggestionData = {
   suggestions: { text: string; source_excerpt?: string; inputId: string }[];
 };
 
-const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, backendAvailable, onViewTraceability }) => {
+const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability }) => {
 
   const [isInputDialogVisible, setIsInputDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -42,6 +49,9 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
   const [suggestionData, setSuggestionData] = useState<FactSuggestionData | null>(null);
   const [isFactModalVisible, setIsFactModalVisible] = useState(false);
 
+  // Dedup merge dialog for accepted suggestions
+  const suggestionMergeDialog = useMergeDialog<FactType>();
+
   const openAddModal = () => {
     setModalMode('add');
     setEditingInput(null);
@@ -54,7 +64,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
     setIsInputDialogVisible(true);
   };
 
-  const saveInput = (inputData: InputType) => {
+  const saveInput = async (inputData: InputType) => {
     if (modalMode === 'add') {
       const newInput: InputType = {
         input_id: Math.random().toString(16).slice(2),
@@ -62,19 +72,38 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
         type: inputData.type,
         url: inputData.url,
         text: inputData.text,
+        version: 1,
+        status: 'draft',
+        created_at: new Date().toISOString(),
       };
       setData((prevState) => prevState ? ({
         ...prevState,
         inputs: [...prevState.inputs, newInput]
       }) : prevState);
     } else if (modalMode === 'edit' && inputData.input_id) {
-      const updatedInputs = data.inputs.map((input) =>
-        input.input_id === inputData.input_id ? { ...input, ...inputData } : input
-      );
-      setData((prevState) => prevState ? ({
-        ...prevState,
-        inputs: updatedInputs
-      }) : prevState);
+      const existing = data.inputs.find(i => i.input_id === inputData.input_id);
+      if (existing && existing.text !== inputData.text) {
+          onWaiting('Creating new version and analyzing impact on related facts...');
+          const versioned = createNewVersion(existing, inputData.text || '') as InputType;
+          const updated = { ...versioned, ...inputData, text: versioned.text, version: versioned.version, status: versioned.status, created_at: versioned.created_at, versions: versioned.versions };
+          const oldText = existing.text || '';
+          const newText = inputData.text || '';
+          const children = getDirectChildren('input', inputData.input_id, data);
+          const { ids: impactedIds, usedFallback } = await checkImpact(oldText, newText, children, backendAvailable);
+          const { data: propagatedData, impactedCount } = propagateImpact(data, 'input', inputData.input_id, 'edited', impactedIds);
+          const updatedInputs = propagatedData.inputs.map(i => i.input_id === inputData.input_id ? updated : i);
+          setData({ ...propagatedData, inputs: updatedInputs });
+          const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
+          onInfo(`Updated to v${updated.version}. ${impactedCount} downstream item(s) marked for review.${fallbackHint}`);
+      } else {
+        const updatedInputs = data.inputs.map((input) =>
+          input.input_id === inputData.input_id ? { ...input, ...inputData } : input
+        );
+        setData((prevState) => prevState ? ({
+          ...prevState,
+          inputs: updatedInputs
+        }) : prevState);
+      }
     }
     setIsInputDialogVisible(false);
   };
@@ -157,10 +186,29 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
     }) : prevState);
   }, [setData]);
 
-  const handleAcceptSuggestion = (suggestion: { text: string; source_excerpt?: string; inputId?: string }) => {
+  const handleAcceptSuggestion = async (suggestion: { text: string; source_excerpt?: string; inputId?: string }) => {
     const relatedInputs = suggestion.inputId ? [suggestion.inputId] : Array.from(selectedInputIds);
+    const newFact: FactType = {
+      fact_id: Math.random().toString(16).slice(2),
+      text: suggestion.text,
+      related_inputs: relatedInputs,
+      source_excerpt: suggestion.source_excerpt,
+    };
+    const duplicates = await findDuplicates(
+      suggestion.text,
+      data.facts.map(f => ({ id: f.fact_id, text: f.text })),
+      backendAvailable,
+    );
+    if (duplicates.length > 0) {
+      suggestionMergeDialog.show(newFact, duplicates[0]);
+      return;
+    }
     addFactToData(suggestion.text, relatedInputs, suggestion.source_excerpt);
   };
+
+  const addFactFromMerge = useCallback((fact: FactType) => {
+    setData(prev => prev ? { ...prev, facts: [...prev.facts, fact] } : prev);
+  }, [setData]);
 
   const handleCloseSuggestions = useCallback(() => {
     setSuggestionData(null);
@@ -176,11 +224,16 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
   };
 
   const deleteInput = (inputId: string) => {
-    const updatedInputs = data.inputs.filter((input) => input.input_id !== inputId);
-    setData((prevState) => prevState ? ({
-      ...prevState,
-        inputs: updatedInputs
-      }) : prevState);
+    const { data: propagatedData, impactedCount } = propagateImpact(data, 'input', inputId, 'archived');
+    const updatedInputs = propagatedData.inputs.map(i =>
+      i.input_id === inputId ? { ...i, status: 'outdated' as EntityStatus } : i
+    );
+    setData({ ...propagatedData, inputs: updatedInputs });
+    onInfo(`Input archived. ${impactedCount} downstream item(s) affected.`);
+  };
+
+  const handleClearStatus = (inputId: string) => {
+    setData((prevState) => prevState ? clearStatus(prevState, 'input', inputId) : prevState);
   };
 
   return (
@@ -229,6 +282,8 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
             handleMouseLeave={() => handleMouseLeave("input", input.input_id, data)}
             openEditModal={openEditModal}
             onViewTraceability={() => onViewTraceability("input", input.input_id)}
+            onClearStatus={() => handleClearStatus(input.input_id)}
+            backendAvailable={backendAvailable}
           >
             <InputItem input={input} />
           </ItemWrapper>
@@ -260,6 +315,22 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
           onClose={handleCloseSuggestions}
         />
       )}
+      <MergeDialog
+        isVisible={suggestionMergeDialog.visible}
+        newText={suggestionMergeDialog.pendingItem?.text || ''}
+        existingItem={suggestionMergeDialog.match || { id: '', text: '', similarity: 0 }}
+        onMerge={() => suggestionMergeDialog.handleMerge((pending, match) => {
+          setData(prev => prev ? {
+            ...prev,
+            facts: prev.facts.map(f => f.fact_id === match.id
+              ? { ...f, related_inputs: Array.from(new Set([...f.related_inputs, ...pending.related_inputs])) }
+              : f),
+          } : prev);
+        })}
+        onKeepAsVariant={() => suggestionMergeDialog.handleKeepAsVariant(addFactFromMerge)}
+        onForceAdd={() => suggestionMergeDialog.handleForceAdd(addFactFromMerge)}
+        onClose={suggestionMergeDialog.reset}
+      />
     </div>
   );
 };

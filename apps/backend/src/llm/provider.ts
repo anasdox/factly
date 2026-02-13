@@ -1,7 +1,7 @@
 import { AnthropicProvider } from './anthropic-provider';
 import { OpenAICompatibleProvider } from './openai-compatible-provider';
 import { OpenAIProvider } from './openai-provider';
-import { ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext } from './prompts';
+import { ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult } from './prompts';
 
 export type { OutputTraceabilityContext };
 
@@ -10,6 +10,10 @@ export interface LLMProvider {
   extractInsights(facts: string[], goal: string): Promise<ExtractedInsight[]>;
   extractRecommendations(insights: string[], goal: string): Promise<ExtractedRecommendation[]>;
   formulateOutputs(recommendations: string[], goal: string, outputType: string, context?: OutputTraceabilityContext): Promise<string[]>;
+  checkDuplicates(text: string, candidates: { id: string; text: string }[]): Promise<DedupResult[]>;
+  scanDuplicates(items: { id: string; text: string }[]): Promise<DedupGroup[]>;
+  proposeUpdate(entityType: string, currentText: string, upstreamOldText: string, upstreamNewText: string, upstreamEntityType: string, goal: string, outputType?: string): Promise<UpdateProposal>;
+  checkImpact(oldText: string, newText: string, children: { id: string; text: string }[]): Promise<ImpactCheckResult[]>;
 }
 
 export function createProvider(): LLMProvider | null {

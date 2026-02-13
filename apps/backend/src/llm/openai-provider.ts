@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { LLMProvider, OutputTraceabilityContext } from './provider';
-import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, ExtractedFact, ExtractedInsight, ExtractedRecommendation } from './prompts';
+import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseImpactCheckResult, ExtractedFact, ExtractedInsight, ExtractedRecommendation, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult } from './prompts';
 
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;
@@ -117,5 +117,61 @@ export class OpenAIProvider implements LLMProvider {
     });
 
     return parseStringArray(this.extractText(response));
+  }
+
+  async checkDuplicates(text: string, candidates: { id: string; text: string }[]): Promise<DedupResult[]> {
+    const response = await this.createChatCompletion({
+      model: this.model,
+      temperature: 0.1,
+      messages: [
+        { role: 'system', content: DEDUP_CHECK_SYSTEM_PROMPT },
+        { role: 'user', content: buildDedupCheckUserContent(text, candidates) },
+      ],
+    });
+
+    return parseDedupCheckResult(this.extractText(response), candidates);
+  }
+
+  async scanDuplicates(items: { id: string; text: string }[]): Promise<DedupGroup[]> {
+    const response = await this.createChatCompletion({
+      model: this.model,
+      temperature: 0.1,
+      messages: [
+        { role: 'system', content: DEDUP_SCAN_SYSTEM_PROMPT },
+        { role: 'user', content: buildDedupScanUserContent(items) },
+      ],
+    });
+
+    return parseDedupScanResult(this.extractText(response), items);
+  }
+
+  async proposeUpdate(entityType: string, currentText: string, upstreamOldText: string, upstreamNewText: string, upstreamEntityType: string, goal: string, outputType?: string): Promise<UpdateProposal> {
+    const systemPrompt = outputType
+      ? `${UPDATE_PROPOSAL_SYSTEM_PROMPT}\n\nThe entity is an output of type "${outputType}". Produce the proposed_text in professional Markdown format.`
+      : UPDATE_PROPOSAL_SYSTEM_PROMPT;
+
+    const response = await this.createChatCompletion({
+      model: this.model,
+      temperature: 0.3,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: buildUpdateProposalUserContent(entityType, currentText, upstreamOldText, upstreamNewText, upstreamEntityType, goal) },
+      ],
+    });
+
+    return parseUpdateProposal(this.extractText(response));
+  }
+
+  async checkImpact(oldText: string, newText: string, children: { id: string; text: string }[]): Promise<ImpactCheckResult[]> {
+    const response = await this.createChatCompletion({
+      model: this.model,
+      temperature: 0.1,
+      messages: [
+        { role: 'system', content: IMPACT_CHECK_SYSTEM_PROMPT },
+        { role: 'user', content: buildImpactCheckUserContent(oldText, newText, children) },
+      ],
+    });
+
+    return parseImpactCheckResult(this.extractText(response), children);
   }
 }

@@ -13,6 +13,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { createProvider, LLMProvider, OutputTraceabilityContext } from './llm/provider';
 import { VALID_OUTPUT_TYPES, ExtractedFact } from './llm/prompts';
+
+const VALID_UPDATE_ENTITY_TYPES = ['fact', 'insight', 'recommendation', 'output'];
 import { extractTextFromUrl, WebScraperError } from './web-scraper';
 
 const dataDir = path.join(__dirname, '..', 'data');
@@ -259,6 +261,128 @@ app.post('/extract/outputs', async (req, res, next) => {
   }
 });
 
+// ── Deduplication endpoints ──
+
+app.post('/dedup/check', async (req, res, next) => {
+  try {
+    const validation = validateDedupCheckRequest(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    if (!llmProvider) {
+      return res.status(503).json({ error: 'Extraction service not configured' });
+    }
+
+    const { text, candidates } = req.body;
+    logger.info(`Checking duplicates for text against ${candidates.length} candidates`);
+
+    let duplicates;
+    try {
+      duplicates = await llmProvider.checkDuplicates(text, candidates);
+    } catch (err: any) {
+      return handleLLMError(err, res);
+    }
+
+    res.json({ duplicates });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/dedup/scan', async (req, res, next) => {
+  try {
+    const validation = validateDedupScanRequest(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    if (!llmProvider) {
+      return res.status(503).json({ error: 'Extraction service not configured' });
+    }
+
+    const { items } = req.body;
+    logger.info(`Scanning ${items.length} items for duplicate groups`);
+
+    let groups;
+    try {
+      groups = await llmProvider.scanDuplicates(items);
+    } catch (err: any) {
+      return handleLLMError(err, res);
+    }
+
+    res.json({ groups });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── Impact check endpoint ──
+
+app.post('/check/impact', async (req, res, next) => {
+  try {
+    const validation = validateImpactCheckRequest(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    if (!llmProvider) {
+      return res.status(503).json({ error: 'Extraction service not configured' });
+    }
+
+    const { old_text, new_text, children } = req.body;
+    logger.info(`Checking impact on ${children.length} children`);
+
+    let impacted;
+    try {
+      impacted = await llmProvider.checkImpact(old_text, new_text, children);
+    } catch (err: any) {
+      return handleLLMError(err, res);
+    }
+
+    res.json({ impacted });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ── Update proposal endpoint ──
+
+app.post('/propose/update', async (req, res, next) => {
+  try {
+    const validation = validateProposeUpdateRequest(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    if (!llmProvider) {
+      return res.status(503).json({ error: 'Extraction service not configured' });
+    }
+
+    const { entity_type, current_text, upstream_change, goal, output_type } = req.body;
+    logger.info(`Proposing update for ${entity_type}`);
+
+    let proposal;
+    try {
+      proposal = await llmProvider.proposeUpdate(
+        entity_type,
+        current_text,
+        upstream_change.old_text,
+        upstream_change.new_text,
+        upstream_change.entity_type,
+        goal,
+        output_type,
+      );
+    } catch (err: any) {
+      return handleLLMError(err, res);
+    }
+
+    res.json(proposal);
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.get('/status', (req, res) => {
   const status = Array.from(subscribers.entries()).reduce((prev: any, [roomId, sockets]) => {
     prev[roomId] = sockets.size;
@@ -433,23 +557,62 @@ const isRoomValid = (roomId: string): boolean => {
   return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(roomId);
 };
 
-function validateDiscoveryData(body: any): { valid: boolean; error?: string } {
+// ── Validation helpers ──
+
+type ValidationResult = { valid: boolean; error?: string };
+
+const VALID_RESULT: ValidationResult = { valid: true };
+
+function requireBody(body: any): ValidationResult | null {
   if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
     return { valid: false, error: 'Body is required' };
   }
-  const stringFields = ['discovery_id', 'title', 'goal', 'date'];
-  for (const field of stringFields) {
+  return null;
+}
+
+function requireNonEmptyString(body: any, field: string): ValidationResult | null {
+  if (typeof body[field] !== 'string' || body[field].length === 0) {
+    return { valid: false, error: `Field "${field}" is required and must be a non-empty string` };
+  }
+  return null;
+}
+
+function requireNonEmptyArray(body: any, field: string, minLength = 1): ValidationResult | null {
+  if (!Array.isArray(body[field]) || body[field].length < minLength) {
+    const suffix = minLength > 1 ? ` with at least ${minLength} elements` : '';
+    return { valid: false, error: `Field "${field}" is required and must be a non-empty array${suffix}` };
+  }
+  return null;
+}
+
+function validateArrayItems(items: any[], idField: string, label: string): ValidationResult | null {
+  for (const item of items) {
+    if (typeof item[idField] !== 'string' || item[idField].length === 0) {
+      return { valid: false, error: `Each ${label} must have a non-empty "${idField}" string` };
+    }
+    if (typeof item.text !== 'string' || item.text.length === 0) {
+      return { valid: false, error: `Each ${label} must have a non-empty "text" string` };
+    }
+  }
+  return null;
+}
+
+// ── Request validators ──
+
+function validateDiscoveryData(body: any): ValidationResult {
+  const bodyErr = requireBody(body);
+  if (bodyErr) return bodyErr;
+  for (const field of ['discovery_id', 'title', 'goal', 'date']) {
     if (typeof body[field] !== 'string') {
       return { valid: false, error: `Field "${field}" is required and must be a string` };
     }
   }
-  const arrayFields = ['inputs', 'facts', 'insights', 'recommendations', 'outputs'];
-  for (const field of arrayFields) {
+  for (const field of ['inputs', 'facts', 'insights', 'recommendations', 'outputs']) {
     if (!Array.isArray(body[field])) {
       return { valid: false, error: `Field "${field}" is required and must be an array` };
     }
   }
-  return { valid: true };
+  return VALID_RESULT;
 }
 
 function validateUpdateBody(body: any): { valid: boolean; error?: string } {
@@ -468,88 +631,114 @@ function validateUpdateBody(body: any): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
-function validateExtractionRequest(body: any): { valid: boolean; error?: string } {
-  if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
-    return { valid: false, error: 'Body is required' };
-  }
+function validateExtractionRequest(body: any): ValidationResult {
+  const bodyErr = requireBody(body);
+  if (bodyErr) return bodyErr;
   const hasText = typeof body.input_text === 'string' && body.input_text.length > 0;
   const hasUrl = typeof body.input_url === 'string' && body.input_url.length > 0;
   if (!hasText && !hasUrl) {
     return { valid: false, error: 'Either "input_text" or "input_url" must be a non-empty string' };
   }
-  if (typeof body.goal !== 'string' || body.goal.length === 0) {
-    return { valid: false, error: 'Field "goal" is required and must be a non-empty string' };
-  }
-  if (typeof body.input_id !== 'string' || body.input_id.length === 0) {
-    return { valid: false, error: 'Field "input_id" is required and must be a non-empty string' };
-  }
-  return { valid: true };
+  return requireNonEmptyString(body, 'goal') || requireNonEmptyString(body, 'input_id') || VALID_RESULT;
 }
 
-function validateInsightsExtractionRequest(body: any): { valid: boolean; error?: string } {
-  if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
-    return { valid: false, error: 'Body is required' };
-  }
-  if (!Array.isArray(body.facts) || body.facts.length === 0) {
-    return { valid: false, error: 'Field "facts" is required and must be a non-empty array' };
-  }
-  for (const fact of body.facts) {
-    if (typeof fact.fact_id !== 'string' || fact.fact_id.length === 0) {
-      return { valid: false, error: 'Each fact must have a non-empty "fact_id" string' };
-    }
-    if (typeof fact.text !== 'string' || fact.text.length === 0) {
-      return { valid: false, error: 'Each fact must have a non-empty "text" string' };
-    }
-  }
-  if (typeof body.goal !== 'string' || body.goal.length === 0) {
-    return { valid: false, error: 'Field "goal" is required and must be a non-empty string' };
-  }
-  return { valid: true };
+function validateInsightsExtractionRequest(body: any): ValidationResult {
+  const bodyErr = requireBody(body);
+  if (bodyErr) return bodyErr;
+  const arrErr = requireNonEmptyArray(body, 'facts');
+  if (arrErr) return arrErr;
+  const itemErr = validateArrayItems(body.facts, 'fact_id', 'fact');
+  if (itemErr) return itemErr;
+  return requireNonEmptyString(body, 'goal') || VALID_RESULT;
 }
 
-function validateRecommendationsExtractionRequest(body: any): { valid: boolean; error?: string } {
-  if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
-    return { valid: false, error: 'Body is required' };
-  }
-  if (!Array.isArray(body.insights) || body.insights.length === 0) {
-    return { valid: false, error: 'Field "insights" is required and must be a non-empty array' };
-  }
-  for (const insight of body.insights) {
-    if (typeof insight.insight_id !== 'string' || insight.insight_id.length === 0) {
-      return { valid: false, error: 'Each insight must have a non-empty "insight_id" string' };
-    }
-    if (typeof insight.text !== 'string' || insight.text.length === 0) {
-      return { valid: false, error: 'Each insight must have a non-empty "text" string' };
-    }
-  }
-  if (typeof body.goal !== 'string' || body.goal.length === 0) {
-    return { valid: false, error: 'Field "goal" is required and must be a non-empty string' };
-  }
-  return { valid: true };
+function validateRecommendationsExtractionRequest(body: any): ValidationResult {
+  const bodyErr = requireBody(body);
+  if (bodyErr) return bodyErr;
+  const arrErr = requireNonEmptyArray(body, 'insights');
+  if (arrErr) return arrErr;
+  const itemErr = validateArrayItems(body.insights, 'insight_id', 'insight');
+  if (itemErr) return itemErr;
+  return requireNonEmptyString(body, 'goal') || VALID_RESULT;
 }
 
-function validateOutputsFormulationRequest(body: any): { valid: boolean; error?: string } {
-  if (!body || typeof body !== 'object' || Object.keys(body).length === 0) {
-    return { valid: false, error: 'Body is required' };
-  }
-  if (!Array.isArray(body.recommendations) || body.recommendations.length === 0) {
-    return { valid: false, error: 'Field "recommendations" is required and must be a non-empty array' };
-  }
-  for (const rec of body.recommendations) {
-    if (typeof rec.recommendation_id !== 'string' || rec.recommendation_id.length === 0) {
-      return { valid: false, error: 'Each recommendation must have a non-empty "recommendation_id" string' };
-    }
-    if (typeof rec.text !== 'string' || rec.text.length === 0) {
-      return { valid: false, error: 'Each recommendation must have a non-empty "text" string' };
-    }
-  }
-  if (typeof body.goal !== 'string' || body.goal.length === 0) {
-    return { valid: false, error: 'Field "goal" is required and must be a non-empty string' };
-  }
+function validateOutputsFormulationRequest(body: any): ValidationResult {
+  const bodyErr = requireBody(body);
+  if (bodyErr) return bodyErr;
+  const arrErr = requireNonEmptyArray(body, 'recommendations');
+  if (arrErr) return arrErr;
+  const itemErr = validateArrayItems(body.recommendations, 'recommendation_id', 'recommendation');
+  if (itemErr) return itemErr;
+  const goalErr = requireNonEmptyString(body, 'goal');
+  if (goalErr) return goalErr;
   if (typeof body.output_type !== 'string' || !VALID_OUTPUT_TYPES.includes(body.output_type)) {
     return { valid: false, error: `Field "output_type" must be one of: ${VALID_OUTPUT_TYPES.join(', ')}` };
   }
-  return { valid: true };
+  return VALID_RESULT;
+}
+
+function validateDedupCheckRequest(body: any): ValidationResult {
+  const bodyErr = requireBody(body);
+  if (bodyErr) return bodyErr;
+  const textErr = requireNonEmptyString(body, 'text');
+  if (textErr) return textErr;
+  const arrErr = requireNonEmptyArray(body, 'candidates');
+  if (arrErr) return arrErr;
+  const itemErr = validateArrayItems(body.candidates, 'id', 'candidate');
+  if (itemErr) return itemErr;
+  return VALID_RESULT;
+}
+
+function validateDedupScanRequest(body: any): ValidationResult {
+  const bodyErr = requireBody(body);
+  if (bodyErr) return bodyErr;
+  const arrErr = requireNonEmptyArray(body, 'items', 2);
+  if (arrErr) return arrErr;
+  const itemErr = validateArrayItems(body.items, 'id', 'item');
+  if (itemErr) return itemErr;
+  return VALID_RESULT;
+}
+
+function validateImpactCheckRequest(body: any): ValidationResult {
+  const bodyErr = requireBody(body);
+  if (bodyErr) return bodyErr;
+  const oldErr = requireNonEmptyString(body, 'old_text');
+  if (oldErr) return oldErr;
+  const newErr = requireNonEmptyString(body, 'new_text');
+  if (newErr) return newErr;
+  const arrErr = requireNonEmptyArray(body, 'children');
+  if (arrErr) return arrErr;
+  const itemErr = validateArrayItems(body.children, 'id', 'child');
+  if (itemErr) return itemErr;
+  return VALID_RESULT;
+}
+
+function validateProposeUpdateRequest(body: any): ValidationResult {
+  const bodyErr = requireBody(body);
+  if (bodyErr) return bodyErr;
+  if (typeof body.entity_type !== 'string' || !VALID_UPDATE_ENTITY_TYPES.includes(body.entity_type)) {
+    return { valid: false, error: `Field "entity_type" must be one of: ${VALID_UPDATE_ENTITY_TYPES.join(', ')}` };
+  }
+  const textErr = requireNonEmptyString(body, 'current_text');
+  if (textErr) return textErr;
+  if (!body.upstream_change || typeof body.upstream_change !== 'object') {
+    return { valid: false, error: 'Field "upstream_change" is required and must be an object' };
+  }
+  if (typeof body.upstream_change.old_text !== 'string') {
+    return { valid: false, error: 'Field "upstream_change.old_text" is required and must be a string' };
+  }
+  if (typeof body.upstream_change.new_text !== 'string') {
+    return { valid: false, error: 'Field "upstream_change.new_text" is required and must be a string' };
+  }
+  if (typeof body.upstream_change.entity_type !== 'string') {
+    return { valid: false, error: 'Field "upstream_change.entity_type" is required and must be a string' };
+  }
+  const goalErr = requireNonEmptyString(body, 'goal');
+  if (goalErr) return goalErr;
+  if (body.entity_type === 'output' && typeof body.output_type === 'string' && !VALID_OUTPUT_TYPES.includes(body.output_type)) {
+    return { valid: false, error: `Field "output_type" must be one of: ${VALID_OUTPUT_TYPES.join(', ')}` };
+  }
+  return VALID_RESULT;
 }
 
 // Global error middleware

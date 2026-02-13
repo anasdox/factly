@@ -185,6 +185,126 @@ export function parseInsightArray(raw: string): ExtractedInsight[] {
     }));
 }
 
+// ── Deduplication prompts ──
+
+export const DEDUP_CHECK_SYSTEM_PROMPT = `You are a semantic similarity assistant. Your role is to identify which candidate texts are semantically equivalent to a given text, even if worded differently.
+
+Rules:
+- Compare the given text against each numbered candidate.
+- Two texts are semantically equivalent if they convey the same core meaning, even with different wording, structure, or level of detail.
+- Only return candidates with similarity above 0.85 (very high semantic overlap).
+- For each match, provide a similarity score (0.0–1.0) and a brief explanation of why they are equivalent.
+- Return a JSON array of objects, each with "index" (1-based candidate number), "similarity" (number), and "explanation" (string).
+- If no candidates are semantically equivalent, return an empty array.
+
+Respond ONLY with a valid JSON array. No explanation, no markdown.
+Example: [{"index": 1, "similarity": 0.92, "explanation": "Both state that revenue grew 15% in Q3"}]`;
+
+export const DEDUP_SCAN_SYSTEM_PROMPT = `You are a semantic grouping assistant. Your role is to identify groups of semantically equivalent items from a list.
+
+Rules:
+- Examine all numbered items and group those that convey the same core meaning.
+- Only group items with very high semantic overlap (similarity > 0.85).
+- Each group must contain at least 2 items.
+- Items that are unique (no close match) should not appear in any group.
+- Return a JSON array of group objects, each with "indices" (array of 1-based item numbers) and "explanation" (string describing what they share).
+- If no groups are found, return an empty array.
+
+Respond ONLY with a valid JSON array. No explanation, no markdown.
+Example: [{"indices": [1, 3], "explanation": "Both describe 15% revenue growth in Q3"}]`;
+
+export const UPDATE_PROPOSAL_SYSTEM_PROMPT = `You are an update assistant. Your role is to propose an updated version of a downstream entity after an upstream change in a research discovery pipeline.
+
+Rules:
+- You will receive the current entity text, the upstream change (before and after), and the research goal.
+- Propose an updated version of the entity that is consistent with the new upstream text.
+- Preserve the style, tone, and level of detail of the original entity text.
+- If the entity is still valid despite the upstream change, return the original text unchanged and explain why no update is needed.
+- Return a JSON object with "proposed_text" (string) and "explanation" (string describing what changed and why).
+
+Respond ONLY with a valid JSON object. No explanation outside the JSON, no markdown fences.
+Example: {"proposed_text": "Updated fact text here", "explanation": "Updated to reflect the new data from the upstream source."}`;
+
+export function buildDedupCheckUserContent(text: string, candidates: { id: string; text: string }[]): string {
+  const numbered = candidates.map((c, i) => `${i + 1}. ${c.text}`).join('\n');
+  return `Text to check:\n${text}\n\nCandidates:\n${numbered}`;
+}
+
+export function buildDedupScanUserContent(items: { id: string; text: string }[]): string {
+  return items.map((item, i) => `${i + 1}. ${item.text}`).join('\n');
+}
+
+export function buildUpdateProposalUserContent(
+  entityType: string,
+  currentText: string,
+  upstreamOldText: string,
+  upstreamNewText: string,
+  upstreamEntityType: string,
+  goal: string,
+): string {
+  return `Research goal: ${goal}
+
+The following upstream ${upstreamEntityType} was changed:
+BEFORE: ${upstreamOldText}
+AFTER: ${upstreamNewText}
+
+The following ${entityType} depends on it and may need updating:
+${currentText}
+
+Propose an updated version of this ${entityType} that is consistent with the upstream change.`;
+}
+
+export type DedupResult = { id: string; similarity: number; explanation: string };
+export type DedupGroup = { items: { id: string; text: string }[]; explanation: string };
+export type UpdateProposal = { proposed_text: string; explanation: string };
+export type ImpactCheckResult = { id: string; impacted: boolean; explanation: string };
+
+export function parseDedupCheckResult(raw: string, candidates: { id: string; text: string }[]): DedupResult[] {
+  const cleaned = stripCodeFences(raw);
+  const parsed = JSON.parse(cleaned);
+  if (!Array.isArray(parsed)) return [];
+  return parsed
+    .filter((item: any) => typeof item === 'object' && item !== null && typeof item.index === 'number')
+    .map((item: any) => {
+      const idx = item.index - 1;
+      if (idx < 0 || idx >= candidates.length) return null;
+      return {
+        id: candidates[idx].id,
+        similarity: typeof item.similarity === 'number' ? item.similarity : 0.9,
+        explanation: typeof item.explanation === 'string' ? item.explanation : '',
+      };
+    })
+    .filter((r: DedupResult | null): r is DedupResult => r !== null);
+}
+
+export function parseDedupScanResult(raw: string, items: { id: string; text: string }[]): DedupGroup[] {
+  const cleaned = stripCodeFences(raw);
+  const parsed = JSON.parse(cleaned);
+  if (!Array.isArray(parsed)) return [];
+  return parsed
+    .filter((g: any) => typeof g === 'object' && g !== null && Array.isArray(g.indices) && g.indices.length >= 2)
+    .map((g: any) => ({
+      items: g.indices
+        .filter((idx: number) => idx >= 1 && idx <= items.length)
+        .map((idx: number) => items[idx - 1]),
+      explanation: typeof g.explanation === 'string' ? g.explanation : '',
+    }))
+    .filter((g: DedupGroup) => g.items.length >= 2);
+}
+
+export function parseUpdateProposal(raw: string): UpdateProposal {
+  const cleaned = stripCodeFences(raw);
+  try {
+    const parsed = JSON.parse(cleaned);
+    return {
+      proposed_text: typeof parsed.proposed_text === 'string' ? parsed.proposed_text : cleaned,
+      explanation: typeof parsed.explanation === 'string' ? parsed.explanation : '',
+    };
+  } catch {
+    return { proposed_text: cleaned, explanation: '' };
+  }
+}
+
 export function parseRecommendationArray(raw: string): ExtractedRecommendation[] {
   const cleaned = stripCodeFences(raw);
   const parsed = JSON.parse(cleaned);
@@ -199,4 +319,52 @@ export function parseRecommendationArray(raw: string): ExtractedRecommendation[]
         ? item.source_insights.filter((n: unknown) => typeof n === 'number')
         : [],
     }));
+}
+
+// ── Impact check prompts ──
+
+export const IMPACT_CHECK_SYSTEM_PROMPT = `You are a semantic impact analysis assistant. Your role is to determine which downstream entities are semantically impacted by an upstream text change.
+
+Rules:
+- You will receive the old and new text of an upstream entity, plus a list of candidate downstream entities.
+- First, identify the SPECIFIC semantic difference between BEFORE and AFTER. Focus on what information was added, removed, or modified — ignore unchanged parts.
+- For each candidate, decide whether that specific change affects the candidate's meaning, validity, or accuracy.
+- A candidate is impacted ONLY if the specific information that changed directly relates to what the candidate states or depends on.
+- A candidate is NOT impacted if the changed information is irrelevant to the candidate's content, even if both the candidate and the change come from the same source document.
+- Be precise: if only one data point changed in the upstream text, only candidates that reference or depend on that specific data point are impacted.
+- Do NOT mark a candidate as impacted merely because it originates from the same source — evaluate each candidate independently against the specific change.
+- Return a JSON array of objects, each with "index" (1-based candidate number), "impacted" (boolean), and "explanation" (brief reason).
+- You MUST return one entry per candidate, in order.
+
+Respond ONLY with a valid JSON array. No explanation, no markdown.
+Example: [{"index": 1, "impacted": true, "explanation": "The candidate references the revenue figure that changed"}, {"index": 2, "impacted": false, "explanation": "The candidate discusses market share, unrelated to the change"}]`;
+
+export function buildImpactCheckUserContent(
+  oldText: string,
+  newText: string,
+  children: { id: string; text: string }[],
+): string {
+  const numbered = children.map((c, i) => `${i + 1}. ${c.text}`).join('\n');
+  return `Upstream change:\nBEFORE: ${oldText}\nAFTER: ${newText}\n\nCandidate downstream entities:\n${numbered}`;
+}
+
+export function parseImpactCheckResult(
+  raw: string,
+  children: { id: string; text: string }[],
+): ImpactCheckResult[] {
+  const cleaned = stripCodeFences(raw);
+  const parsed = JSON.parse(cleaned);
+  if (!Array.isArray(parsed)) return children.map(c => ({ id: c.id, impacted: true, explanation: '' }));
+  return parsed
+    .filter((item: any) => typeof item === 'object' && item !== null && typeof item.index === 'number')
+    .map((item: any) => {
+      const idx = item.index - 1;
+      if (idx < 0 || idx >= children.length) return null;
+      return {
+        id: children[idx].id,
+        impacted: item.impacted === true,
+        explanation: typeof item.explanation === 'string' ? item.explanation : '',
+      };
+    })
+    .filter((r: ImpactCheckResult | null): r is ImpactCheckResult => r !== null);
 }

@@ -5,9 +5,15 @@ import { faAdd, faWandMagicSparkles, faLightbulb, faXmark, faSpinner, faCheckDou
 import ItemWrapper from './ItemWrapper';
 import FactModal from './FactModal';
 import InsightModal from './InsightModal';
+import MergeDialog from './MergeDialog';
+import ProposalPanel from './ProposalPanel';
 import SuggestionsPanel from './SuggestionsPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { API_URL } from '../config';
+import { createNewVersion, propagateImpact, clearStatus, getDirectChildren } from '../lib';
+import { findDuplicates } from '../dedup';
+import { checkImpact } from '../impact';
+import { useMergeDialog } from '../hooks/useMergeDialog';
 
 type Props = {
   factRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -16,6 +22,8 @@ type Props = {
   handleMouseEnter: (entityType: string, entityId: string, data: DiscoveryData) => void;
   handleMouseLeave: (entityType: string, entityId: string, data: DiscoveryData) => void;
   onError: (msg: string) => void;
+  onInfo: (msg: string) => void;
+  onWaiting: (msg: string) => void;
   backendAvailable: boolean;
   onViewTraceability: (entityType: string, entityId: string) => void;
 };
@@ -25,7 +33,13 @@ type InsightSuggestionData = {
   factIds: string[];
 };
 
-const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, backendAvailable, onViewTraceability }) => {
+type ProposalState = {
+  factId: string;
+  proposedText: string;
+  loading: boolean;
+};
+
+const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability }) => {
 
   const [isFactDialogVisible, setIsFactDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -42,6 +56,15 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
 
   const [isInsightModalVisible, setIsInsightModalVisible] = useState(false);
 
+  // Dedup / merge dialog state
+  const mergeDialog = useMergeDialog<FactType>();
+
+  // Dedup merge dialog for accepted insight suggestions
+  const insightMergeDialog = useMergeDialog<InsightType>();
+
+  // AI proposal state
+  const [proposal, setProposal] = useState<ProposalState | null>(null);
+
   const openAddModal = () => {
     setModalMode('add');
     setEditingFact(null);
@@ -54,28 +77,69 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     setIsFactDialogVisible(true);
   };
 
-  const saveFact = (factData: FactType) => {
+  const addFactToState = (newFact: FactType) => {
+    setData((prevState) => prevState ? ({
+      ...prevState,
+      facts: [...prevState.facts, newFact]
+    }) : prevState);
+  };
+
+  const saveFact = async (factData: FactType) => {
     if (modalMode === 'add') {
       const newFact: FactType = {
         fact_id: Math.random().toString(16).slice(2),
         text: factData.text,
         related_inputs: factData.related_inputs,
+        version: 1,
+        status: 'draft',
+        created_at: new Date().toISOString(),
       };
-      setData((prevState) => prevState ? ({
-        ...prevState,
-        facts: [...prevState.facts, newFact]
-      }) : prevState);
-    } else if (modalMode === 'edit' && factData.fact_id) {
-      const updatedFacts = data.facts.map((fact) =>
-        fact.fact_id === factData.fact_id ? { ...fact, ...factData } : fact
+
+      // Check for duplicates before adding
+      const duplicates = await findDuplicates(
+        factData.text,
+        data.facts.map(f => ({ id: f.fact_id, text: f.text })),
+        backendAvailable,
       );
-      setData((prevState) => prevState ? ({
-        ...prevState,
-        facts: updatedFacts
-      }) : prevState);
+
+      if (duplicates.length > 0) {
+        mergeDialog.show(newFact, duplicates[0]);
+        setIsFactDialogVisible(false);
+        return;
+      }
+
+      addFactToState(newFact);
+    } else if (modalMode === 'edit' && factData.fact_id) {
+      const existing = data.facts.find(f => f.fact_id === factData.fact_id);
+      const textChanged = existing && existing.text !== factData.text;
+
+      if (textChanged && existing) {
+          onWaiting('Creating new version and analyzing impact on related insights...');
+          const versioned = createNewVersion(existing, factData.text) as FactType;
+          const children = getDirectChildren('fact', factData.fact_id, data);
+          const { ids: impactedIds, usedFallback } = await checkImpact(existing.text, factData.text, children, backendAvailable);
+          const { data: propagated, impactedCount } = propagateImpact(data, 'fact', factData.fact_id, 'edited', impactedIds);
+          const updatedFacts = propagated.facts.map(f =>
+            f.fact_id === factData.fact_id ? { ...versioned, related_inputs: factData.related_inputs } : f
+          );
+          setData({ ...propagated, facts: updatedFacts });
+          const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
+          onInfo(`Updated to v${versioned.version}. ${impactedCount} downstream item(s) marked for review.${fallbackHint}`);
+      } else {
+        // No text change, just update other fields
+        const updatedFacts = data.facts.map((fact) =>
+          fact.fact_id === factData.fact_id ? { ...fact, ...factData } : fact
+        );
+        setData((prevState) => prevState ? ({
+          ...prevState,
+          facts: updatedFacts
+        }) : prevState);
+      }
     }
     setIsFactDialogVisible(false);
   };
+
+  // MergeDialog callbacks use the hook
 
   const deleteFact = (factId: string) => {
     const updatedFacts = data.facts.filter((fact) => fact.fact_id !== factId);
@@ -83,6 +147,85 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
       ...prevState,
       facts: updatedFacts
     }) : prevState);
+  };
+
+  // Clear status (confirm-valid)
+  const handleClearStatus = (factId: string) => {
+    setData(prev => prev ? clearStatus(prev, 'fact', factId) : prev);
+  };
+
+  // AI propose update
+  const handleProposeUpdate = async (fact: FactType) => {
+    const parentInputId = fact.related_inputs[0];
+    if (!parentInputId) {
+      onError('No related input found for this fact.');
+      return;
+    }
+
+    const parentInput = data.inputs.find(i => i.input_id === parentInputId);
+    if (!parentInput) {
+      onError('Related input not found in data.');
+      return;
+    }
+
+    setProposal({ factId: fact.fact_id, proposedText: '', loading: true });
+
+    try {
+      const oldText = parentInput.versions && parentInput.versions.length > 0
+        ? parentInput.versions[parentInput.versions.length - 1].text
+        : '';
+
+      const response = await fetch(`${API_URL}/propose/update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          entity_type: 'fact',
+          current_text: fact.text,
+          upstream_change: {
+            old_text: oldText,
+            new_text: parentInput.text || '',
+            entity_type: 'input',
+          },
+          goal: data.goal,
+        }),
+      });
+
+      if (!response.ok) {
+        const body = await response.json();
+        onError(body.error || 'Proposal request failed');
+        setProposal(null);
+        return;
+      }
+
+      const result = await response.json();
+      setProposal({ factId: fact.fact_id, proposedText: result.proposed_text || result.text || '', loading: false });
+    } catch (err: any) {
+      onError(err.message || 'Proposal request failed');
+      setProposal(null);
+    }
+  };
+
+  const handleAcceptProposal = async (text: string) => {
+    if (!proposal) return;
+    const fact = data.facts.find(f => f.fact_id === proposal.factId);
+    if (!fact) return;
+
+    const versioned = createNewVersion(fact, text) as FactType;
+    const cleared = clearStatus(data, 'fact', proposal.factId);
+    const children = getDirectChildren('fact', proposal.factId, cleared);
+    const { ids: impactedIds, usedFallback } = await checkImpact(fact.text, text, children, backendAvailable);
+    const { data: propagated, impactedCount } = propagateImpact(cleared, 'fact', proposal.factId, 'edited', impactedIds);
+    const updatedFacts = propagated.facts.map(f =>
+      f.fact_id === proposal.factId ? versioned : f
+    );
+    setData({ ...propagated, facts: updatedFacts });
+    const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
+    onInfo(`Updated to v${versioned.version}. ${impactedCount} downstream item(s) marked for review.${fallbackHint}`);
+    setProposal(null);
+  };
+
+  const handleRejectProposal = () => {
+    setProposal(null);
   };
 
   // Generate insights from selected facts
@@ -130,12 +273,30 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     }) : prevState);
   }, [setData]);
 
-  const handleAcceptInsight = (suggestion: { text: string; related_fact_ids?: string[] }) => {
+  const handleAcceptInsight = async (suggestion: { text: string; related_fact_ids?: string[] }) => {
     const relatedFacts = suggestion.related_fact_ids && suggestion.related_fact_ids.length > 0
       ? suggestion.related_fact_ids
       : Array.from(selectedFactIds);
+    const newInsight: InsightType = {
+      insight_id: Math.random().toString(16).slice(2),
+      text: suggestion.text,
+      related_facts: relatedFacts,
+    };
+    const duplicates = await findDuplicates(
+      suggestion.text,
+      data.insights.map(i => ({ id: i.insight_id, text: i.text })),
+      backendAvailable,
+    );
+    if (duplicates.length > 0) {
+      insightMergeDialog.show(newInsight, duplicates[0]);
+      return;
+    }
     addInsightToData(suggestion.text, relatedFacts);
   };
+
+  const addInsightFromMerge = useCallback((insight: InsightType) => {
+    setData(prev => prev ? { ...prev, insights: [...prev.insights, insight] } : prev);
+  }, [setData]);
 
   const handleCloseSuggestions = useCallback(() => {
     setInsightSuggestionData(null);
@@ -196,6 +357,9 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
             handleMouseLeave={() => handleMouseLeave("fact", fact.fact_id, data)}
             openEditModal={openEditModal}
             onViewTraceability={() => onViewTraceability("fact", fact.fact_id)}
+            onClearStatus={() => handleClearStatus(fact.fact_id)}
+            onProposeUpdate={() => handleProposeUpdate(fact)}
+            backendAvailable={backendAvailable}
           >
             <FactItem fact={fact} />
           </ItemWrapper>
@@ -226,6 +390,48 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           title="Suggested Insights"
           onAccept={(suggestion) => handleAcceptInsight(suggestion)}
           onClose={handleCloseSuggestions}
+        />
+      )}
+      <MergeDialog
+        isVisible={mergeDialog.visible}
+        newText={mergeDialog.pendingItem?.text || ''}
+        existingItem={mergeDialog.match || { id: '', text: '', similarity: 0 }}
+        onMerge={() => mergeDialog.handleMerge((pending, match) => {
+          setData(prev => prev ? {
+            ...prev,
+            facts: prev.facts.map(f => f.fact_id === match.id
+              ? { ...f, related_inputs: Array.from(new Set([...f.related_inputs, ...pending.related_inputs])) }
+              : f),
+          } : prev);
+        })}
+        onKeepAsVariant={() => mergeDialog.handleKeepAsVariant(addFactToState)}
+        onForceAdd={() => mergeDialog.handleForceAdd(addFactToState)}
+        onClose={mergeDialog.reset}
+      />
+      <MergeDialog
+        isVisible={insightMergeDialog.visible}
+        newText={insightMergeDialog.pendingItem?.text || ''}
+        existingItem={insightMergeDialog.match || { id: '', text: '', similarity: 0 }}
+        onMerge={() => insightMergeDialog.handleMerge((pending, match) => {
+          setData(prev => prev ? {
+            ...prev,
+            insights: prev.insights.map(i => i.insight_id === match.id
+              ? { ...i, related_facts: Array.from(new Set([...i.related_facts, ...pending.related_facts])) }
+              : i),
+          } : prev);
+        })}
+        onKeepAsVariant={() => insightMergeDialog.handleKeepAsVariant(addInsightFromMerge)}
+        onForceAdd={() => insightMergeDialog.handleForceAdd(addInsightFromMerge)}
+        onClose={insightMergeDialog.reset}
+      />
+      {proposal && (
+        <ProposalPanel
+          currentText={data.facts.find(f => f.fact_id === proposal.factId)?.text || ''}
+          proposedText={proposal.proposedText}
+          loading={proposal.loading}
+          overlay
+          onAccept={handleAcceptProposal}
+          onReject={handleRejectProposal}
         />
       )}
     </div>

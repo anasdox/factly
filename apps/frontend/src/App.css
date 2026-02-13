@@ -479,3 +479,306 @@ dialog label {
 .tour-active dialog[open]::backdrop {
   z-index: 10003 !important;
 }
+
+/* ── Status indicators ── */
+
+.status-chip {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  font-size: 0.65em;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 3;
+}
+
+.status-chip.needs-review { color: var(--color-status-needs-review); border: 1px solid var(--color-status-needs-review); }
+.status-chip.needs-refresh { color: var(--color-status-needs-refresh); border: 1px solid var(--color-status-needs-refresh); }
+.status-chip.unsupported { color: var(--color-status-unsupported); border: 1px solid var(--color-status-unsupported); }
+.status-chip.weak { color: var(--color-status-weak); border: 1px solid var(--color-status-weak); }
+.status-chip.risky { color: var(--color-status-risky); border: 1px solid var(--color-status-risky); }
+.status-chip.outdated { color: var(--text-secondary); border: 1px solid var(--text-secondary); }
+
+.version-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 0.6em;
+  color: var(--text-secondary);
+  font-weight: 600;
+  z-index: 1;
+}
+
+.wrapper[class*="status-"] > .item { padding-top: 1.6em; }
+
+.wrapper.status-needs-review { border-left: 3px solid var(--border-status-needs-review); }
+.wrapper.status-needs-refresh { border-left: 3px solid var(--border-status-needs-refresh); }
+.wrapper.status-unsupported { border-left: 3px solid var(--border-status-unsupported); }
+.wrapper.status-weak { border-left: 3px solid var(--border-status-weak); }
+.wrapper.status-risky { border-left: 3px solid var(--border-status-risky); }
+.wrapper.status-outdated { border-left: 3px solid var(--text-secondary); opacity: 0.6; }
+
+
+/* ── Merge dialog ── */
+
+.merge-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+.merge-dialog {
+  background: var(--bg-modal);
+  border: 1px solid var(--border-dialog);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.merge-dialog h3 {
+  margin-top: 0;
+}
+
+.merge-dialog-comparison {
+  display: flex;
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.merge-dialog-comparison > div {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--bg-item);
+  font-size: 0.85em;
+}
+
+.merge-dialog-comparison > div h4 {
+  margin: 0 0 8px 0;
+  font-size: 0.8em;
+  color: var(--text-secondary);
+}
+
+.merge-dialog-similarity {
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.merge-dialog-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.merge-dialog-actions button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-btn);
+  background: var(--bg-btn);
+  cursor: pointer;
+}
+
+.merge-dialog-actions button:hover {
+  border-color: var(--border-btn-hover);
+}
+
+/* ── Proposal panel ── */
+
+.proposal-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.proposal-panel-overlay > .proposal-panel {
+  width: 800px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.proposal-loading {
+  text-align: center;
+  padding: 1rem;
+}
+
+.proposal-edit-textarea {
+  width: 100%;
+  resize: vertical;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.proposal-panel {
+  background: var(--bg-suggestion-card);
+  border: 1px solid var(--border-suggestion-card);
+  border-radius: 10px;
+  padding: 16px;
+  margin: 8px 5px;
+  width: calc(100% - 10px);
+  box-sizing: border-box;
+}
+
+.proposal-panel h4 {
+  margin: 0 0 12px 0;
+  font-size: 0.85em;
+}
+
+.proposal-comparison {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.proposal-comparison > div {
+  flex: 1;
+  min-width: 0;
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--bg-item);
+  font-size: 0.8em;
+}
+
+.proposal-comparison > div + div {
+  border-left: 1px solid var(--border-color);
+  border-radius: 0;
+}
+
+.proposal-comparison > div label {
+  display: block;
+  font-size: 0.75em;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.proposal-explanation {
+  font-size: 0.75em;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-bottom: 12px;
+}
+
+.proposal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.proposal-actions button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-btn);
+  background: var(--bg-btn);
+  cursor: pointer;
+  font-size: 0.8em;
+}
+
+.proposal-actions button:hover {
+  border-color: var(--border-btn-hover);
+}
+
+/* ── Dedup scan results ── */
+
+.dedup-results-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+.dedup-results-panel {
+  background: var(--bg-modal);
+  border: 1px solid var(--border-dialog);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 700px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.dedup-results-panel h3 {
+  margin-top: 0;
+}
+
+.dedup-group {
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: var(--bg-item);
+}
+
+.dedup-group-header {
+  font-size: 0.85em;
+  margin-bottom: 8px;
+}
+
+.dedup-group ul {
+  list-style: disc;
+  padding-left: 1.5em;
+  margin: 8px 0;
+  font-size: 0.85em;
+}
+
+.dedup-group-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dedup-group-actions button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-btn);
+  background: var(--bg-btn);
+  cursor: pointer;
+  font-size: 0.8em;
+  color: var(--text-primary);
+}
+
+.dedup-group-actions button:hover {
+  border-color: var(--border-btn-hover);
+}
+
+.dedup-results-close {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.dedup-results-close button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-btn);
+  background: var(--bg-btn);
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.dedup-results-close button:hover {
+  border-color: var(--border-btn-hover);
+}
