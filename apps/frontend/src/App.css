@@ -782,3 +782,143 @@ dialog label {
 .dedup-results-close button:hover {
   border-color: var(--border-btn-hover);
 }
+
+/* ── Batch dedup review panel ── */
+
+.batch-dedup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+.batch-dedup-panel {
+  background: var(--bg-modal);
+  border: 1px solid var(--border-dialog);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.batch-dedup-panel h3 {
+  margin-top: 0;
+}
+
+.batch-dedup-loading {
+  font-size: 0.85em;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+.batch-dedup-bulk-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.batch-dedup-bulk-actions button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-btn);
+  background: var(--bg-btn);
+  cursor: pointer;
+  font-size: 0.8em;
+  color: var(--text-primary);
+}
+
+.batch-dedup-bulk-actions button:hover {
+  border-color: var(--border-btn-hover);
+}
+
+.batch-dedup-entry {
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: var(--bg-item);
+}
+
+.batch-dedup-comparison {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.batch-dedup-comparison > div {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--bg-surface, var(--bg-modal));
+  font-size: 0.85em;
+}
+
+.batch-dedup-comparison > div h4 {
+  margin: 0 0 8px 0;
+  font-size: 0.8em;
+  color: var(--text-secondary);
+}
+
+.batch-dedup-similarity {
+  font-size: 0.8em;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.batch-dedup-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.batch-dedup-actions button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-btn);
+  background: var(--bg-btn);
+  cursor: pointer;
+  font-size: 0.8em;
+  color: var(--text-primary);
+}
+
+.batch-dedup-actions button:hover {
+  border-color: var(--border-btn-hover);
+}
+
+.batch-dedup-actions button.selected {
+  background: var(--color-accent);
+  color: var(--bg-page);
+  border-color: var(--color-accent);
+}
+
+.batch-dedup-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.batch-dedup-footer button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-btn);
+  background: var(--bg-btn);
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.batch-dedup-footer button:hover:not(:disabled) {
+  border-color: var(--border-btn-hover);
+}
+
+.batch-dedup-footer button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

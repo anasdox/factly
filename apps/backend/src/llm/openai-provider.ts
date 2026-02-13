@@ -163,15 +163,23 @@ export class OpenAIProvider implements LLMProvider {
   }
 
   async checkImpact(oldText: string, newText: string, children: { id: string; text: string }[]): Promise<ImpactCheckResult[]> {
+    const userContent = buildImpactCheckUserContent(oldText, newText, children);
+    console.log('[impact-check] LLM request user content:', userContent);
+
     const response = await this.createChatCompletion({
       model: this.model,
       temperature: 0.1,
       messages: [
         { role: 'system', content: IMPACT_CHECK_SYSTEM_PROMPT },
-        { role: 'user', content: buildImpactCheckUserContent(oldText, newText, children) },
+        { role: 'user', content: userContent },
       ],
     });
 
-    return parseImpactCheckResult(this.extractText(response), children);
+    const rawText = this.extractText(response);
+    console.log('[impact-check] LLM raw response:', rawText);
+
+    const result = parseImpactCheckResult(rawText, children);
+    console.log('[impact-check] Parsed result:', JSON.stringify(result));
+    return result;
   }
 }

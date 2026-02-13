@@ -332,14 +332,18 @@ app.post('/check/impact', async (req, res, next) => {
 
     const { old_text, new_text, children } = req.body;
     logger.info(`Checking impact on ${children.length} children`);
+    logger.info(`[impact-check] old_text: "${old_text.substring(0, 100)}..." → new_text: "${new_text.substring(0, 100)}..."`);
 
     let impacted;
     try {
       impacted = await llmProvider.checkImpact(old_text, new_text, children);
     } catch (err: any) {
+      logger.error(`[impact-check] LLM call failed:`, err);
       return handleLLMError(err, res);
     }
 
+    const impactedCount = impacted.filter((r: any) => r.impacted).length;
+    logger.info(`[impact-check] Result: ${impactedCount}/${impacted.length} children impacted`);
     res.json({ impacted });
   } catch (err) {
     next(err);

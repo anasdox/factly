@@ -353,13 +353,31 @@ export function parseImpactCheckResult(
   children: { id: string; text: string }[],
 ): ImpactCheckResult[] {
   const cleaned = stripCodeFences(raw);
-  const parsed = JSON.parse(cleaned);
-  if (!Array.isArray(parsed)) return children.map(c => ({ id: c.id, impacted: true, explanation: '' }));
-  return parsed
+  console.log('[impact-check] Cleaned for parsing:', cleaned);
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch (e) {
+    console.error('[impact-check] JSON.parse FAILED on cleaned text — falling back to mark-all. Error:', e);
+    return children.map(c => ({ id: c.id, impacted: true, explanation: 'parse-error-fallback' }));
+  }
+
+  if (!Array.isArray(parsed)) {
+    console.warn('[impact-check] Parsed result is NOT an array — falling back to mark-all. Type:', typeof parsed);
+    return children.map(c => ({ id: c.id, impacted: true, explanation: 'not-array-fallback' }));
+  }
+
+  console.log('[impact-check] Parsed array length:', parsed.length, '/ children count:', children.length);
+
+  const results = parsed
     .filter((item: any) => typeof item === 'object' && item !== null && typeof item.index === 'number')
     .map((item: any) => {
       const idx = item.index - 1;
-      if (idx < 0 || idx >= children.length) return null;
+      if (idx < 0 || idx >= children.length) {
+        console.warn(`[impact-check] Index out of range: ${item.index} (children: ${children.length})`);
+        return null;
+      }
       return {
         id: children[idx].id,
         impacted: item.impacted === true,
@@ -367,4 +385,9 @@ export function parseImpactCheckResult(
       };
     })
     .filter((r: ImpactCheckResult | null): r is ImpactCheckResult => r !== null);
+
+  const impactedCount = results.filter(r => r.impacted).length;
+  console.log(`[impact-check] Final: ${impactedCount}/${results.length} marked as impacted`);
+
+  return results;
 }

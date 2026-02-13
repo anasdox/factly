@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { handleMouseEnter, handleMouseLeave } from '../lib';
 import './GuidedTour.css';
 
 type TourStep = {
   target: string;
   title: string;
   content: string;
-  passiveContent?: string;
   actionRequired: boolean;
   advancesOn?: 'facts' | 'insights' | 'recommendations' | 'outputs';
   interactiveSelector?: string;
@@ -22,15 +20,13 @@ const TOUR_STEPS: TourStep[] = [
   {
     target: '.column.inputs',
     title: 'Step 1: Inputs',
-    content: 'These are your raw sources. You have two survey-related inputs ready to analyze. Let\'s extract facts from the first one.',
-    passiveContent: 'These are your raw sources — texts, URLs, or documents you want to analyze. Each input feeds into the next step.',
+    content: 'These are your raw sources. You have two survey-related inputs ready to analyze. Let\'s extract facts from them.',
     actionRequired: false,
   },
   {
     target: '.column.inputs',
     title: 'Extract Facts',
     content: 'Click on an input to select it, then click "Generate Facts" in the toolbar to extract facts using AI.',
-    passiveContent: 'In this example, facts have already been extracted from the inputs. Hover over an input to see which facts it produced.',
     actionRequired: true,
     advancesOn: 'facts',
     interactiveSelector: '.column.inputs',
@@ -39,7 +35,6 @@ const TOUR_STEPS: TourStep[] = [
     target: '.column.facts',
     title: 'Step 2: Facts',
     content: 'Great! AI extracted verified facts from your input. Each fact links back to its source. Now select all facts and click "Generate Insights".',
-    passiveContent: 'Facts are verified statements extracted from your inputs. Each fact links back to its source. Select facts and click "Generate Insights" to find patterns.',
     actionRequired: true,
     advancesOn: 'insights',
     interactiveSelector: '.column.facts',
@@ -48,7 +43,6 @@ const TOUR_STEPS: TourStep[] = [
     target: '.column.insights',
     title: 'Step 3: Insights',
     content: 'Insights identify patterns across your facts. Now select all insights and click "Generate Recommendations".',
-    passiveContent: 'Insights identify patterns and meaning across multiple facts. Select insights and click "Generate Recommendations" to get action items.',
     actionRequired: true,
     advancesOn: 'recommendations',
     interactiveSelector: '.column.insights',
@@ -57,7 +51,6 @@ const TOUR_STEPS: TourStep[] = [
     target: '.column.recommendations',
     title: 'Step 4: Recommendations',
     content: 'These are concrete action items. Select all recommendations, choose an output type, and click "Formulate Outputs".',
-    passiveContent: 'Recommendations are concrete action items derived from your insights. Select them, choose an output type, and click "Formulate Outputs".',
     actionRequired: true,
     advancesOn: 'outputs',
     interactiveSelector: '.column.recommendations',
@@ -66,7 +59,6 @@ const TOUR_STEPS: TourStep[] = [
     target: '.column.outputs',
     title: 'Step 5: Outputs',
     content: 'Your deliverable is ready! Click on an output to preview it, or hover over items and click the tree icon to explore the full traceability chain.',
-    passiveContent: 'Outputs are your final deliverables — reports, action plans, or briefs. Click on an output to preview it, or hover over any item to see its connections.',
     actionRequired: false,
     interactiveSelector: '.column.outputs',
   },
@@ -79,14 +71,13 @@ const TOUR_STEPS: TourStep[] = [
 ];
 
 type GuidedTourProps = {
-  mode: 'interactive' | 'passive';
   data: DiscoveryData;
   onClose: () => void;
 };
 
 const SPOTLIGHT_PAD = 8;
 
-const GuidedTour: React.FC<GuidedTourProps> = ({ mode, data, onClose }) => {
+const GuidedTour: React.FC<GuidedTourProps> = ({ data, onClose }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
@@ -99,9 +90,8 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ mode, data, onClose }) => {
   });
 
   const step = TOUR_STEPS[currentStep];
-  const isInteractive = mode === 'interactive';
   const isLastStep = currentStep === TOUR_STEPS.length - 1;
-  const nextDisabled = isInteractive && step.actionRequired;
+  const nextDisabled = step.actionRequired;
 
   const positionSpotlight = useCallback(() => {
     const el = document.querySelector(step.target);
@@ -211,9 +201,8 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ mode, data, onClose }) => {
     setTooltipPos({ top: chosen.top, left: chosen.left });
   }, [spotlightRect, currentStep]);
 
-  // Auto-advance when data changes (interactive mode, steps 3-6)
+  // Auto-advance when data changes (e.g. user extracts facts, insights, etc.)
   useEffect(() => {
-    if (!isInteractive) return;
     const prev = prevDataRef.current;
     const stepDef = TOUR_STEPS[currentStep];
 
@@ -233,40 +222,17 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ mode, data, onClose }) => {
       recommendations: data.recommendations.length,
       outputs: data.outputs.length,
     };
-  }, [data, currentStep, isInteractive]);
-
-  // Passive mode: trigger traceability highlighting on relevant steps
-  useEffect(() => {
-    if (isInteractive) return;
-
-    // Steps 3-6 in passive mode: highlight items to show traceability
-    if (currentStep === 2 && data.inputs.length > 0) {
-      handleMouseEnter('input', data.inputs[0].input_id, data);
-      return () => { handleMouseLeave('input', data.inputs[0].input_id, data); };
-    }
-    if (currentStep === 3 && data.facts.length > 0) {
-      handleMouseEnter('fact', data.facts[0].fact_id, data);
-      return () => { handleMouseLeave('fact', data.facts[0].fact_id, data); };
-    }
-    if (currentStep === 4 && data.insights.length > 0) {
-      handleMouseEnter('insight', data.insights[0].insight_id, data);
-      return () => { handleMouseLeave('insight', data.insights[0].insight_id, data); };
-    }
-    if (currentStep === 5 && data.recommendations.length > 0) {
-      handleMouseEnter('recommendation', data.recommendations[0].recommendation_id, data);
-      return () => { handleMouseLeave('recommendation', data.recommendations[0].recommendation_id, data); };
-    }
-  }, [currentStep, isInteractive, data]);
+  }, [data, currentStep]);
 
   // Elevate only the interactive area for the current step
   useEffect(() => {
-    const selector = isInteractive ? step.interactiveSelector : undefined;
+    const selector = step.interactiveSelector;
     if (!selector) return;
     const el = document.querySelector(selector);
     if (!el) return;
     el.classList.add('tour-step-interactive');
     return () => { el.classList.remove('tour-step-interactive'); };
-  }, [currentStep, isInteractive, step.interactiveSelector]);
+  }, [currentStep, step.interactiveSelector]);
 
   const handleNext = () => {
     if (isLastStep) {
@@ -276,7 +242,6 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ mode, data, onClose }) => {
     }
   };
 
-  const content = (!isInteractive && step.passiveContent) ? step.passiveContent : step.content;
   const nextLabel = isLastStep ? 'Finish' : (nextDisabled ? 'Waiting...' : 'Next');
 
   return (
@@ -299,7 +264,7 @@ const GuidedTour: React.FC<GuidedTourProps> = ({ mode, data, onClose }) => {
         style={{ top: tooltipPos.top, left: tooltipPos.left }}
       >
         <div className="tour-tooltip-title">{step.title}</div>
-        <div className="tour-tooltip-content">{content}</div>
+        <div className="tour-tooltip-content">{step.content}</div>
         <div className="tour-tooltip-footer">
           <span className="tour-step-indicator">
             {currentStep + 1} / {TOUR_STEPS.length}
