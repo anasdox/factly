@@ -14,6 +14,7 @@ export interface LLMProvider {
   scanDuplicates(items: { id: string; text: string }[]): Promise<DedupGroup[]>;
   proposeUpdate(entityType: string, currentText: string, upstreamOldText: string, upstreamNewText: string, upstreamEntityType: string, goal: string, outputType?: string): Promise<UpdateProposal>;
   checkImpact(oldText: string, newText: string, children: { id: string; text: string }[]): Promise<ImpactCheckResult[]>;
+  getEmbeddings?(texts: string[]): Promise<number[][]>;
 }
 
 export function createProvider(): LLMProvider | null {
@@ -29,7 +30,7 @@ export function createProvider(): LLMProvider | null {
   }
 
   if (providerName === 'openai') {
-    return new OpenAIProvider(apiKey, process.env.LLM_MODEL);
+    return new OpenAIProvider(apiKey, process.env.LLM_MODEL, process.env.LLM_EMBEDDINGS_MODEL);
   }
 
   if (providerName === 'openai-compatible') {
@@ -37,7 +38,7 @@ export function createProvider(): LLMProvider | null {
     if (!baseUrl) {
       throw new Error('LLM_BASE_URL is required when using the openai-compatible provider');
     }
-    return new OpenAICompatibleProvider(apiKey, baseUrl, process.env.LLM_MODEL);
+    return new OpenAICompatibleProvider(apiKey, baseUrl, process.env.LLM_MODEL, process.env.LLM_EMBEDDINGS_MODEL);
   }
 
   return null;

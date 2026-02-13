@@ -1,7 +1,7 @@
 import { API_URL } from './config';
 
 const TRIGRAM_LENGTH = 3;
-const DEFAULT_DEDUP_THRESHOLD = 0.80;
+const DEFAULT_DEDUP_THRESHOLD = 0.75;
 
 export function canonicalize(text: string): string {
   return text.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();

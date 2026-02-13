@@ -5,11 +5,13 @@ import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTE
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;
   private model: string;
+  private embeddingsModel?: string;
   private readonly maxCompletionTokens = 4096;
 
-  constructor(apiKey: string, model?: string) {
+  constructor(apiKey: string, model?: string, embeddingsModel?: string) {
     this.client = new OpenAI({ apiKey });
     this.model = model || 'gpt-4o';
+    this.embeddingsModel = embeddingsModel;
   }
 
   private extractText(response: OpenAI.Chat.ChatCompletion): string {
@@ -181,5 +183,18 @@ export class OpenAIProvider implements LLMProvider {
     const result = parseImpactCheckResult(rawText, children);
     console.log('[impact-check] Parsed result:', JSON.stringify(result));
     return result;
+  }
+
+  async getEmbeddings(texts: string[]): Promise<number[][]> {
+    if (!this.embeddingsModel) {
+      throw new Error('Embeddings model not configured');
+    }
+    const response = await this.client.embeddings.create({
+      model: this.embeddingsModel,
+      input: texts,
+    });
+    return response.data
+      .sort((a, b) => a.index - b.index)
+      .map((d) => d.embedding);
   }
 }

@@ -18,6 +18,8 @@
   - FS-DedupErrorFallsBackToLocal
   - FS-DedupDisabledForInputs
   - FS-OnDemandDedupDisabledWhenBackendUnavailable
+  - FS-EmbeddingBasedSemanticComparison
+  - FS-EmbeddingFallbackToLlmChat
 
 ## Overview
 
@@ -265,10 +267,59 @@ No dedup check is triggered for Input entities. Inputs are source materials and 
 .dedup-group { /* group of similar items */ }
 ```
 
-## Configuration
+## Embedding-Based Deduplication (Hybrid Mode)
 
-No new environment variables. Reuses existing `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`.
+When an embedding model is configured, the backend uses embedding vectors + cosine similarity for scoring (fast, cheap, consistent) and LLM chat only for generating explanations on matches above the threshold.
+
+### Configuration
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `LLM_EMBEDDINGS_MODEL` | Embedding model name (e.g. `text-embedding-3-small`). Empty = use LLM-chat dedup. | (empty) |
+| `LLM_DEDUP_THRESHOLD` | Cosine similarity threshold for duplicate detection | `0.75` |
+
+### Provider interface
+
+```typescript
+interface LLMProvider {
+  // ... existing methods ...
+  getEmbeddings?(texts: string[]): Promise<number[][]>;
+}
+```
+
+- `getEmbeddings` is optional. Only OpenAI and OpenAI-compatible providers implement it when `LLM_EMBEDDINGS_MODEL` is set.
+- Anthropic provider does not implement `getEmbeddings` (no embeddings API) and falls back to LLM-chat dedup.
+
+### New file: `apps/backend/src/llm/embeddings.ts`
+
+Three exports:
+
+- **`cosineSimilarity(a, b)`** — dot product / (normA * normB)
+- **`embeddingCheckDuplicates(provider, text, candidates, threshold)`**:
+  1. Single embedding API call for `[text, ...candidates]`
+  2. Cosine similarity filter by threshold
+  3. LLM `checkDuplicates()` only for matches (to generate explanations)
+  4. Returns `DedupResult[]` with embedding scores + LLM explanations
+- **`embeddingScanDuplicates(provider, items, threshold)`**:
+  1. Single embedding API call for all items
+  2. Pairwise cosine similarity + union-find grouping
+  3. LLM `scanDuplicates()` per group (to generate explanations)
+  4. Returns `DedupGroup[]`
+
+### Endpoint routing
+
+In `/dedup/check` and `/dedup/scan` handlers:
+```
+if (embeddingsModel && llmProvider.getEmbeddings) → use embedding path
+else → use existing LLM-chat path (unchanged)
+```
+
+### Fallback behavior
+
+- No `LLM_EMBEDDINGS_MODEL` env var → LLM-chat dedup (existing behavior)
+- Anthropic provider → LLM-chat dedup (no `getEmbeddings` method)
+- OpenAI/OpenAI-compatible with `LLM_EMBEDDINGS_MODEL` → embedding-based hybrid dedup
 
 ## Dependencies
 
-No new npm packages. All dedup logic is implemented from scratch (canonicalization, trigram, DJB2 hash).
+No new npm packages. All dedup logic is implemented from scratch (canonicalization, trigram, DJB2 hash, cosine similarity, union-find).

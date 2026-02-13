@@ -197,16 +197,19 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
       source_excerpt: suggestion.source_excerpt,
     };
     dedupQueue.trackStart();
+    onWaiting('Checking for duplicates…');
     const duplicates = await findDuplicates(
       suggestion.text,
       data.facts.map(f => ({ id: f.fact_id, text: f.text })),
       backendAvailable,
     );
     if (duplicates.length > 0) {
+      onInfo('Similar fact found — queued for review.');
       dedupQueue.enqueue(newFact, duplicates[0]);
       return;
     }
     dedupQueue.trackComplete();
+    onInfo('Fact added.');
     addFactToData(suggestion.text, relatedInputs, suggestion.source_excerpt);
   };
 

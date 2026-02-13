@@ -134,6 +134,24 @@ Feature: Semantic Deduplication
     When the backend returns no duplicate groups
     Then a toast notification displays "No duplicates detected in Insights."
 
+  # ── Embedding-based deduplication ──
+
+  @fsid:FS-EmbeddingBasedSemanticComparison
+  Scenario: Backend uses embeddings for semantic deduplication when configured
+    Given the backend is available
+    And an embedding model is configured
+    When a duplicate check is triggered for a new Fact
+    Then the system generates embedding vectors for the new text and existing Fact texts
+    And compares them using cosine similarity
+    And returns duplicates above the similarity threshold with LLM-generated explanations
+
+  @fsid:FS-EmbeddingFallbackToLlmChat
+  Scenario: Backend falls back to LLM chat when embeddings are not available
+    Given the backend is available
+    And no embedding model is configured
+    When a duplicate check is triggered
+    Then the system uses LLM chat-based semantic comparison as before
+
   # ── Error handling ──
 
   @fsid:FS-DedupErrorFallsBackToLocal

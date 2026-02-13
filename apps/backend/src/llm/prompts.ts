@@ -187,31 +187,32 @@ export function parseInsightArray(raw: string): ExtractedInsight[] {
 
 // ── Deduplication prompts ──
 
-export const DEDUP_CHECK_SYSTEM_PROMPT = `You are a semantic similarity assistant. Your role is to identify which candidate texts are semantically equivalent to a given text, even if worded differently.
+export const DEDUP_CHECK_SYSTEM_PROMPT = `You are a semantic similarity assistant. Your role is to identify which candidate texts make the same factual claim as a given text, even if worded completely differently.
 
 Rules:
 - Compare the given text against each numbered candidate.
-- Two texts are semantically equivalent if they convey the same core meaning, even with different wording, structure, or level of detail.
-- Only return candidates with similarity above 0.85 (very high semantic overlap).
-- For each match, provide a similarity score (0.0–1.0) and a brief explanation of why they are equivalent.
+- Two texts are duplicates if they describe the same underlying fact, event, or claim — regardless of wording, phrasing, number format (e.g. "one third" vs "33%" vs "31%"), or level of detail.
+- Focus on whether the core assertion is the same, not on surface-level wording similarity.
+- Return candidates with similarity above 0.75.
+- For each match, provide a similarity score (0.0–1.0) and a brief explanation of why they convey the same claim.
 - Return a JSON array of objects, each with "index" (1-based candidate number), "similarity" (number), and "explanation" (string).
-- If no candidates are semantically equivalent, return an empty array.
+- If no candidates make the same claim, return an empty array.
 
 Respond ONLY with a valid JSON array. No explanation, no markdown.
-Example: [{"index": 1, "similarity": 0.92, "explanation": "Both state that revenue grew 15% in Q3"}]`;
+Example: [{"index": 1, "similarity": 0.90, "explanation": "Both state that roughly a third of churned customers switched to cheaper competitors"}]`;
 
-export const DEDUP_SCAN_SYSTEM_PROMPT = `You are a semantic grouping assistant. Your role is to identify groups of semantically equivalent items from a list.
+export const DEDUP_SCAN_SYSTEM_PROMPT = `You are a semantic grouping assistant. Your role is to identify groups of items that make the same factual claim, even if worded completely differently.
 
 Rules:
-- Examine all numbered items and group those that convey the same core meaning.
-- Only group items with very high semantic overlap (similarity > 0.85).
+- Examine all numbered items and group those that describe the same underlying fact, event, or claim.
+- Focus on whether the core assertion is the same, not on surface-level wording. Treat equivalent number formats (e.g. "one third" vs "33%" vs "31%"), synonyms, and paraphrases as the same claim.
 - Each group must contain at least 2 items.
 - Items that are unique (no close match) should not appear in any group.
-- Return a JSON array of group objects, each with "indices" (array of 1-based item numbers) and "explanation" (string describing what they share).
+- Return a JSON array of group objects, each with "indices" (array of 1-based item numbers) and "explanation" (string describing the shared claim).
 - If no groups are found, return an empty array.
 
 Respond ONLY with a valid JSON array. No explanation, no markdown.
-Example: [{"indices": [1, 3], "explanation": "Both describe 15% revenue growth in Q3"}]`;
+Example: [{"indices": [1, 3], "explanation": "Both state that roughly a third of churned customers switched to cheaper competitors"}]`;
 
 export const UPDATE_PROPOSAL_SYSTEM_PROMPT = `You are an update assistant. Your role is to propose an updated version of a downstream entity after an upstream change in a research discovery pipeline.
 

@@ -13,6 +13,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { createProvider, LLMProvider, OutputTraceabilityContext } from './llm/provider';
 import { VALID_OUTPUT_TYPES, ExtractedFact } from './llm/prompts';
+import { embeddingCheckDuplicates, embeddingScanDuplicates } from './llm/embeddings';
 
 const VALID_UPDATE_ENTITY_TYPES = ['fact', 'insight', 'recommendation', 'output'];
 import { extractTextFromUrl, WebScraperError } from './web-scraper';
@@ -42,6 +43,12 @@ if (llmProvider) {
   logger.info(`LLM provider configured: ${process.env.LLM_PROVIDER}`);
 } else {
   logger.warn('LLM provider not configured. Extraction endpoint will return 503.');
+}
+
+const embeddingsModel = process.env.LLM_EMBEDDINGS_MODEL;
+const dedupThreshold = parseFloat(process.env.LLM_DEDUP_THRESHOLD || '0.75');
+if (embeddingsModel) {
+  logger.info(`Embedding-based dedup enabled: model=${embeddingsModel}, threshold=${dedupThreshold}`);
 }
 
 
@@ -279,7 +286,13 @@ app.post('/dedup/check', async (req, res, next) => {
 
     let duplicates;
     try {
-      duplicates = await llmProvider.checkDuplicates(text, candidates);
+      if (embeddingsModel && llmProvider.getEmbeddings) {
+        logger.info('Using embedding-based dedup check');
+        duplicates = await embeddingCheckDuplicates(llmProvider, text, candidates, dedupThreshold);
+      } else {
+        logger.info('Using LLM-chat dedup check');
+        duplicates = await llmProvider.checkDuplicates(text, candidates);
+      }
     } catch (err: any) {
       return handleLLMError(err, res);
     }
@@ -306,7 +319,13 @@ app.post('/dedup/scan', async (req, res, next) => {
 
     let groups;
     try {
-      groups = await llmProvider.scanDuplicates(items);
+      if (embeddingsModel && llmProvider.getEmbeddings) {
+        logger.info('Using embedding-based dedup scan');
+        groups = await embeddingScanDuplicates(llmProvider, items, dedupThreshold);
+      } else {
+        logger.info('Using LLM-chat dedup scan');
+        groups = await llmProvider.scanDuplicates(items);
+      }
     } catch (err: any) {
       return handleLLMError(err, res);
     }

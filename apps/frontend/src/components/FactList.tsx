@@ -98,6 +98,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
       };
 
       // Check for duplicates before adding
+      onWaiting('Checking for duplicates…');
       const duplicates = await findDuplicates(
         factData.text,
         data.facts.map(f => ({ id: f.fact_id, text: f.text })),
@@ -105,11 +106,13 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
       );
 
       if (duplicates.length > 0) {
+        onInfo('Similar fact found — please review.');
         mergeDialog.show(newFact, duplicates[0]);
         setIsFactDialogVisible(false);
         return;
       }
 
+      onInfo('No duplicates found. Fact added.');
       addFactToState(newFact);
     } else if (modalMode === 'edit' && factData.fact_id) {
       const existing = data.facts.find(f => f.fact_id === factData.fact_id);
@@ -289,16 +292,19 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
       related_facts: relatedFacts,
     };
     insightDedupQueue.trackStart();
+    onWaiting('Checking for duplicates…');
     const duplicates = await findDuplicates(
       suggestion.text,
       data.insights.map(i => ({ id: i.insight_id, text: i.text })),
       backendAvailable,
     );
     if (duplicates.length > 0) {
+      onInfo('Similar insight found — queued for review.');
       insightDedupQueue.enqueue(newInsight, duplicates[0]);
       return;
     }
     insightDedupQueue.trackComplete();
+    onInfo('Insight added.');
     addInsightToData(suggestion.text, relatedFacts);
   };
 
