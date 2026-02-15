@@ -25,6 +25,7 @@ const OutputModal: React.FC<Props> = ({
   const [currentOutputText, setCurrentOutputText] = useState("");
   const [currentOutputRelatedRecommendations, setCurrentRelatedRecommendations] = useState<string[]>([]);
   const [currentOutputType, setCurrentOutputType] = useState<OutputType['type']>('report');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (mode === 'edit' && outputData) {
@@ -36,6 +37,7 @@ const OutputModal: React.FC<Props> = ({
       setCurrentRelatedRecommendations([]);
       setCurrentOutputType('report');
     }
+    setConfirmDelete(false);
   }, [mode, outputData]);
 
   const handleSave = () => {
@@ -48,8 +50,9 @@ const OutputModal: React.FC<Props> = ({
     saveOutput(newOutputData);
     closeDialog();
   };
+
   const handleDelete = () => {
-    if (outputData && outputData.output_id && window.confirm(`Are you sure you want to delete this output?`)) {
+    if (outputData && outputData.output_id) {
       deleteOutput(outputData.output_id);
       closeDialog();
     }
@@ -57,55 +60,71 @@ const OutputModal: React.FC<Props> = ({
 
   return (
     <Modal isVisible={isDialogVisible} onClose={closeDialog}>
-      <h2>{mode === 'add' ? 'Add Output' : 'Edit Output'}</h2>
-      <form>
-        <label htmlFor="output-text">Text</label>
-        <textarea
-          id="output-text"
-          rows={5}
-          value={currentOutputText}
-          required
-          onChange={(event) => {
-            setCurrentOutputText(event.target.value);
-          }} />
-        <label htmlFor="output-type">Type</label>
-        <select
-          id="output-type"
-          value={currentOutputType}
-          onChange={(event) => setCurrentOutputType(event.target.value as OutputType['type'])}
-        >
-          <option value="report">Report</option>
-          <option value="presentation">Presentation</option>
-          <option value="action_plan">Action Plan</option>
-          <option value="brief">Brief</option>
-        </select>
-        <label htmlFor="output-related-recommendations">Related Recommendations</label>
-        <select
-          id="output-related-recommendations"
-          value={currentOutputRelatedRecommendations}
-          onChange={(event) => {
-            const selectedOptions = Array.from(event.target.selectedOptions, (option) => option.value);
-            setCurrentRelatedRecommendations(selectedOptions);
-          }} multiple>
-          {recommendations ? recommendations.map((recommendation) => (
-            <option key={recommendation.recommendation_id} value={recommendation.recommendation_id}>
-              {recommendation.text}
-            </option>
-          )) : ""}
-        </select>
-      </form>
-      <div className='modal-actions'>
-        <div className="modal-action-group-left">
-          <button className='modal-action-close' onClick={closeDialog}><FontAwesomeIcon icon={faXmark} /> Cancel</button>
-          {mode === 'edit' &&
-            <button className='modal-action-delete' onClick={handleDelete}><FontAwesomeIcon icon={faTrashCan} /> Delete</button>
-          }
+      {confirmDelete ? (
+        <>
+          <p style={{ margin: '0 0 1em' }}>Are you sure you want to delete this output?</p>
+          <div className="modal-actions">
+            <div className="modal-action-group-left">
+              <button className="modal-action-save" onClick={handleDelete}>Confirm</button>
+            </div>
+            <div className="modal-action-group-right">
+              <button className="modal-action-close" onClick={() => setConfirmDelete(false)}>Cancel</button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <h2>{mode === 'add' ? 'Add Output' : 'Edit Output'}</h2>
+          <form>
+            <label htmlFor="output-text">Text</label>
+            <textarea
+              id="output-text"
+              rows={5}
+              value={currentOutputText}
+              required
+              onChange={(event) => {
+                setCurrentOutputText(event.target.value);
+              }} />
+            <label htmlFor="output-type">Type</label>
+            <select
+              id="output-type"
+              value={currentOutputType}
+              onChange={(event) => setCurrentOutputType(event.target.value as OutputType['type'])}
+            >
+              <option value="report">Report</option>
+              <option value="presentation">Presentation</option>
+              <option value="action_plan">Action Plan</option>
+              <option value="brief">Brief</option>
+            </select>
+            <label htmlFor="output-related-recommendations">Related Recommendations</label>
+            <select
+              id="output-related-recommendations"
+              value={currentOutputRelatedRecommendations}
+              onChange={(event) => {
+                const selectedOptions = Array.from(event.target.selectedOptions, (option) => option.value);
+                setCurrentRelatedRecommendations(selectedOptions);
+              }} multiple>
+              {recommendations ? recommendations.map((recommendation) => (
+                <option key={recommendation.recommendation_id} value={recommendation.recommendation_id}>
+                  {recommendation.text}
+                </option>
+              )) : ""}
+            </select>
+          </form>
+          <div className='modal-actions'>
+            <div className="modal-action-group-left">
+              <button className='modal-action-close' onClick={closeDialog}><FontAwesomeIcon icon={faXmark} /> Cancel</button>
+              {mode === 'edit' &&
+                <button className='modal-action-delete' onClick={() => setConfirmDelete(true)}><FontAwesomeIcon icon={faTrashCan} /> Delete</button>
+              }
 
-        </div>
-        <div className="modal-action-group-right">
-          <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? <><FontAwesomeIcon icon={faPlus} /> Add</> : <><FontAwesomeIcon icon={faFloppyDisk} /> Save</>}</button>
-        </div>
-      </div>
+            </div>
+            <div className="modal-action-group-right">
+              <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? <><FontAwesomeIcon icon={faPlus} /> Add</> : <><FontAwesomeIcon icon={faFloppyDisk} /> Save</>}</button>
+            </div>
+          </div>
+        </>
+      )}
     </Modal>
   );
 };

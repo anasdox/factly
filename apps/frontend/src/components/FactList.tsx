@@ -131,7 +131,10 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
           onInfo(`Updated to v${versioned.version}. ${impactedCount} downstream item(s) marked for review.${fallbackHint}`);
       } else {
-        // No text change, just update other fields
+        // No text change — update fields and check if links changed
+        const linksChanged = existing &&
+          JSON.stringify([...existing.related_inputs].sort()) !== JSON.stringify([...factData.related_inputs].sort());
+
         const updatedFacts = data.facts.map((fact) =>
           fact.fact_id === factData.fact_id ? { ...fact, ...factData } : fact
         );
@@ -139,6 +142,41 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           ...prevState,
           facts: updatedFacts
         }) : prevState);
+
+        // Propose reformulation if links changed
+        if (linksChanged && existing && backendAvailable) {
+          const oldTexts = existing.related_inputs
+            .map(id => data.inputs.find(i => i.input_id === id)?.text || '')
+            .filter(Boolean).join('\n\n');
+          const newTexts = factData.related_inputs
+            .map(id => data.inputs.find(i => i.input_id === id)?.text || '')
+            .filter(Boolean).join('\n\n');
+
+          setProposal({ factId: factData.fact_id, proposedText: '', loading: true });
+          onWaiting('Sources changed — generating reformulation proposal…');
+
+          try {
+            const response = await fetch(`${API_URL}/propose/update`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                entity_type: 'fact',
+                current_text: existing.text,
+                upstream_change: { old_text: oldTexts, new_text: newTexts, entity_type: 'input' },
+                goal: data.goal,
+              }),
+            });
+            if (response.ok) {
+              const result = await response.json();
+              onInfo('Reformulation proposal ready.');
+              setProposal({ factId: factData.fact_id, proposedText: result.proposed_text || '', loading: false });
+            } else {
+              setProposal(null);
+            }
+          } catch {
+            setProposal(null);
+          }
+        }
       }
     }
     setIsFactDialogVisible(false);

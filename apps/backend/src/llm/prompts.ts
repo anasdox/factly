@@ -137,14 +137,26 @@ export function buildOutputsUserContent(
 }
 
 function stripCodeFences(raw: string): string {
-  const trimmed = raw.trim();
+  let trimmed = raw.trim();
   if (trimmed.startsWith('```')) {
     const firstNewline = trimmed.indexOf('\n');
     const lastFence = trimmed.lastIndexOf('```');
     if (firstNewline !== -1 && lastFence > firstNewline) {
-      return trimmed.slice(firstNewline + 1, lastFence).trim();
+      trimmed = trimmed.slice(firstNewline + 1, lastFence).trim();
     }
   }
+  // Escape control characters inside JSON string literals (LLMs sometimes
+  // emit raw newlines/tabs inside quoted values which breaks JSON.parse).
+  trimmed = trimmed.replace(/"(?:[^"\\]|\\.)*"/g, (match) =>
+    match.replace(/[\x00-\x1f]/g, (ch) => {
+      switch (ch) {
+        case '\n': return '\\n';
+        case '\r': return '\\r';
+        case '\t': return '\\t';
+        default: return '\\u' + ch.charCodeAt(0).toString(16).padStart(4, '0');
+      }
+    })
+  );
   return trimmed;
 }
 

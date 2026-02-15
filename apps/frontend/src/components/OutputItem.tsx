@@ -17,9 +17,16 @@ const TYPE_LABELS: Record<string, string> = {
 const OutputItem: React.FC<Props> = ({ output }) => {
   const [previewOpen, setPreviewOpen] = useState(false);
 
+  const formattedDate = output.created_at
+    ? new Date(output.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+    : null;
+
   return (
     <div className="output-item item" onClick={() => setPreviewOpen(true)} title="Click to preview">
-      {output.type && <span className="output-type-badge">{TYPE_LABELS[output.type] || output.type}</span>}
+      <div className="output-meta-row">
+        {output.type && <span className="output-type-badge">{TYPE_LABELS[output.type] || output.type}</span>}
+        {formattedDate && <span className="output-date">{formattedDate}</span>}
+      </div>
       <div className="output-text markdown-body">{markdownRenderer.render(output.text)}</div>
       <OutputPreviewModal
         isVisible={previewOpen}

@@ -24,6 +24,7 @@ const InputModal: React.FC<Props> = ({
   const [currentInputType, setCurrentInputType] = useState('text');
   const [currentInputUrl, setCurrentInputUrl] = useState('');
   const [currentInputText, setCurrentInputText] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (mode === 'edit' && inputData) {
@@ -37,6 +38,7 @@ const InputModal: React.FC<Props> = ({
       setCurrentInputUrl('');
       setCurrentInputText('');
     }
+    setConfirmDelete(false);
   }, [mode, inputData]);
 
   const handleSave = () => {
@@ -51,9 +53,8 @@ const InputModal: React.FC<Props> = ({
     closeDialog();
   };
 
-
   const handleDelete = () => {
-    if (inputData && inputData.input_id && window.confirm('Are you sure you want to delete this input?')) {
+    if (inputData && inputData.input_id) {
       deleteInput(inputData.input_id);
       closeDialog();
     }
@@ -61,62 +62,78 @@ const InputModal: React.FC<Props> = ({
 
   return (
     <Modal isVisible={isDialogVisible} onClose={closeDialog}>
-      <h2>{mode === 'add' ? 'Add Input' : 'Edit Input'}</h2>
-      <form>
-        <label htmlFor="input-title">Title</label>
-        <input
-          id="input-title"
-          type="text"
-          value={currentInputTitle}
-          onChange={(event) => {
-            setCurrentInputTitle(event.target.value);
-          }} />
-        <label htmlFor="input-type">Type</label>
-        <select
-          id="input-type"
-          value={currentInputType}
-          onChange={(event) => {
-            setCurrentInputType(event.target.value);
-          }}>
-          <option value="text">Text</option>
-          <option value="web">Web</option>
-        </select>
-        {currentInputType === 'text' ? (
-          <>
-            <label htmlFor="input-text">Text</label>
-            <textarea
-              id="input-text"
-              rows={5}
-              value={currentInputText}
-              onChange={(event) => {
-                setCurrentInputText(event.target.value);
-              }} />
-          </>
-        ) : (
-          <>
-            <label htmlFor="input-url">URL</label>
+      {confirmDelete ? (
+        <>
+          <p style={{ margin: '0 0 1em' }}>Are you sure you want to delete this input?</p>
+          <div className="modal-actions">
+            <div className="modal-action-group-left">
+              <button className="modal-action-save" onClick={handleDelete}>Confirm</button>
+            </div>
+            <div className="modal-action-group-right">
+              <button className="modal-action-close" onClick={() => setConfirmDelete(false)}>Cancel</button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <h2>{mode === 'add' ? 'Add Input' : 'Edit Input'}</h2>
+          <form>
+            <label htmlFor="input-title">Title</label>
             <input
-              id="input-url"
+              id="input-title"
               type="text"
-              value={currentInputUrl}
+              value={currentInputTitle}
               onChange={(event) => {
-                setCurrentInputUrl(event.target.value);
+                setCurrentInputTitle(event.target.value);
               }} />
-          </>
-        )}
-      </form>
-      <div className='modal-actions'>
-        <div className="modal-action-group-left">
-          <button className='modal-action-close' onClick={closeDialog}><FontAwesomeIcon icon={faXmark} /> Cancel</button>
-          {mode === 'edit' &&
-            <button className='modal-action-delete' onClick={handleDelete}><FontAwesomeIcon icon={faTrashCan} /> Delete</button>
-          }
-        </div>
-        <div className="modal-action-group-right">
-          <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? <><FontAwesomeIcon icon={faPlus} /> Add</> : <><FontAwesomeIcon icon={faFloppyDisk} /> Save</>}</button>
+            <label htmlFor="input-type">Type</label>
+            <select
+              id="input-type"
+              value={currentInputType}
+              onChange={(event) => {
+                setCurrentInputType(event.target.value);
+              }}>
+              <option value="text">Text</option>
+              <option value="web">Web</option>
+            </select>
+            {currentInputType === 'text' ? (
+              <>
+                <label htmlFor="input-text">Text</label>
+                <textarea
+                  id="input-text"
+                  rows={5}
+                  value={currentInputText}
+                  onChange={(event) => {
+                    setCurrentInputText(event.target.value);
+                  }} />
+              </>
+            ) : (
+              <>
+                <label htmlFor="input-url">URL</label>
+                <input
+                  id="input-url"
+                  type="text"
+                  value={currentInputUrl}
+                  onChange={(event) => {
+                    setCurrentInputUrl(event.target.value);
+                  }} />
+              </>
+            )}
+          </form>
+          <div className='modal-actions'>
+            <div className="modal-action-group-left">
+              <button className='modal-action-close' onClick={closeDialog}><FontAwesomeIcon icon={faXmark} /> Cancel</button>
+              {mode === 'edit' &&
+                <button className='modal-action-delete' onClick={() => setConfirmDelete(true)}><FontAwesomeIcon icon={faTrashCan} /> Delete</button>
+              }
+            </div>
+            <div className="modal-action-group-right">
+              <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? <><FontAwesomeIcon icon={faPlus} /> Add</> : <><FontAwesomeIcon icon={faFloppyDisk} /> Save</>}</button>
 
-        </div>
-      </div>
+            </div>
+          </div>
+        </>
+      )}
     </Modal>
   );
 };

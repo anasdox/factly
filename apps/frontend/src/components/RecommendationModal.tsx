@@ -24,6 +24,7 @@ const RecommendationModal: React.FC<Props> = ({
 }) => {
   const [currentRecommendationText, setCurrentRecommendationText] = useState("");
   const [currentRecommendationRelatedInsights, setCurrentRelatedInsights] = useState<string[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (recommendationData) {
@@ -33,6 +34,7 @@ const RecommendationModal: React.FC<Props> = ({
       setCurrentRecommendationText('');
       setCurrentRelatedInsights([]);
     }
+    setConfirmDelete(false);
   }, [mode, recommendationData]);
 
   const handleSave = () => {
@@ -46,7 +48,7 @@ const RecommendationModal: React.FC<Props> = ({
   };
 
   const handleDelete = () => {
-    if (recommendationData && recommendationData.recommendation_id && window.confirm('Are you sure you want to delete this recommendation?')) {
+    if (recommendationData && recommendationData.recommendation_id) {
       deleteRecommendation(recommendationData.recommendation_id);
       closeDialog();
     }
@@ -54,40 +56,56 @@ const RecommendationModal: React.FC<Props> = ({
 
   return (
     <Modal isVisible={isDialogVisible} onClose={closeDialog}>
-      <h2>{mode === 'add' ? 'Add Recommendation' : 'Edit Recommendation'}</h2>
-      <form>
-        <label htmlFor="recommendation-text">Text</label>
-        <textarea
-          id="recommendation-text"
-          rows={5}
-          value={currentRecommendationText}
-          required
-          onChange={(event) => {
-            setCurrentRecommendationText(event.target.value);
-          }} />
-        <label htmlFor="recommendation-related-insights">Related Insights</label>
-        <select
-          id="recommendation-related-insights"
-          value={currentRecommendationRelatedInsights}
-          onChange={(event) => {
-            const selectedOptions = Array.from(event.target.selectedOptions, (option) => option.value);
-            setCurrentRelatedInsights(selectedOptions);
-          }} multiple>
-          {insights ? insights.map((insight) => (<option key={insight.insight_id} value={insight.insight_id}>{insight.text}</option>)) : ""}
-        </select>
-      </form>
-      <div className='modal-actions'>
-        <div className="modal-action-group-left">
-          <button className='modal-action-close' onClick={closeDialog}><FontAwesomeIcon icon={faXmark} /> Cancel</button>
-          {mode === 'edit' &&
-            <button className='modal-action-delete' onClick={handleDelete}><FontAwesomeIcon icon={faTrashCan} /> Delete</button>
-          }
+      {confirmDelete ? (
+        <>
+          <p style={{ margin: '0 0 1em' }}>Are you sure you want to delete this recommendation?</p>
+          <div className="modal-actions">
+            <div className="modal-action-group-left">
+              <button className="modal-action-save" onClick={handleDelete}>Confirm</button>
+            </div>
+            <div className="modal-action-group-right">
+              <button className="modal-action-close" onClick={() => setConfirmDelete(false)}>Cancel</button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <h2>{mode === 'add' ? 'Add Recommendation' : 'Edit Recommendation'}</h2>
+          <form>
+            <label htmlFor="recommendation-text">Text</label>
+            <textarea
+              id="recommendation-text"
+              rows={5}
+              value={currentRecommendationText}
+              required
+              onChange={(event) => {
+                setCurrentRecommendationText(event.target.value);
+              }} />
+            <label htmlFor="recommendation-related-insights">Related Insights</label>
+            <select
+              id="recommendation-related-insights"
+              value={currentRecommendationRelatedInsights}
+              onChange={(event) => {
+                const selectedOptions = Array.from(event.target.selectedOptions, (option) => option.value);
+                setCurrentRelatedInsights(selectedOptions);
+              }} multiple>
+              {insights ? insights.map((insight) => (<option key={insight.insight_id} value={insight.insight_id}>{insight.text}</option>)) : ""}
+            </select>
+          </form>
+          <div className='modal-actions'>
+            <div className="modal-action-group-left">
+              <button className='modal-action-close' onClick={closeDialog}><FontAwesomeIcon icon={faXmark} /> Cancel</button>
+              {mode === 'edit' &&
+                <button className='modal-action-delete' onClick={() => setConfirmDelete(true)}><FontAwesomeIcon icon={faTrashCan} /> Delete</button>
+              }
 
-        </div>
-        <div className="modal-action-group-right">
-          <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? <><FontAwesomeIcon icon={faPlus} /> Add</> : <><FontAwesomeIcon icon={faFloppyDisk} /> Save</>}</button>
-        </div>
-      </div>
+            </div>
+            <div className="modal-action-group-right">
+              <button className='modal-action-save' onClick={handleSave}>{mode === 'add' ? <><FontAwesomeIcon icon={faPlus} /> Add</> : <><FontAwesomeIcon icon={faFloppyDisk} /> Save</>}</button>
+            </div>
+          </div>
+        </>
+      )}
     </Modal>
   );
 };

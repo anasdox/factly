@@ -44,7 +44,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
     setIsOutputDialogVisible(true);
   };
 
-  const saveOutput = (outputData: OutputType) => {
+  const saveOutput = async (outputData: OutputType) => {
     if (modalMode === 'add') {
       const newOutput: OutputType = {
         output_id: Math.random().toString(16).slice(2),
@@ -69,8 +69,49 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
           setData((prevState) => prevState ? ({ ...prevState, outputs: updatedOutputs }) : prevState);
           onInfo(`Updated to v${updated.version}. No downstream items (terminal entity).`);
       } else {
+        // No text change — update fields and check if links changed
+        const linksChanged = existing &&
+          JSON.stringify([...existing.related_recommendations].sort()) !== JSON.stringify([...outputData.related_recommendations].sort());
+
         const updatedOutputs = data.outputs.map(o => o.output_id === outputData.output_id ? { ...o, ...outputData } : o);
         setData((prevState) => prevState ? ({ ...prevState, outputs: updatedOutputs }) : prevState);
+
+        // Propose reformulation if links changed
+        if (linksChanged && existing && backendAvailable) {
+          const oldTexts = existing.related_recommendations
+            .map(id => data.recommendations.find(r => r.recommendation_id === id)?.text || '')
+            .filter(Boolean).join('\n\n');
+          const newTexts = outputData.related_recommendations
+            .map(id => data.recommendations.find(r => r.recommendation_id === id)?.text || '')
+            .filter(Boolean).join('\n\n');
+
+          setProposalTarget(outputData.output_id);
+          setProposalData(null);
+          onWaiting('Sources changed — generating reformulation proposal…');
+
+          try {
+            const response = await fetch(`${API_URL}/propose/update`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                entity_type: 'output',
+                current_text: existing.text,
+                upstream_change: { old_text: oldTexts, new_text: newTexts, entity_type: 'recommendation' },
+                goal: data.goal,
+                output_type: existing.type,
+              }),
+            });
+            if (response.ok) {
+              const result = await response.json();
+              onInfo('Reformulation proposal ready.');
+              setProposalData(result);
+            } else {
+              setProposalTarget(null);
+            }
+          } catch {
+            setProposalTarget(null);
+          }
+        }
       }
     }
     setIsOutputDialogVisible(false);

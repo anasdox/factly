@@ -94,6 +94,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
       };
 
       // Dedup guard
+      onWaiting('Checking for duplicates…');
       const existingItems = data.recommendations.map(r => ({ id: r.recommendation_id, text: r.text }));
       const duplicates = await findDuplicates(recommendationData.text, existingItems, backendAvailable);
 
@@ -119,7 +120,10 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
           const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
           onInfo(`Updated to v${updated.version}. ${impactedCount} downstream item(s) flagged.${fallbackHint}`);
       } else {
-        // No text change, just update other fields
+        // No text change — update fields and check if links changed
+        const linksChanged = existing &&
+          JSON.stringify([...existing.related_insights].sort()) !== JSON.stringify([...recommendationData.related_insights].sort());
+
         const updatedRecommendations = data.recommendations.map(r =>
           r.recommendation_id === recommendationData.recommendation_id ? { ...r, ...recommendationData } : r
         );
@@ -127,6 +131,42 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
           ...prevState,
           recommendations: updatedRecommendations
         }) : prevState);
+
+        // Propose reformulation if links changed
+        if (linksChanged && existing && backendAvailable) {
+          const oldTexts = existing.related_insights
+            .map(id => data.insights.find(i => i.insight_id === id)?.text || '')
+            .filter(Boolean).join('\n\n');
+          const newTexts = recommendationData.related_insights
+            .map(id => data.insights.find(i => i.insight_id === id)?.text || '')
+            .filter(Boolean).join('\n\n');
+
+          setProposalTarget(recommendationData.recommendation_id);
+          setProposalData(null);
+          onWaiting('Sources changed — generating reformulation proposal…');
+
+          try {
+            const response = await fetch(`${API_URL}/propose/update`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                entity_type: 'recommendation',
+                current_text: existing.text,
+                upstream_change: { old_text: oldTexts, new_text: newTexts, entity_type: 'insight' },
+                goal: data.goal,
+              }),
+            });
+            if (response.ok) {
+              const result = await response.json();
+              onInfo('Reformulation proposal ready.');
+              setProposalData(result);
+            } else {
+              setProposalTarget(null);
+            }
+          } catch {
+            setProposalTarget(null);
+          }
+        }
       }
     }
     setIsRecommendationDialogVisible(false);
