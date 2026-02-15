@@ -5,10 +5,18 @@ import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTE
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic;
   private model: string;
+  private tempExtraction: number;
+  private tempDedup: number;
+  private tempImpact: number;
+  private tempProposal: number;
 
   constructor(apiKey: string, model?: string) {
     this.client = new Anthropic({ apiKey });
     this.model = model || 'claude-sonnet-4-5-20250929';
+    this.tempExtraction = parseFloat(process.env.LLM_TEMP_EXTRACTION || '0.2');
+    this.tempDedup = parseFloat(process.env.LLM_TEMP_DEDUP || '0.1');
+    this.tempImpact = parseFloat(process.env.LLM_TEMP_IMPACT || '0.1');
+    this.tempProposal = parseFloat(process.env.LLM_TEMP_PROPOSAL || '0.3');
   }
 
   private extractText(response: Anthropic.Message): string {
@@ -23,7 +31,7 @@ export class AnthropicProvider implements LLMProvider {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 4096,
-      temperature: 0.2,
+      temperature: this.tempExtraction,
       system: EXTRACTION_SYSTEM_PROMPT,
       messages: [
         {
@@ -41,7 +49,7 @@ export class AnthropicProvider implements LLMProvider {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 4096,
-      temperature: 0.2,
+      temperature: this.tempExtraction,
       system: INSIGHTS_SYSTEM_PROMPT,
       messages: [
         {
@@ -59,7 +67,7 @@ export class AnthropicProvider implements LLMProvider {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 4096,
-      temperature: 0.2,
+      temperature: this.tempExtraction,
       system: RECOMMENDATIONS_SYSTEM_PROMPT,
       messages: [
         {
@@ -76,7 +84,7 @@ export class AnthropicProvider implements LLMProvider {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 4096,
-      temperature: 0.2,
+      temperature: this.tempExtraction,
       system: buildOutputsPrompt(outputType),
       messages: [
         {
@@ -93,7 +101,7 @@ export class AnthropicProvider implements LLMProvider {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 2048,
-      temperature: 0.1,
+      temperature: this.tempDedup,
       system: DEDUP_CHECK_SYSTEM_PROMPT,
       messages: [
         { role: 'user', content: buildDedupCheckUserContent(text, candidates) },
@@ -107,7 +115,7 @@ export class AnthropicProvider implements LLMProvider {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 2048,
-      temperature: 0.1,
+      temperature: this.tempDedup,
       system: DEDUP_SCAN_SYSTEM_PROMPT,
       messages: [
         { role: 'user', content: buildDedupScanUserContent(items) },
@@ -125,7 +133,7 @@ export class AnthropicProvider implements LLMProvider {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 4096,
-      temperature: 0.3,
+      temperature: this.tempProposal,
       system: systemPrompt,
       messages: [
         { role: 'user', content: buildUpdateProposalUserContent(entityType, currentText, upstreamOldText, upstreamNewText, upstreamEntityType, goal) },
@@ -139,7 +147,7 @@ export class AnthropicProvider implements LLMProvider {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 2048,
-      temperature: 0.1,
+      temperature: this.tempImpact,
       system: IMPACT_CHECK_SYSTEM_PROMPT,
       messages: [
         { role: 'user', content: buildImpactCheckUserContent(oldText, newText, children) },

@@ -1,0 +1,216 @@
+[
+  {
+    "id": "scan-group-001",
+    "items": [
+      {
+        "id": "sg1-a",
+        "text": "The global average temperature has increased by 1.1°C compared to the pre-industrial period."
+      },
+      {
+        "id": "sg1-b",
+        "text": "Global warming has reached 1.1 degrees Celsius above 1850-1900 levels."
+      },
+      {
+        "id": "sg1-c",
+        "text": "Global CO2 emissions reached 36.8 gigatonnes in 2022."
+      },
+      {
+        "id": "sg1-d",
+        "text": "Sea level rise reached 3.7 mm per year between 2006 and 2018."
+      },
+      {
+        "id": "sg1-e",
+        "text": "The average temperature increase of the planet is 1.1°C compared to the pre-industrial era."
+      },
+      {
+        "id": "sg1-f",
+        "text": "The rise in sea levels is accelerating at 3.7 millimeters per year over the 2006-2018 period."
+      },
+      {
+        "id": "sg1-g",
+        "text": "Annual carbon dioxide emissions worldwide surpassed the 36 gigatonne mark in 2022."
+      },
+      {
+        "id": "sg1-h",
+        "text": "Permafrost covers 23 million km² in the Northern Hemisphere."
+      }
+    ],
+    "expected_groups": [
+      ["sg1-a", "sg1-b", "sg1-e"],
+      ["sg1-d", "sg1-f"],
+      ["sg1-c", "sg1-g"]
+    ]
+  },
+  {
+    "id": "scan-group-002",
+    "items": [
+      {
+        "id": "sg2-a",
+        "text": "Investments in renewable energy reached 495 billion dollars in 2022."
+      },
+      {
+        "id": "sg2-b",
+        "text": "The carbon price in the EU ETS reached 101 euros per tonne in February 2023."
+      },
+      {
+        "id": "sg2-c",
+        "text": "In 2022, global investments in renewables totaled 495 billion dollars."
+      },
+      {
+        "id": "sg2-d",
+        "text": "The European Emissions Trading System saw the price per tonne of CO2 reach 101 EUR in February 2023."
+      },
+      {
+        "id": "sg2-e",
+        "text": "The voluntary carbon market reached 2 billion dollars in 2022."
+      },
+      {
+        "id": "sg2-f",
+        "text": "Climate disasters caused 313 billion dollars in damages in 2022."
+      },
+      {
+        "id": "sg2-g",
+        "text": "Nearly 500 billion dollars were invested in renewable energy sources worldwide in 2022."
+      },
+      {
+        "id": "sg2-h",
+        "text": "Damages from extreme weather events amounted to 313 billion dollars globally in 2022."
+      }
+    ],
+    "expected_groups": [
+      ["sg2-a", "sg2-c", "sg2-g"],
+      ["sg2-b", "sg2-d"],
+      ["sg2-f", "sg2-h"]
+    ]
+  },
+  {
+    "id": "scan-group-003",
+    "items": [
+      {
+        "id": "sg3-a",
+        "text": "The average cost of a data breach in Europe reached 4.35 million euros in 2022."
+      },
+      {
+        "id": "sg3-b",
+        "text": "60% of European companies experienced at least one ransomware attempt in 2022."
+      },
+      {
+        "id": "sg3-c",
+        "text": "The average cost of a data leak for a European company stands at 4.35 million euros in 2022."
+      },
+      {
+        "id": "sg3-d",
+        "text": "Europe is short of 347,000 cybersecurity specialists."
+      },
+      {
+        "id": "sg3-e",
+        "text": "Six out of ten European companies were targeted by at least one ransomware attack in 2022."
+      },
+      {
+        "id": "sg3-f",
+        "text": "The shortage of IT security professionals in Europe is estimated at nearly 350,000 positions."
+      },
+      {
+        "id": "sg3-g",
+        "text": "The number of cyberattacks in Europe increased by 38% in 2022."
+      },
+      {
+        "id": "sg3-h",
+        "text": "The NIS2 directive extends cybersecurity obligations to an additional 160,000 European entities."
+      }
+    ],
+    "expected_groups": [
+      ["sg3-a", "sg3-c"],
+      ["sg3-b", "sg3-e"],
+      ["sg3-d", "sg3-f"]
+    ]
+  },
+  {
+    "id": "scan-group-004",
+    "items": [
+      {
+        "id": "sg4-a",
+        "text": "ChatGPT reached 100 million monthly active users within two months of its launch."
+      },
+      {
+        "id": "sg4-b",
+        "text": "The global generative AI market is estimated at 44.9 billion dollars in 2023."
+      },
+      {
+        "id": "sg4-c",
+        "text": "ChatGPT became the fastest consumer application to reach 100 million monthly users, in just two months."
+      },
+      {
+        "id": "sg4-d",
+        "text": "55% of Fortune 500 companies launched a generative AI pilot project in 2023."
+      },
+      {
+        "id": "sg4-e",
+        "text": "The generative artificial intelligence market was worth approximately 45 billion dollars in 2023."
+      },
+      {
+        "id": "sg4-f",
+        "text": "OpenAI raised 10 billion dollars from Microsoft."
+      },
+      {
+        "id": "sg4-g",
+        "text": "More than half of the large American Fortune 500 companies had initiated at least one generative AI project in 2023."
+      },
+      {
+        "id": "sg4-h",
+        "text": "The training cost of a large language model is estimated between 50 and 100 million dollars."
+      },
+      {
+        "id": "sg4-i",
+        "text": "The training of GPT-4 consumed approximately 50 GWh of energy."
+      }
+    ],
+    "expected_groups": [
+      ["sg4-a", "sg4-c"],
+      ["sg4-b", "sg4-e"],
+      ["sg4-d", "sg4-g"]
+    ]
+  },
+  {
+    "id": "scan-group-005",
+    "items": [
+      {
+        "id": "sg5-a",
+        "text": "The volume of real estate transactions in France dropped by 22% in the first half of 2023."
+      },
+      {
+        "id": "sg5-b",
+        "text": "Mortgage interest rates climbed from 1.1% in January 2022 to 3.45% in September 2023."
+      },
+      {
+        "id": "sg5-c",
+        "text": "The French real estate market recorded a 22% decline in transactions during the first half of 2023."
+      },
+      {
+        "id": "sg5-d",
+        "text": "Mortgage rates went from 1.1% at the start of 2022 to 3.45% by the end of September 2023."
+      },
+      {
+        "id": "sg5-e",
+        "text": "The average price per square meter in Paris fell by 5.2%, settling at 10,230 euros."
+      },
+      {
+        "id": "sg5-f",
+        "text": "The share of first-time buyers in real estate purchases went from 45% in 2021 to 31% in 2023."
+      },
+      {
+        "id": "sg5-g",
+        "text": "In Paris, the price per square meter dropped by 5.2%, falling to 10,230 euros in the third quarter of 2023."
+      },
+      {
+        "id": "sg5-h",
+        "text": "The average time to sell a property went from 64 days in 2022 to 89 days in 2023."
+      }
+    ],
+    "expected_groups": [
+      ["sg5-a", "sg5-c"],
+      ["sg5-b", "sg5-d"],
+      ["sg5-e", "sg5-g"]
+    ]
+  }
+]

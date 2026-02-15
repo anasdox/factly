@@ -2,21 +2,23 @@
 SHELL := /bin/bash
 .SHELLFLAGS := -c '. "$$HOME/.nvm/nvm.sh" && eval "$$@"' bash
 
-BACKEND_DIR  := apps/backend
-FRONTEND_DIR := apps/frontend
-TESTS_DIR    := tests/acceptance
-BACKEND_PID  := /tmp/factly-backend.pid
+BACKEND_DIR    := apps/backend
+FRONTEND_DIR   := apps/frontend
+TESTS_DIR      := tests/acceptance
+BENCHMARK_DIR  := tools/benchmark
+BACKEND_PID    := /tmp/factly-backend.pid
 
-.PHONY: install install-backend install-frontend install-tests \
+.PHONY: install install-backend install-frontend install-tests install-benchmark \
         start-backend stop-backend restart-backend start-frontend start \
         build-backend build-frontend build \
-        typecheck typecheck-backend typecheck-frontend \
+        typecheck typecheck-backend typecheck-frontend typecheck-benchmark \
         test test-backend test-acceptance \
+        demo demo-m8 demo-m9 demo-m16 demo-m17 \
         clean lint
 
 ## Install
 
-install: install-backend install-frontend install-tests
+install: install-backend install-frontend install-tests install-benchmark
 
 install-backend:
 	cd $(BACKEND_DIR) && npm install
@@ -26,6 +28,9 @@ install-frontend:
 
 install-tests:
 	cd $(TESTS_DIR) && npm install
+
+install-benchmark:
+	cd $(BENCHMARK_DIR) && npm install
 
 ## Run
 
@@ -80,7 +85,10 @@ typecheck-backend:
 typecheck-frontend:
 	cd $(FRONTEND_DIR) && npx tsc --noEmit
 
-typecheck: typecheck-backend typecheck-frontend
+typecheck-benchmark:
+	cd $(BENCHMARK_DIR) && npx tsc --noEmit
+
+typecheck: typecheck-backend typecheck-frontend typecheck-benchmark
 
 ## Test
 ## Tests manage their own backend process (start/stop/restart).
@@ -101,6 +109,22 @@ test-backend: restart-backend
 	$(MAKE) -C $(CURDIR) restart-backend; \
 	exit $$status
 
+## Demo
+
+demo-m8:
+	bash demos/ServerSidePersistence/demo.sh
+
+demo-m9:
+	bash demos/InputValidationErrorHandling/demo.sh
+
+demo-m16:
+	bash demos/BenchmarkQualityTool/demo.sh
+
+demo-m17:
+	bash demos/BenchmarkDashboardUI/demo.sh
+
+demo: demo-m16 demo-m17
+
 ## Lint
 
 lint:
@@ -113,6 +137,7 @@ clean:
 	rm -rf $(BACKEND_DIR)/node_modules $(BACKEND_DIR)/dist
 	rm -rf $(FRONTEND_DIR)/node_modules $(FRONTEND_DIR)/build
 	rm -rf $(TESTS_DIR)/node_modules
+	rm -rf $(BENCHMARK_DIR)/node_modules
 
 ## Logs
 

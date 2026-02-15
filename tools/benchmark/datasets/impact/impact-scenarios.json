@@ -1,0 +1,335 @@
+[
+  {
+    "id": "impact-substance-001",
+    "old_text": "Global greenhouse gas emissions reached 59.1 gigatons of CO2 equivalent in 2021.",
+    "new_text": "Global greenhouse gas emissions reached 62.3 gigatons of CO2 equivalent in 2022, a new all-time record.",
+    "children": [
+      {
+        "id": "child-001a",
+        "text": "The 2021 emissions (59.1 Gt CO2eq) represent a 12% increase compared to 2010, confirming the inadequacy of current climate commitments."
+      },
+      {
+        "id": "child-001b",
+        "text": "The goal of limiting warming to 1.5°C requires a 45% reduction in emissions by 2030 compared to 2010 levels."
+      },
+      {
+        "id": "child-001c",
+        "text": "The energy sector is responsible for 73% of total greenhouse gas emissions."
+      },
+      {
+        "id": "child-001d",
+        "text": "China is the world's largest emitter with 30% of annual global emissions."
+      }
+    ],
+    "expected_impacts": [
+      { "id": "child-001a", "impacted": true },
+      { "id": "child-001b", "impacted": false },
+      { "id": "child-001c", "impacted": false },
+      { "id": "child-001d", "impacted": false }
+    ]
+  },
+  {
+    "id": "impact-substance-002",
+    "old_text": "The carbon price in the EU ETS reached 101 euros per ton in February 2023.",
+    "new_text": "The carbon price in the EU ETS dropped to 58 euros per ton in March 2024, due to declining industrial demand.",
+    "children": [
+      {
+        "id": "child-002a",
+        "text": "The record price of 101 EUR/ton in the EU ETS reflects the growing effectiveness of the European carbon pricing mechanism."
+      },
+      {
+        "id": "child-002b",
+        "text": "EU ETS revenues, driven by the high carbon price, fund the energy transition of member states."
+      },
+      {
+        "id": "child-002c",
+        "text": "The EU's CBAM aims to tax carbon-intensive imports to prevent carbon leakage."
+      },
+      {
+        "id": "child-002d",
+        "text": "It is recommended to invest in carbon capture and storage technologies to complement market mechanisms."
+      }
+    ],
+    "expected_impacts": [
+      { "id": "child-002a", "impacted": true },
+      { "id": "child-002b", "impacted": true },
+      { "id": "child-002c", "impacted": false },
+      { "id": "child-002d", "impacted": false }
+    ]
+  },
+  {
+    "id": "impact-substance-003",
+    "old_text": "France has 100,000 public charging points for electric vehicles.",
+    "new_text": "France now has 150,000 public charging points for electric vehicles, reaching 37.5% of the target of 400,000 charging stations by 2030.",
+    "children": [
+      {
+        "id": "child-003a",
+        "text": "With 100,000 charging stations deployed, France must accelerate the installation rate by a factor of 4 to reach the target of 400,000 stations by 2030."
+      },
+      {
+        "id": "child-003b",
+        "text": "It is recommended to simplify the permitting process for installing charging stations in condominiums."
+      },
+      {
+        "id": "child-003c",
+        "text": "Electric vehicle sales accounted for 15.6% of new vehicle registrations in 2022."
+      }
+    ],
+    "expected_impacts": [
+      { "id": "child-003a", "impacted": true },
+      { "id": "child-003b", "impacted": false },
+      { "id": "child-003c", "impacted": false }
+    ]
+  },
+  {
+    "id": "impact-substance-004",
+    "old_text": "Venture capital investments in Europe totaled 52 billion euros in 2022, down 35% from the record 80 billion in 2021.",
+    "new_text": "Venture capital investments in Europe rebounded to 68 billion euros in 2023, up 31% compared to 2022, driven by the AI sector.",
+    "children": [
+      {
+        "id": "child-004a",
+        "text": "The 35% decline in European venture capital in 2022 reflects a global correction following the 2021 euphoria."
+      },
+      {
+        "id": "child-004b",
+        "text": "Deep tech captured 38% of European VC investments in 2023, confirming a structural shift toward breakthrough technologies."
+      },
+      {
+        "id": "child-004c",
+        "text": "Down rounds accounted for 18% of deals in 2023, signaling a valuation adjustment."
+      },
+      {
+        "id": "child-004d",
+        "text": "France ranks second in Europe with 28 unicorns."
+      },
+      {
+        "id": "child-004e",
+        "text": "It is recommended to strengthen European fund-of-funds to maintain investment momentum."
+      }
+    ],
+    "expected_impacts": [
+      { "id": "child-004a", "impacted": true },
+      { "id": "child-004b", "impacted": false },
+      { "id": "child-004c", "impacted": true },
+      { "id": "child-004d", "impacted": false },
+      { "id": "child-004e", "impacted": true }
+    ]
+  },
+  {
+    "id": "impact-wording-001",
+    "old_text": "The global average temperature has increased by 1.1°C compared to the pre-industrial period.",
+    "new_text": "The average global warming stands at 1.1°C above pre-industrial levels.",
+    "children": [
+      {
+        "id": "child-005a",
+        "text": "The 1.1°C increase in global temperature confirms the warming trajectory predicted by climate models."
+      },
+      {
+        "id": "child-005b",
+        "text": "Without significant emission reductions, the 1.5°C threshold will be exceeded as early as 2030-2035."
+      },
+      {
+        "id": "child-005c",
+        "text": "It is urgent to accelerate decarbonization to limit warming below 1.5°C."
+      }
+    ],
+    "expected_impacts": [
+      { "id": "child-005a", "impacted": false },
+      { "id": "child-005b", "impacted": false },
+      { "id": "child-005c", "impacted": false }
+    ]
+  },
+  {
+    "id": "impact-wording-002",
+    "old_text": "The transport sector remains the largest CO2 emitter in France with 31% of national emissions.",
+    "new_text": "In France, transport remains the highest carbon dioxide emitting sector, accounting for 31% of the country's emissions.",
+    "children": [
+      {
+        "id": "child-006a",
+        "text": "With transport being the leading source of emissions (31%), the electrification of the vehicle fleet is the primary decarbonization lever in France."
+      },
+      {
+        "id": "child-006b",
+        "text": "Electric vehicle sales accounted for 15.6% of new vehicle registrations in 2022."
+      },
+      {
+        "id": "child-006c",
+        "text": "It is recommended to accelerate the deployment of charging stations to support the transition to electric vehicles."
+      },
+      {
+        "id": "child-006d",
+        "text": "Road freight accounts for 44% of transport sector emissions in France."
+      }
+    ],
+    "expected_impacts": [
+      { "id": "child-006a", "impacted": false },
+      { "id": "child-006b", "impacted": false },
+      { "id": "child-006c", "impacted": false },
+      { "id": "child-006d", "impacted": false }
+    ]
+  },
+  {
+    "id": "impact-wording-003",
+    "old_text": "Europe is short of 347,000 cybersecurity specialists in 2023.",
+    "new_text": "In 2023, Europe's shortage of qualified cybersecurity professionals is estimated at 347,000 positions.",
+    "children": [
+      {
+        "id": "child-007a",
+        "text": "The shortage of 347,000 cybersecurity experts in Europe weakens organizations' ability to respond to growing threats."
+      },
+      {
+        "id": "child-007b",
+        "text": "The average salary for a cybersecurity expert in France has reached 72,000 euros gross annually, up 18%."
+      },
+      {
+        "id": "child-007c",
+        "text": "It is recommended to create accelerated cybersecurity training programs to bridge the skills gap."
+      }
+    ],
+    "expected_impacts": [
+      { "id": "child-007a", "impacted": false },
+      { "id": "child-007b", "impacted": false },
+      { "id": "child-007c", "impacted": false }
+    ]
+  },
+  {
+    "id": "impact-wording-004",
+    "old_text": "Coral reefs have lost 50% of their coverage since 1950.",
+    "new_text": "Since the mid-twentieth century, global coral reefs have seen their surface area reduced by half.",
+    "children": [
+      {
+        "id": "child-008a",
+        "text": "The loss of 50% of coral coverage since 1950 jeopardizes 25% of marine biodiversity that depends on these ecosystems."
+      },
+      {
+        "id": "child-008b",
+        "text": "A 2°C warming would lead to the disappearance of 99% of tropical reefs."
+      },
+      {
+        "id": "child-008c",
+        "text": "It is recommended to establish marine protected areas covering 30% of the oceans by 2030."
+      }
+    ],
+    "expected_impacts": [
+      { "id": "child-008a", "impacted": false },
+      { "id": "child-008b", "impacted": false },
+      { "id": "child-008c", "impacted": false }
+    ]
+  },
+  {
+    "id": "impact-mixed-001",
+    "old_text": "The average cost of a data breach in Europe reached 4.35 million euros in 2022, up 12.7% compared to 2021.",
+    "new_text": "The average cost of a data breach for a European company stands at 4.78 million euros in 2023, an increase of 9.9% compared to 2022.",
+    "children": [
+      {
+        "id": "child-009a",
+        "text": "The continued increase in the cost of data breaches (4.35 million euros in 2022, +12.7%) justifies strengthening investments in preventive cybersecurity."
+      },
+      {
+        "id": "child-009b",
+        "text": "The sectors most targeted by cyberattacks are healthcare (18%), public administration (16%), and financial services (14%)."
+      },
+      {
+        "id": "child-009c",
+        "text": "The average time to detect an intrusion is 197 days in Europe."
+      },
+      {
+        "id": "child-009d",
+        "text": "It is recommended to allocate a minimum of 10% of the IT budget to cybersecurity for exposed companies."
+      }
+    ],
+    "expected_impacts": [
+      { "id": "child-009a", "impacted": true },
+      { "id": "child-009b", "impacted": false },
+      { "id": "child-009c", "impacted": false },
+      { "id": "child-009d", "impacted": false }
+    ]
+  },
+  {
+    "id": "impact-mixed-002",
+    "old_text": "Investments in renewable energy reached 495 billion dollars in 2022, surpassing investments in fossil fuels for the first time.",
+    "new_text": "Global investments in renewable energy reached 623 billion dollars in 2023, widening the gap with fossil fuel investments for the second consecutive year.",
+    "children": [
+      {
+        "id": "child-010a",
+        "text": "Crossing the symbolic threshold of 495 billion dollars in 2022 marks a historic turning point in green finance."
+      },
+      {
+        "id": "child-010b",
+        "text": "China installed 125 GW of solar capacity in 2022, more than the rest of the world combined."
+      },
+      {
+        "id": "child-010c",
+        "text": "It is recommended to redirect fossil fuel subsidies toward renewable energy to accelerate the transition."
+      },
+      {
+        "id": "child-010d",
+        "text": "The growing investments in renewables confirm that the energy transition has become economically attractive for investors."
+      }
+    ],
+    "expected_impacts": [
+      { "id": "child-010a", "impacted": true },
+      { "id": "child-010b", "impacted": false },
+      { "id": "child-010c", "impacted": false },
+      { "id": "child-010d", "impacted": true }
+    ]
+  },
+  {
+    "id": "impact-mixed-003",
+    "old_text": "55% of Fortune 500 companies launched at least one generative AI pilot project in 2023, compared to 12% in 2022.",
+    "new_text": "78% of Fortune 500 companies deployed at least one generative AI project in production in 2024, compared to 55% in pilot phase in 2023.",
+    "children": [
+      {
+        "id": "child-011a",
+        "text": "The rapid adoption of generative AI (from 12% to 55% in one year among the Fortune 500) reflects an unprecedented technological paradigm shift."
+      },
+      {
+        "id": "child-011b",
+        "text": "67% of executives express concerns about governance and intellectual property risks related to generative AI."
+      },
+      {
+        "id": "child-011c",
+        "text": "The global generative AI market is estimated at 44.9 billion dollars in 2023."
+      },
+      {
+        "id": "child-011d",
+        "text": "It is recommended to establish an AI governance framework before any production deployment."
+      }
+    ],
+    "expected_impacts": [
+      { "id": "child-011a", "impacted": true },
+      { "id": "child-011b", "impacted": false },
+      { "id": "child-011c", "impacted": false },
+      { "id": "child-011d", "impacted": true }
+    ]
+  },
+  {
+    "id": "impact-mixed-004",
+    "old_text": "The share of renewable energy in France's electricity production reached 26.9% in 2022, compared to 19.1% in 2015.",
+    "new_text": "The share of renewable energy in France's electricity production rose to 29.8% in 2023, continuing the upward trend since 2015 (19.1%).",
+    "children": [
+      {
+        "id": "child-012a",
+        "text": "The growth of renewables (26.9% in 2022) remains insufficient to meet the target of 40% of the electricity mix by 2030."
+      },
+      {
+        "id": "child-012b",
+        "text": "Nuclear power still provides 63% of French electricity."
+      },
+      {
+        "id": "child-012c",
+        "text": "The pace of new wind capacity installations slowed by 15% in 2022."
+      },
+      {
+        "id": "child-012d",
+        "text": "It is recommended to simplify permitting procedures to accelerate the deployment of renewables."
+      }
+    ],
+    "expected_impacts": [
+      { "id": "child-012a", "impacted": true },
+      { "id": "child-012b", "impacted": false },
+      { "id": "child-012c", "impacted": false },
+      { "id": "child-012d", "impacted": false }
+    ]
+  }
+]

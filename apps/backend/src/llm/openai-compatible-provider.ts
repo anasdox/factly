@@ -7,11 +7,19 @@ export class OpenAICompatibleProvider implements LLMProvider {
   private model: string;
   private embeddingsModel?: string;
   private readonly maxCompletionTokens = 4096;
+  private tempExtraction: number;
+  private tempDedup: number;
+  private tempImpact: number;
+  private tempProposal: number;
 
   constructor(apiKey: string, baseUrl: string, model?: string, embeddingsModel?: string) {
     this.client = new OpenAI({ apiKey, baseURL: baseUrl });
     this.model = model || 'gpt-oss-120b';
     this.embeddingsModel = embeddingsModel;
+    this.tempExtraction = parseFloat(process.env.LLM_TEMP_EXTRACTION || '0.2');
+    this.tempDedup = parseFloat(process.env.LLM_TEMP_DEDUP || '0.1');
+    this.tempImpact = parseFloat(process.env.LLM_TEMP_IMPACT || '0.1');
+    this.tempProposal = parseFloat(process.env.LLM_TEMP_PROPOSAL || '0.3');
   }
 
   private extractText(response: OpenAI.Chat.ChatCompletion): string {
@@ -58,7 +66,7 @@ export class OpenAICompatibleProvider implements LLMProvider {
   async extractFacts(text: string, goal: string): Promise<ExtractedFact[]> {
     const response = await this.createChatCompletion({
       model: this.model,
-      temperature: 0.2,
+      temperature: this.tempExtraction,
       messages: [
         { role: 'system', content: EXTRACTION_SYSTEM_PROMPT },
         {
@@ -75,7 +83,7 @@ export class OpenAICompatibleProvider implements LLMProvider {
     const numberedFacts = facts.map((f, i) => `${i + 1}. ${f}`).join('\n');
     const response = await this.createChatCompletion({
       model: this.model,
-      temperature: 0.2,
+      temperature: this.tempExtraction,
       messages: [
         { role: 'system', content: INSIGHTS_SYSTEM_PROMPT },
         {
@@ -92,7 +100,7 @@ export class OpenAICompatibleProvider implements LLMProvider {
     const numberedInsights = insights.map((ins, i) => `${i + 1}. ${ins}`).join('\n');
     const response = await this.createChatCompletion({
       model: this.model,
-      temperature: 0.2,
+      temperature: this.tempExtraction,
       messages: [
         { role: 'system', content: RECOMMENDATIONS_SYSTEM_PROMPT },
         {
@@ -108,7 +116,7 @@ export class OpenAICompatibleProvider implements LLMProvider {
   async formulateOutputs(recommendations: string[], goal: string, outputType: string, context?: OutputTraceabilityContext): Promise<string[]> {
     const response = await this.createChatCompletion({
       model: this.model,
-      temperature: 0.2,
+      temperature: this.tempExtraction,
       messages: [
         { role: 'system', content: buildOutputsPrompt(outputType) },
         {
@@ -124,7 +132,7 @@ export class OpenAICompatibleProvider implements LLMProvider {
   async checkDuplicates(text: string, candidates: { id: string; text: string }[]): Promise<DedupResult[]> {
     const response = await this.createChatCompletion({
       model: this.model,
-      temperature: 0.1,
+      temperature: this.tempDedup,
       messages: [
         { role: 'system', content: DEDUP_CHECK_SYSTEM_PROMPT },
         { role: 'user', content: buildDedupCheckUserContent(text, candidates) },
@@ -137,7 +145,7 @@ export class OpenAICompatibleProvider implements LLMProvider {
   async scanDuplicates(items: { id: string; text: string }[]): Promise<DedupGroup[]> {
     const response = await this.createChatCompletion({
       model: this.model,
-      temperature: 0.1,
+      temperature: this.tempDedup,
       messages: [
         { role: 'system', content: DEDUP_SCAN_SYSTEM_PROMPT },
         { role: 'user', content: buildDedupScanUserContent(items) },
@@ -154,7 +162,7 @@ export class OpenAICompatibleProvider implements LLMProvider {
 
     const response = await this.createChatCompletion({
       model: this.model,
-      temperature: 0.3,
+      temperature: this.tempProposal,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: buildUpdateProposalUserContent(entityType, currentText, upstreamOldText, upstreamNewText, upstreamEntityType, goal) },
@@ -170,7 +178,7 @@ export class OpenAICompatibleProvider implements LLMProvider {
 
     const response = await this.createChatCompletion({
       model: this.model,
-      temperature: 0.1,
+      temperature: this.tempImpact,
       messages: [
         { role: 'system', content: IMPACT_CHECK_SYSTEM_PROMPT },
         { role: 'user', content: userContent },

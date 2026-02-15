@@ -1,0 +1,110 @@
+[
+  {
+    "id": "fe-tech-001",
+    "domain": "technical",
+    "input_text": "Generative artificial intelligence is transforming the global technology landscape at an unprecedented pace. The global generative AI market is estimated at $44.9 billion in 2023 and is expected to reach $207 billion by 2030, representing a compound annual growth rate (CAGR) of 24.4%. OpenAI raised $10 billion from Microsoft in January 2023, bringing its valuation to $29 billion. ChatGPT reached 100 million monthly active users in just two months after its launch, the fastest growth record in the history of consumer applications.\n\nCorporate investments in generative AI increased 4.5-fold in 2023. According to McKinsey, 55% of Fortune 500 companies launched at least one generative AI pilot project in 2023, compared to 12% in 2022. The most adopted use cases are marketing content generation (78% of projects), software development assistance (65%), and automated customer service (54%). However, 67% of executives express concerns about governance and intellectual property risks.\n\nThe race for language models is intensifying: GPT-4 (OpenAI), Gemini (Google), Claude (Anthropic), and Llama 2 (Meta) are competing for the market. The cost of training a state-of-the-art language model is estimated at between $50 and $100 million, requiring between 10,000 and 25,000 NVIDIA A100 GPUs. The energy consumption of GPT-4's training is estimated at 50 GWh, equivalent to the annual consumption of 4,600 French households.",
+    "goal": "Extract key facts about the rise of generative AI and its economic and energy implications",
+    "gold_facts": [
+      {
+        "text": "The global generative AI market is estimated at $44.9 billion in 2023 and is expected to reach $207 billion by 2030 (CAGR of 24.4%).",
+        "source_excerpt": "The global generative AI market is estimated at $44.9 billion in 2023 and is expected to reach $207 billion by 2030"
+      },
+      {
+        "text": "OpenAI raised $10 billion from Microsoft, bringing its valuation to $29 billion.",
+        "source_excerpt": "OpenAI raised $10 billion from Microsoft in January 2023, bringing its valuation to $29 billion"
+      },
+      {
+        "text": "ChatGPT reached 100 million monthly active users in two months, a historic growth record.",
+        "source_excerpt": "ChatGPT reached 100 million monthly active users in just two months after its launch"
+      },
+      {
+        "text": "55% of Fortune 500 companies launched at least one generative AI pilot project in 2023, compared to 12% in 2022.",
+        "source_excerpt": "55% of Fortune 500 companies launched at least one generative AI pilot project in 2023, compared to 12% in 2022"
+      },
+      {
+        "text": "The most adopted use cases are marketing content (78%), software development assistance (65%), and automated customer service (54%).",
+        "source_excerpt": "The most adopted use cases are marketing content generation (78% of projects), software development assistance (65%), and automated customer service (54%)"
+      },
+      {
+        "text": "The cost of training a state-of-the-art language model is estimated at between $50 and $100 million, requiring 10,000 to 25,000 A100 GPUs.",
+        "source_excerpt": "The cost of training a state-of-the-art language model is estimated at between $50 and $100 million, requiring between 10,000 and 25,000 NVIDIA A100 GPUs"
+      },
+      {
+        "text": "GPT-4's training consumed approximately 50 GWh, equivalent to the annual consumption of 4,600 French households.",
+        "source_excerpt": "The energy consumption of GPT-4's training is estimated at 50 GWh, equivalent to the annual consumption of 4,600 French households"
+      }
+    ]
+  },
+  {
+    "id": "fe-tech-002",
+    "domain": "technical",
+    "input_text": "Cybersecurity in Europe faces growing threats and a structural skills shortage. The number of reported cyberattacks in Europe increased by 38% in 2022, reaching 10,623 major incidents according to ENISA (European Union Agency for Cybersecurity). The average cost of a data breach in Europe reached 4.35 million euros in 2022, up 12.7% from 2021. The most targeted sectors are healthcare (18% of attacks), public administrations (16%), and financial services (14%).\n\nRansomware remains the primary threat: 60% of European companies experienced at least one ransomware attack attempt in 2022. The average ransom demanded reached 1.2 million euros, but only 37% of victims actually pay. The average time to detect an intrusion is 197 days in Europe, compared to 277 days globally, thanks to NIS2 and GDPR regulations that impose notification obligations.\n\nThe cybersecurity professional shortage is critical: Europe lacks 347,000 specialists in 2023, according to (ISC)². The average salary of a cybersecurity expert in France increased by 18% year-over-year to reach 72,000 euros gross annually. The NIS2 directive, which came into effect in October 2024, extends cybersecurity obligations to 160,000 additional European entities, now covering 18 critical sectors compared to 7 previously.",
+    "goal": "Extract key facts about the state of cybersecurity in Europe and the skills shortage",
+    "gold_facts": [
+      {
+        "text": "The number of cyberattacks in Europe increased by 38% in 2022, reaching 10,623 major incidents according to ENISA.",
+        "source_excerpt": "The number of reported cyberattacks in Europe increased by 38% in 2022, reaching 10,623 major incidents"
+      },
+      {
+        "text": "The average cost of a data breach in Europe reached 4.35 million euros in 2022, up 12.7%.",
+        "source_excerpt": "The average cost of a data breach in Europe reached 4.35 million euros in 2022, up 12.7% from 2021"
+      },
+      {
+        "text": "The most targeted sectors by cyberattacks are healthcare (18%), public administrations (16%), and financial services (14%).",
+        "source_excerpt": "The most targeted sectors are healthcare (18% of attacks), public administrations (16%), and financial services (14%)"
+      },
+      {
+        "text": "60% of European companies experienced at least one ransomware attempt in 2022, with an average ransom of 1.2 million euros.",
+        "source_excerpt": "60% of European companies experienced at least one ransomware attack attempt in 2022. The average ransom demanded reached 1.2 million euros"
+      },
+      {
+        "text": "The average time to detect an intrusion is 197 days in Europe, compared to 277 days globally.",
+        "source_excerpt": "The average time to detect an intrusion is 197 days in Europe, compared to 277 days globally"
+      },
+      {
+        "text": "Europe lacks 347,000 cybersecurity specialists in 2023 and the average salary in France reached 72,000 euros gross annually (+18%).",
+        "source_excerpt": "Europe lacks 347,000 specialists in 2023, according to (ISC)²"
+      },
+      {
+        "text": "The NIS2 directive extends cybersecurity obligations to 160,000 additional European entities, covering 18 critical sectors compared to 7 previously.",
+        "source_excerpt": "The NIS2 directive, which came into effect in October 2024, extends cybersecurity obligations to 160,000 additional European entities, now covering 18 critical sectors compared to 7 previously"
+      }
+    ]
+  },
+  {
+    "id": "fe-tech-003",
+    "domain": "technical",
+    "input_text": "European cloud computing is seeking to assert its sovereignty against the dominance of American hyperscalers. The three main cloud providers (AWS, Azure, Google Cloud) hold 72% of the European cloud infrastructure market, estimated at 42 billion euros in 2022. The market share of European providers (OVHcloud, Deutsche Telekom, Orange Business) stagnates at 13%. The GAIA-X program, launched in 2020 to create a sovereign European cloud infrastructure, has engaged 350 members in 22 countries but has produced only 12 operational pilot projects by end of 2023.\n\nThe ANSSI's SecNumCloud certification, required for sensitive French government data, imposes strict criteria: hosting on national territory, majority European shareholding, and immunity from extraterritorial legislation (US Cloud Act). To date, only 4 providers have obtained SecNumCloud 3.2 certification: OVHcloud, 3DS Outscale, Worldline, and Oodrive. The sovereign cloud market in France is estimated at 2.8 billion euros in 2023.\n\nMulti-cloud adoption is becoming widespread: 89% of large European companies use at least two cloud providers, and 56% use three or more. The average cloud cost for a large European company increased by 23% in 2023, reaching 4.7 million euros per year. Data portability and vendor lock-in issues are cited as a major concern by 71% of European CIOs surveyed.",
+    "goal": "Extract key facts about European cloud computing and digital sovereignty challenges",
+    "gold_facts": [
+      {
+        "text": "AWS, Azure, and Google Cloud hold 72% of the European cloud infrastructure market, estimated at 42 billion euros in 2022.",
+        "source_excerpt": "The three main cloud providers (AWS, Azure, Google Cloud) hold 72% of the European cloud infrastructure market, estimated at 42 billion euros in 2022"
+      },
+      {
+        "text": "The market share of European providers (OVHcloud, Deutsche Telekom, Orange Business) stagnates at 13%.",
+        "source_excerpt": "The market share of European providers (OVHcloud, Deutsche Telekom, Orange Business) stagnates at 13%"
+      },
+      {
+        "text": "GAIA-X has engaged 350 members in 22 countries but has produced only 12 operational pilot projects by end of 2023.",
+        "source_excerpt": "The GAIA-X program, launched in 2020 to create a sovereign European cloud infrastructure, has engaged 350 members in 22 countries but has produced only 12 operational pilot projects"
+      },
+      {
+        "text": "Only 4 providers have obtained SecNumCloud 3.2 certification: OVHcloud, 3DS Outscale, Worldline, and Oodrive.",
+        "source_excerpt": "only 4 providers have obtained SecNumCloud 3.2 certification: OVHcloud, 3DS Outscale, Worldline, and Oodrive"
+      },
+      {
+        "text": "The sovereign cloud market in France is estimated at 2.8 billion euros in 2023.",
+        "source_excerpt": "The sovereign cloud market in France is estimated at 2.8 billion euros in 2023"
+      },
+      {
+        "text": "89% of large European companies use at least two cloud providers (multi-cloud), and 56% use three or more.",
+        "source_excerpt": "89% of large European companies use at least two cloud providers, and 56% use three or more"
+      },
+      {
+        "text": "The average cloud cost for a large European company increased by 23% in 2023, reaching 4.7 million euros per year.",
+        "source_excerpt": "The average cloud cost for a large European company increased by 23% in 2023, reaching 4.7 million euros per year"
+      }
+    ]
+  }
+]

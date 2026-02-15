@@ -12,6 +12,7 @@ import Toast from './components/Toast';
 import DiscoveryModal from './components/DiscoveryModal';
 import TraceabilityModal from './components/TraceabilityModal';
 import GuidedTour from './components/GuidedTour';
+import Modal from './components/Modal';
 import { API_URL } from './config';
 
 const STORAGE_KEY = 'factly_last_discovery';
@@ -61,6 +62,7 @@ const App: React.FC = () => {
   const [traceabilityTarget, setTraceabilityTarget] = useState<{ type: string; id: string } | null>(null);
   const openTraceability = useCallback((type: string, id: string) => setTraceabilityTarget({ type, id }), []);
   const [tourActive, setTourActive] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{ message: string; onConfirm: () => void } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -223,10 +225,15 @@ const App: React.FC = () => {
           onWaiting={handleWaiting}
           backendAvailable={backendAvailable}
           onStartTour={() => {
-            if (!window.confirm('This will load the example discovery and start the guided tour. Continue?')) return;
-            const freshId = 'example-' + Date.now();
-            setData({ ...EXAMPLE_DISCOVERY, discovery_id: freshId });
-            setTourActive(true);
+            setConfirmDialog({
+              message: 'This will load the example discovery and start the guided tour. Continue?',
+              onConfirm: () => {
+                setConfirmDialog(null);
+                const freshId = 'example-' + Date.now();
+                setData({ ...EXAMPLE_DISCOVERY, discovery_id: freshId });
+                setTourActive(true);
+              },
+            });
           }}
         />
       </header>
@@ -313,6 +320,17 @@ const App: React.FC = () => {
           data={data}
         />
       )}
+      <Modal isVisible={!!confirmDialog} onClose={() => setConfirmDialog(null)} maxWidth="400px">
+        <p style={{ margin: '0 0 1em' }}>{confirmDialog?.message}</p>
+        <div className="modal-actions">
+          <div className="modal-action-group-left">
+            <button className="modal-action-save" onClick={confirmDialog?.onConfirm}>Confirm</button>
+          </div>
+          <div className="modal-action-group-right">
+            <button className="modal-action-close" onClick={() => setConfirmDialog(null)}>Cancel</button>
+          </div>
+        </div>
+      </Modal>
     </div >
   );
 };

@@ -1,0 +1,226 @@
+[
+  {
+    "id": "dedup-easy-001",
+    "text_a": "The global average temperature has increased by 1.1°C compared to the pre-industrial period.",
+    "text_b": "The global average temperature has increased by 1.1°C compared to the pre-industrial period (1850-1900).",
+    "is_duplicate": true,
+    "difficulty": "easy",
+    "expected_score_range": [0.9, 1.0]
+  },
+  {
+    "id": "dedup-easy-002",
+    "text_a": "CO2 emissions from the transport sector account for 31% of national emissions in France.",
+    "text_b": "The transport sector is responsible for 31% of CO2 emissions in France.",
+    "is_duplicate": true,
+    "difficulty": "easy",
+    "expected_score_range": [0.85, 1.0]
+  },
+  {
+    "id": "dedup-easy-003",
+    "text_a": "Investments in renewable energy reached 495 billion dollars in 2022.",
+    "text_b": "Norway's GDP reached 482 billion dollars in 2022.",
+    "is_duplicate": false,
+    "difficulty": "easy",
+    "expected_score_range": [0.0, 0.3]
+  },
+  {
+    "id": "dedup-easy-004",
+    "text_a": "The carbon price in the EU ETS reached 101 euros per tonne in February 2023.",
+    "text_b": "The carbon price in the European Emissions Trading System reached a record of 101 EUR/tonne in February 2023.",
+    "is_duplicate": true,
+    "difficulty": "easy",
+    "expected_score_range": [0.85, 1.0]
+  },
+  {
+    "id": "dedup-easy-005",
+    "text_a": "France has 100,000 public charging points for electric vehicles.",
+    "text_b": "France has 567,000 km of national and departmental road network.",
+    "is_duplicate": false,
+    "difficulty": "easy",
+    "expected_score_range": [0.0, 0.2]
+  },
+  {
+    "id": "dedup-easy-006",
+    "text_a": "The Thwaites Glacier in Antarctica is retreating by 2.1 km per year.",
+    "text_b": "The Thwaites Glacier, nicknamed the Doomsday Glacier, is losing 2.1 kilometers per year in Antarctica.",
+    "is_duplicate": true,
+    "difficulty": "easy",
+    "expected_score_range": [0.85, 1.0]
+  },
+  {
+    "id": "dedup-easy-007",
+    "text_a": "The Arctic is warming four times faster than the global average.",
+    "text_b": "The population of the Arctic is estimated at 4 million people.",
+    "is_duplicate": false,
+    "difficulty": "easy",
+    "expected_score_range": [0.0, 0.2]
+  },
+  {
+    "id": "dedup-easy-008",
+    "text_a": "The European biosimilars market reached 12.3 billion euros in 2022.",
+    "text_b": "The European medical devices market reached 12.1 billion euros in 2022.",
+    "is_duplicate": false,
+    "difficulty": "easy",
+    "expected_score_range": [0.15, 0.35]
+  },
+  {
+    "id": "dedup-easy-009",
+    "text_a": "Electric vehicle sales accounted for 15.6% of new registrations in France in 2022.",
+    "text_b": "The French automotive market recorded 1.53 million new registrations in 2022.",
+    "is_duplicate": false,
+    "difficulty": "easy",
+    "expected_score_range": [0.0, 0.3]
+  },
+  {
+    "id": "dedup-easy-010",
+    "text_a": "The number of cyberattacks in Europe increased by 38% in 2022.",
+    "text_b": "Reported cyberattacks in Europe saw a 38% rise over the course of 2022.",
+    "is_duplicate": true,
+    "difficulty": "easy",
+    "expected_score_range": [0.85, 1.0]
+  },
+  {
+    "id": "dedup-medium-001",
+    "text_a": "Global greenhouse gas emissions reached 59.1 gigatonnes of CO2 equivalent in 2021.",
+    "text_b": "In 2021, the world emitted nearly 59 gigatonnes of CO2 equivalent in greenhouse gases, a historically high level.",
+    "is_duplicate": true,
+    "difficulty": "medium",
+    "expected_score_range": [0.7, 0.95]
+  },
+  {
+    "id": "dedup-medium-002",
+    "text_a": "The average cost of a data breach in Europe reached 4.35 million euros in 2022, up 12.7%.",
+    "text_b": "The average cost of a successful cyberattack in Europe stands at 4.35 million euros in 2022, representing an increase of nearly 13% year-over-year.",
+    "is_duplicate": true,
+    "difficulty": "medium",
+    "expected_score_range": [0.7, 0.95]
+  },
+  {
+    "id": "dedup-medium-003",
+    "text_a": "Global cereal production reached 2,756 million tonnes in 2022, down 1.8%.",
+    "text_b": "Global cereal consumption reached 2,800 million tonnes in 2022, exceeding production for the third consecutive year.",
+    "is_duplicate": false,
+    "difficulty": "medium",
+    "expected_score_range": [0.2, 0.5]
+  },
+  {
+    "id": "dedup-medium-004",
+    "text_a": "Bangladesh could lose 17% of its land area by 2050 with a 50 cm sea level rise, displacing 20 million people.",
+    "text_b": "With a 50-centimeter rise in sea levels, Bangladesh risks losing roughly one-fifth of its territory by mid-century, forcing the displacement of tens of millions of inhabitants.",
+    "is_duplicate": true,
+    "difficulty": "medium",
+    "expected_score_range": [0.65, 0.9]
+  },
+  {
+    "id": "dedup-medium-005",
+    "text_a": "Europe is short of 347,000 cybersecurity specialists in 2023.",
+    "text_b": "Europe trained 347,000 new digital professionals in 2023, up 12% compared to the previous year.",
+    "is_duplicate": false,
+    "difficulty": "medium",
+    "expected_score_range": [0.15, 0.4]
+  },
+  {
+    "id": "dedup-medium-006",
+    "text_a": "The France 2030 plan allocates 54 billion euros in investment, including 8 billion for green hydrogen.",
+    "text_b": "The European recovery plan NextGenerationEU mobilizes 54 billion euros for the digital transition, including 8 billion for 5G.",
+    "is_duplicate": false,
+    "difficulty": "medium",
+    "expected_score_range": [0.1, 0.35]
+  },
+  {
+    "id": "dedup-medium-007",
+    "text_a": "AWS, Azure, and Google Cloud hold 72% of the European cloud market, estimated at 42 billion euros.",
+    "text_b": "The cloud market in Europe represents 42 billion euros, of which 35% is captured by AWS alone.",
+    "is_duplicate": false,
+    "difficulty": "medium",
+    "expected_score_range": [0.3, 0.55]
+  },
+  {
+    "id": "dedup-medium-008",
+    "text_a": "Deforestation in the Amazon reached 11,568 km² in 2022, down 21% compared to 2021.",
+    "text_b": "The Brazilian Amazon lost more than 11,000 km² of forest in 2022, an area that decreased compared to the peak of the previous year.",
+    "is_duplicate": true,
+    "difficulty": "medium",
+    "expected_score_range": [0.65, 0.9]
+  },
+  {
+    "id": "dedup-medium-009",
+    "text_a": "Venture capital investments in Europe totaled 52 billion euros in 2022, down 35%.",
+    "text_b": "European venture capital invested 52 billion euros in 2022, a third less than the record set in 2021.",
+    "is_duplicate": true,
+    "difficulty": "medium",
+    "expected_score_range": [0.7, 0.95]
+  },
+  {
+    "id": "dedup-medium-010",
+    "text_a": "Heat waves caused 61,672 deaths in Europe during the summer of 2022.",
+    "text_b": "Floods in Europe caused 243 deaths and 44 billion euros in damages in 2021.",
+    "is_duplicate": false,
+    "difficulty": "medium",
+    "expected_score_range": [0.15, 0.4]
+  },
+  {
+    "id": "dedup-hard-001",
+    "text_a": "Permafrost could release between 150 and 200 gigatonnes of carbon by 2100, creating a positive climate feedback loop.",
+    "text_b": "The thawing of Arctic permafrost threatens to release up to 200 Gt of carbon into the atmosphere over the course of the century, a self-amplifying phenomenon that would accelerate warming.",
+    "is_duplicate": true,
+    "difficulty": "hard",
+    "expected_score_range": [0.6, 0.85]
+  },
+  {
+    "id": "dedup-hard-002",
+    "text_a": "Coral reefs have lost 50% of their coverage since 1950, and a 2°C warming would cause the disappearance of 99% of tropical reefs.",
+    "text_b": "Tropical coral reefs, which harbor a quarter of marine biodiversity, face near-total extinction if warming reaches 2 degrees above pre-industrial levels.",
+    "is_duplicate": true,
+    "difficulty": "hard",
+    "expected_score_range": [0.55, 0.8]
+  },
+  {
+    "id": "dedup-hard-003",
+    "text_a": "Global fossil fuel subsidies reached 7 trillion dollars in 2022 according to the IMF.",
+    "text_b": "Governments worldwide spent 7 trillion dollars in direct and indirect fossil fuel subsidies in 2022, according to estimates by the International Monetary Fund.",
+    "is_duplicate": true,
+    "difficulty": "hard",
+    "expected_score_range": [0.7, 0.9]
+  },
+  {
+    "id": "dedup-hard-004",
+    "text_a": "82% of solar panels installed in Europe are manufactured in China.",
+    "text_b": "China dominates the global solar supply chain, producing 80% of photovoltaic cells and 97% of solar-grade polysilicon.",
+    "is_duplicate": false,
+    "difficulty": "hard",
+    "expected_score_range": [0.35, 0.6]
+  },
+  {
+    "id": "dedup-hard-005",
+    "text_a": "The loss and damage fund created at COP27 received pledges of 725 million dollars, against estimated needs of 400 billion per year.",
+    "text_b": "The climate loss and damage financing mechanism, established at COP27, remains vastly underfunded: contribution pledges cover only a tiny fraction of the hundreds of billions needed annually.",
+    "is_duplicate": true,
+    "difficulty": "hard",
+    "expected_score_range": [0.55, 0.8]
+  },
+  {
+    "id": "dedup-hard-006",
+    "text_a": "Sea level rise reached 3.7 mm per year over the 2006-2018 period.",
+    "text_b": "Coastal erosion is advancing by 3.7 meters per year on average along European coastlines since 2006.",
+    "is_duplicate": false,
+    "difficulty": "hard",
+    "expected_score_range": [0.15, 0.4]
+  },
+  {
+    "id": "dedup-hard-007",
+    "text_a": "Battery storage capacity in Europe reached 8.8 GWh in 2022, covering 0.3% of grid flexibility needs.",
+    "text_b": "Lithium-ion battery production in Europe reached 8.8 GWh in 2022, primarily intended for the automotive sector.",
+    "is_duplicate": false,
+    "difficulty": "hard",
+    "expected_score_range": [0.25, 0.5]
+  },
+  {
+    "id": "dedup-hard-008",
+    "text_a": "The training cost of a state-of-the-art language model is estimated between 50 and 100 million dollars.",
+    "text_b": "The inference cost of large language models in production is estimated between 5 and 20 million dollars per month for large-scale deployments.",
+    "is_duplicate": false,
+    "difficulty": "hard",
+    "expected_score_range": [0.2, 0.5]
+  }
+]

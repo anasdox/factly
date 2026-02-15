@@ -1,0 +1,20 @@
+{
+  "name": "quick",
+  "description": "Quick benchmark for CI — fact extraction only, 1 run",
+  "backendUrl": "http://localhost:3002",
+  "suites": ["fact-extraction"],
+  "runsPerCase": 1,
+  "target": {
+    "provider": "openai",
+    "model": "gpt-4o",
+    "tempExtraction": 0.2,
+    "tempDedup": 0.1,
+    "tempImpact": 0.1,
+    "tempProposal": 0.3
+  },
+  "matching": {
+    "method": "string",
+    "threshold": 0.6
+  },
+  "timeoutMs": 30000
+}

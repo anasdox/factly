@@ -14,6 +14,7 @@ import * as path from 'path';
 import { createProvider, LLMProvider, OutputTraceabilityContext } from './llm/provider';
 import { VALID_OUTPUT_TYPES, ExtractedFact } from './llm/prompts';
 import { embeddingCheckDuplicates, embeddingScanDuplicates } from './llm/embeddings';
+import benchmarkRoutes from './benchmark-routes';
 
 const VALID_UPDATE_ENTITY_TYPES = ['fact', 'insight', 'recommendation', 'output'];
 import { extractTextFromUrl, WebScraperError } from './web-scraper';
@@ -58,6 +59,7 @@ const port = parseInt(process.env.PORT || '3002', 10);
 // Add middleware
 app.use(bodyParser.json());
 app.use(cors());
+app.use('/benchmark', benchmarkRoutes);
 
 // Define API endpoints
 app.post('/rooms', async (req, res, next) => {

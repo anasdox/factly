@@ -152,6 +152,33 @@
 - The analyst decides: merge, keep both, or reject
 - On-demand "Detect Duplicates" action per column: sends all items to the LLM to identify semantically similar groups, and proposes merges
 
+### M16: AI Quality Benchmark Tool
+**Status:** In Progress
+**Outcome:** A standalone benchmark tool that measures the quality of each AI pipeline step (extraction, dedup, impact, update proposal) across 7 quality dimensions, supports comparing configurations (model, temperature, embedding, threshold), and tracks quality evolution over time.
+- CLI tool in `tools/benchmark/` with `run`, `compare`, `history`, `list` commands
+- 7 quality dimensions: fact extraction, insight extraction, recommendations, outputs, dedup, impact check, update proposals
+- Automated metrics: precision/recall/F1 (trigram and embedding matching), traceability accuracy, source anchoring, structural analysis, dedup TPR/FPR, impact TPR/TNR, value propagation
+- LLM-as-judge evaluators: atomicity, non-triviality, validity, actionability, relevance, completeness, explanation quality, semantic correctness, style preservation
+- Gold datasets across 3 domains (climate, market, technical) with 28+ dedup pairs, 12+ impact scenarios, 10+ update scenarios
+- Configuration matrix support for systematic multi-model/multi-temperature exploration
+- Cost tracking (tokens + estimated USD)
+- Results stored as timestamped JSON for historical comparison and regression detection
+- Configurable temperatures via env vars (`LLM_TEMP_EXTRACTION`, `LLM_TEMP_DEDUP`, `LLM_TEMP_IMPACT`, `LLM_TEMP_PROPOSAL`)
+
+### M17: Benchmark Dashboard UI
+**Status:** In Progress
+**Outcome:** A web dashboard at `/benchmark` for viewing, comparing, and launching benchmarks visually.
+- Backend REST API: list results, get result detail, compare runs, manage configs, get improvement suggestions
+- Run selector with sort/filter by date, score, model
+- Radar chart of 7 quality dimensions (SVG, superposed for multi-run comparison)
+- Metric comparison table with best-value highlighting
+- Best config highlight per dimension
+- Dimension drill-down with individual case metrics and LLM-judge reasoning
+- Historical score evolution chart
+- New benchmark launcher with config builder (sliders, dropdowns)
+- Matrix builder for systematic exploration (multi-select per parameter, combination count)
+- Improvement suggestions panel (sweet spot detection, regression alerts, neighborhood exploration)
+
 ## Risks and Dependencies
 
 | Risk | Mitigation |
@@ -166,6 +193,9 @@
 | Staleness noise (M14) | Too many stale markers may overwhelm the analyst | Allow bulk confirm/dismiss; clear staleness per column |
 | Deduplication false positives (M15) | LLM may flag non-duplicates as similar | Human-in-the-loop: analyst always decides; never auto-merge |
 | LLM cost for deduplication (M15) | Sending all existing items per extraction increases token usage | Include only same-column items; cap context size |
+| Benchmark cost (M16) | Full matrix benchmarks consume many LLM calls | Quick config for CI; cost tracker per run; limit runs per case |
+| Gold dataset bias (M16) | Manually curated datasets may not represent real-world diversity | 3 domains; periodic dataset revision; automated vs LLM-judge cross-validation |
+| LLM-judge reliability (M16) | Judge model may have systematic biases | Use different model for judging than for testing; store reasoning for audit |
 
 ## Non-Goals (Project-Wide)
 

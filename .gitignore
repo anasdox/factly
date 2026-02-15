@@ -26,3 +26,7 @@ Thumbs.db
 
 # Test coverage
 coverage/
+
+# Benchmark results (generated, not committed)
+tools/benchmark/results/*.json
+!tools/benchmark/results/.gitkeep

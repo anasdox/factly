@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
+import BenchmarkPage from './pages/BenchmarkPage';
 import reportWebVitals from './reportWebVitals';
 import { QueryParamProvider } from 'use-query-params';
 import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6';
@@ -16,6 +17,7 @@ root.render(
       <QueryParamProvider adapter={ReactRouter6Adapter}>
         <Routes>
           <Route path="/" element={<App />}/>
+          <Route path="/benchmark" element={<BenchmarkPage />}/>
         </Routes>
       </QueryParamProvider>
     </BrowserRouter>

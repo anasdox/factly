@@ -1,0 +1,14 @@
+{
+  "name": "factly-benchmark",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI quality benchmark tool for Factly pipeline",
+  "scripts": {
+    "benchmark": "ts-node src/cli.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "name": "full-matrix",
+  "description": "Full matrix benchmark across multiple models and temperatures",
+  "backendUrl": "http://localhost:3002",
+  "suites": [
+    "fact-extraction",
+    "insight-extraction",
+    "recommendation-extraction",
+    "output-formulation",
+    "dedup",
+    "impact-check",
+    "update-proposal"
+  ],
+  "runsPerCase": 3,
+  "matrix": {
+    "model": ["gpt-4o", "gpt-4.1"],
+    "tempExtraction": [0.0, 0.1, 0.2, 0.3],
+    "tempDedup": [0.0, 0.1],
+    "tempImpact": [0.0, 0.1],
+    "tempProposal": [0.1, 0.3]
+  },
+  "baseTarget": {
+    "provider": "openai",
+    "model": "gpt-4o",
+    "tempExtraction": 0.2,
+    "tempDedup": 0.1,
+    "tempImpact": 0.1,
+    "tempProposal": 0.3,
+    "embeddingsModel": "text-embedding-3-small",
+    "dedupThreshold": 0.75
+  },
+  "matching": {
+    "method": "string",
+    "threshold": 0.6
+  },
+  "timeoutMs": 60000
+}

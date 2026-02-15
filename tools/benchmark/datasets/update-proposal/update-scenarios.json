@@ -1,0 +1,114 @@
+[
+  {
+    "id": "update-001",
+    "entity_type": "insight",
+    "current_text": "The 1.1°C increase in global temperature confirms the warming trajectory predicted by climate models and makes the 1.5°C threshold increasingly difficult to meet.",
+    "upstream_old_text": "The global average temperature has increased by 1.1°C compared to the pre-industrial period.",
+    "upstream_new_text": "The global average temperature has increased by 1.3°C compared to the pre-industrial period, according to revised 2024 data.",
+    "upstream_entity_type": "fact",
+    "goal": "Update the insight to reflect the new warming value",
+    "expected_values_present": ["1.3°C", "2024"],
+    "expected_values_absent": ["1.1°C"]
+  },
+  {
+    "id": "update-002",
+    "entity_type": "recommendation",
+    "current_text": "Launch a European investment plan of 50 billion euros over 5 years dedicated to energy storage to increase flexibility capacity from 0.3% to at least 10% of grid needs by 2030.",
+    "upstream_old_text": "The energy storage capacity deficit (0.3% of needs) constitutes the main technical bottleneck of the transition.",
+    "upstream_new_text": "Energy storage capacity in Europe reached 2.1% of grid flexibility needs in 2024, but remains far too insufficient to effectively integrate intermittent renewables.",
+    "upstream_entity_type": "insight",
+    "goal": "Update the recommendation to reflect the progress in storage",
+    "expected_values_present": ["2.1%"],
+    "expected_values_absent": ["0.3%"]
+  },
+  {
+    "id": "update-003",
+    "entity_type": "fact",
+    "current_text": "Global greenhouse gas emissions reached 59.1 gigatons of CO2 equivalent in 2021, a 12% increase compared to 2010.",
+    "upstream_old_text": "Global greenhouse gas emissions reached a record level of 59.1 gigatons of CO2 equivalent in 2021.",
+    "upstream_new_text": "Global greenhouse gas emissions reached 62.3 gigatons of CO2 equivalent in 2022, a new all-time record according to the IPCC report.",
+    "upstream_entity_type": "fact",
+    "goal": "Update the fact with the latest emissions data",
+    "expected_values_present": ["62.3 gigatons", "2022"],
+    "expected_values_absent": ["59.1 gigatons", "2021"]
+  },
+  {
+    "id": "update-004",
+    "entity_type": "insight",
+    "current_text": "Europe faces a dual risk of strategic dependence: after Russian gas, it is the dependence on China for energy transition components (solar panels, wind turbines) that constitutes a major vulnerability.",
+    "upstream_old_text": "82% of solar panels installed in Europe are manufactured in China.",
+    "upstream_new_text": "The share of Chinese-origin solar panels installed in Europe decreased to 68% in 2024, thanks to new production capacities from Meyer Burger and Enel Green Power.",
+    "upstream_entity_type": "fact",
+    "goal": "Update the insight by incorporating the reduction in Chinese dependence",
+    "expected_values_present": ["68%"],
+    "expected_values_absent": ["82%"]
+  },
+  {
+    "id": "update-005",
+    "entity_type": "recommendation",
+    "current_text": "Create regional strategic food reserves covering 90 days of consumption in the European areas most vulnerable to supply disruptions.",
+    "upstream_old_text": "Climate change creates a vicious cycle on food systems: declining agricultural yields and falling global cereal production worsen global food insecurity, while increasing import costs.",
+    "upstream_new_text": "Global cereal production rebounded by 4.2% in 2024, but yields in Southern Europe remain 12% below the ten-year average, maintaining regional vulnerability despite the overall improvement.",
+    "upstream_entity_type": "insight",
+    "goal": "Update the recommendation by incorporating the overall improvement but the persistent vulnerability of Southern Europe",
+    "expected_values_present": ["Southern Europe", "12%"],
+    "expected_values_absent": []
+  },
+  {
+    "id": "update-006",
+    "entity_type": "output",
+    "current_text": "## 1. Massive investment in energy storage\n\nA plan of **50 billion euros over 5 years** is needed to increase storage capacity from 0.3% to 10% of grid needs by 2030.",
+    "upstream_old_text": "Launch a European investment plan of 50 billion euros over 5 years dedicated to energy storage to increase flexibility capacity from 0.3% to at least 10% of grid needs by 2030.",
+    "upstream_new_text": "Launch a European investment plan of 35 billion euros over 4 years dedicated to energy storage to increase flexibility capacity from 2.1% to at least 15% of grid needs by 2030, leveraging the decline in battery costs.",
+    "upstream_entity_type": "recommendation",
+    "goal": "Update the report to reflect the revised plan",
+    "output_type": "report",
+    "expected_values_present": ["35 billion", "4 years", "2.1%", "15%"],
+    "expected_values_absent": ["50 billion", "5 years", "0.3%"]
+  },
+  {
+    "id": "update-007",
+    "entity_type": "fact",
+    "current_text": "The carbon price in the EU ETS reached a record of 101 euros per ton in February 2023, compared to 25 euros in 2020.",
+    "upstream_old_text": "The carbon price in the EU ETS reached a record of 101 euros per ton in February 2023.",
+    "upstream_new_text": "The carbon price in the EU ETS stabilized around 72 euros per ton in 2024, after reaching 101 euros in 2023.",
+    "upstream_entity_type": "fact",
+    "goal": "Update the fact with the most recent price data",
+    "expected_values_present": ["72 euros", "2024"],
+    "expected_values_absent": []
+  },
+  {
+    "id": "update-008",
+    "entity_type": "insight",
+    "current_text": "The rapid adoption of generative AI (from 12% to 55% in one year among the Fortune 500) reflects an unprecedented technological paradigm shift.",
+    "upstream_old_text": "55% of Fortune 500 companies launched at least one generative AI pilot project in 2023.",
+    "upstream_new_text": "78% of Fortune 500 companies deployed at least one generative AI project in production in 2024, moving beyond the pilot stage.",
+    "upstream_entity_type": "fact",
+    "goal": "Update the insight to reflect the shift to production and the new adoption rate",
+    "expected_values_present": ["78%", "production", "2024"],
+    "expected_values_absent": ["55%", "pilot"]
+  },
+  {
+    "id": "update-009",
+    "entity_type": "recommendation",
+    "current_text": "Set a binding timeline for the progressive elimination of fossil fuel subsidies in G20 countries (25% reduction by 2027, 75% by 2030) with reallocation of at least 15% of the savings toward international climate financing.",
+    "upstream_old_text": "The gap between fossil fuel subsidies (7 trillion dollars) and climate financing (83.3 billion) reveals a fundamental inconsistency in global public policies.",
+    "upstream_new_text": "Fossil fuel subsidies decreased to 5.8 trillion dollars in 2024 while climate financing reached 116 billion, but the gap remains at 50:1, revealing a persistent fundamental inconsistency despite progress.",
+    "upstream_entity_type": "insight",
+    "goal": "Update the recommendation to reflect the evolution of amounts while maintaining the urgency",
+    "expected_values_present": ["5.8 trillion", "116 billion"],
+    "expected_values_absent": ["7 trillion", "83.3 billion"]
+  },
+  {
+    "id": "update-010",
+    "entity_type": "output",
+    "current_text": "### 2. Industrial sovereignty over key components\n\nThe creation of a **European industrial alliance** for transition components (photovoltaic cells, wind turbine blades, electrolyzers) must be accompanied by progressive local content quotas: 20% in 2025, 40% in 2030.",
+    "upstream_old_text": "Create a European industrial alliance for energy transition components with progressive local content quotas (20% in 2025, 40% in 2030) to reduce dependence on China.",
+    "upstream_new_text": "Strengthen the European industrial Solar Alliance for energy transition components by raising local content quotas to 30% in 2025 and 55% in 2030, building on the new Meyer Burger and Enel Green Power factories.",
+    "upstream_entity_type": "recommendation",
+    "goal": "Update the report to reflect the revised quotas and the existing alliance",
+    "output_type": "report",
+    "expected_values_present": ["Solar Alliance", "30%", "55%", "Meyer Burger", "Enel Green Power"],
+    "expected_values_absent": ["20% in 2025", "40% in 2030"]
+  }
+]
