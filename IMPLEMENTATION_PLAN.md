@@ -59,7 +59,7 @@
 - [x] Implementation done for current milestone
 - [x] CI green (101/101 acceptance tests pass, TypeScript clean)
 - [x] Refactoring validated (acceptance + full tests green — 101/101)
-- [ ] Demo prepared for milestone scope
+- [x] Demo prepared and validated by UoR (2026-02-15)
 
 ## Risks and trade-offs
 - Risk: TypeScript downlevelIteration flag not enabled — Set operations with for..of fail

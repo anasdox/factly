@@ -18,7 +18,7 @@ Deliver M14: Staleness Propagation on Edit + M15: Semantic Deduplication + AI-As
 - [x] Implement M14+M15
 - [x] All acceptance tests pass (38/38 M14+M15, 101/101 full suite)
 - [x] Refactoring phase (ProposalPanel extraction, useMergeDialog hook, type safety fixes, backend validation helpers, constants, CSS standardization)
-- [ ] Demo and user validation
+- [x] Demo and user validation (validated 2026-02-15)
 
 ## Validation
 - All acceptance tests pass

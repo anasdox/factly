@@ -135,7 +135,7 @@
 - OutputRenderer abstraction for future format extensibility (HTML, PDF, audio)
 
 ### M14: Staleness Propagation on Edit
-**Status:** Planned
+**Status:** Delivered (Demo validated 2026-02-15)
 **Outcome:** When an analyst modifies an upstream item (input, fact, insight), downstream items that depend on it are flagged as potentially stale. The analyst controls whether to re-generate, manually update, or dismiss the staleness.
 - On save, the analyst indicates if the edit changes meaning (substance) or only wording (form)
 - Form-only edits: no cascade, no staleness
@@ -145,7 +145,7 @@
 - Staleness clears when the item is re-generated, updated, or explicitly confirmed
 
 ### M15: Semantic Deduplication
-**Status:** Planned
+**Status:** Delivered (Demo validated 2026-02-15)
 **Outcome:** The system detects and prevents semantically duplicate items (facts, insights, recommendations) even when worded differently.
 - At suggestion time: existing items are included in the LLM prompt so it avoids generating duplicates
 - If a suggestion is too close to an existing item, it is flagged as a potential duplicate with a reference to the existing item
