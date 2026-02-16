@@ -56,8 +56,14 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
       fileReader.readAsText(file, "UTF-8");
       fileReader.onload = e => {
         try {
-          const data = JSON.parse(e.target?.result as string);
-          setData(data as DiscoveryData);
+          const parsed = JSON.parse(e.target?.result as string) as DiscoveryData;
+          setConfirmAction({
+            message: `Import "${parsed.title || 'Untitled'}"? This will replace the current discovery.`,
+            onConfirm: () => {
+              setConfirmAction(null);
+              setData(parsed);
+            },
+          });
         } catch (error) {
           console.error("Error parsing JSON:", error);
         }
@@ -66,6 +72,8 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         console.error("Error reading file:", error);
       };
     }
+    // Reset input so the same file can be re-selected
+    event.target.value = '';
   };
 
   const handleExport = () => {
