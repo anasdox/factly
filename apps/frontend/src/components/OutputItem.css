@@ -68,6 +68,25 @@
   color: var(--color-heading-2);
 }
 
+.output-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.output-preview-copy {
+  background: none;
+  border: none;
+  font-size: 1em;
+  cursor: pointer;
+  color: var(--color-preview-btn);
+  padding: 4px 6px;
+}
+
+.output-preview-copy:hover {
+  color: var(--color-heading-2);
+}
+
 .output-preview-close {
   background: none;
   border: none;
