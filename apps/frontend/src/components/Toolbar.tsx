@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { faEdit, faFileDownload, faPlus, faUpload, faPlayCircle, faMoon, faSun, faRoute } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faFileDownload, faPlus, faUpload, faPlayCircle, faMoon, faSun, faRoute, faRocket, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./Toolbar.css";
 
 import DiscoveryModal from "./DiscoveryModal";
 import StartEventRoomModal from './StartEventRoomModal';
+import FullAutoConfigModal from './FullAutoConfigModal';
+import FullAutoSummaryModal, { FullAutoStats } from './FullAutoSummaryModal';
 import Modal from './Modal';
 
 import { StringParam, useQueryParam } from "use-query-params";
@@ -46,6 +48,195 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  // Full Auto Pipeline state
+  const [isFullAutoConfigVisible, setIsFullAutoConfigVisible] = useState(false);
+  const [isFullAutoSummaryVisible, setIsFullAutoSummaryVisible] = useState(false);
+  const [isRunningFullAuto, setIsRunningFullAuto] = useState(false);
+  const [fullAutoStats, setFullAutoStats] = useState<FullAutoStats>({ facts: 0, insights: 0, recommendations: 0, outputs: 0 });
+  const [fullAutoError, setFullAutoError] = useState<string | undefined>();
+  const fullAutoSnapshotRef = useRef<DiscoveryData | null>(null);
+
+  const handleRunFullAuto = async (config: { outputType: OutputType['type'] }) => {
+    setIsFullAutoConfigVisible(false);
+    setIsRunningFullAuto(true);
+    setFullAutoError(undefined);
+    const stats: FullAutoStats = { facts: 0, insights: 0, recommendations: 0, outputs: 0 };
+
+    // Snapshot for undo
+    fullAutoSnapshotRef.current = JSON.parse(JSON.stringify(data));
+
+    try {
+      // Step 1: Extract facts from all inputs in parallel
+      onWaiting('Full Auto: Extracting facts...');
+      const factPromises = data.inputs.map(input => {
+        const payload: Record<string, string> = {
+          goal: data.goal,
+          input_id: input.input_id,
+        };
+        if (input.type === 'web') {
+          payload.input_url = input.url || '';
+        } else {
+          payload.input_text = input.text || '';
+        }
+        return fetch(`${API_URL}/extract/facts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }).then(async (response) => {
+          if (!response.ok) {
+            const body = await response.json().catch(() => ({ error: 'Extraction failed' }));
+            throw new Error(body.error || 'Extraction failed');
+          }
+          const result = await response.json();
+          return { inputId: input.input_id, suggestions: result.suggestions as { text: string; source_excerpt?: string }[] };
+        });
+      });
+
+      const factResults = await Promise.allSettled(factPromises);
+      const newFacts: FactType[] = [];
+      for (const result of factResults) {
+        if (result.status === 'fulfilled') {
+          for (const s of result.value.suggestions) {
+            newFacts.push({
+              fact_id: Math.random().toString(16).slice(2),
+              text: s.text,
+              related_inputs: [result.value.inputId],
+              source_excerpt: s.source_excerpt,
+              created_at: new Date().toISOString(),
+            });
+          }
+        }
+      }
+      stats.facts = newFacts.length;
+      if (newFacts.length === 0) throw new Error('No facts could be extracted from any input.');
+      setData(prev => prev ? { ...prev, facts: [...prev.facts, ...newFacts] } : prev);
+
+      // Step 2: Extract insights from new facts
+      onWaiting('Full Auto: Generating insights...');
+      const insightsResponse = await fetch(`${API_URL}/extract/insights`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          facts: newFacts.map(f => ({ fact_id: f.fact_id, text: f.text })),
+          goal: data.goal,
+        }),
+      });
+      if (!insightsResponse.ok) {
+        const body = await insightsResponse.json().catch(() => ({ error: 'Insights extraction failed' }));
+        throw new Error(body.error || 'Insights extraction failed');
+      }
+      const insightsResult = await insightsResponse.json();
+      const newInsights: InsightType[] = [];
+      for (const s of insightsResult.suggestions as { text: string; related_fact_ids?: string[] }[]) {
+        const relatedFacts = s.related_fact_ids && s.related_fact_ids.length > 0
+          ? s.related_fact_ids
+          : newFacts.map(f => f.fact_id);
+        newInsights.push({
+          insight_id: Math.random().toString(16).slice(2),
+          text: s.text,
+          related_facts: relatedFacts,
+          created_at: new Date().toISOString(),
+        });
+      }
+      stats.insights = newInsights.length;
+      if (newInsights.length === 0) throw new Error('No insights could be derived from the extracted facts.');
+      setData(prev => prev ? { ...prev, insights: [...prev.insights, ...newInsights] } : prev);
+
+      // Step 3: Extract recommendations from new insights
+      onWaiting('Full Auto: Generating recommendations...');
+      const recsResponse = await fetch(`${API_URL}/extract/recommendations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          insights: newInsights.map(i => ({ insight_id: i.insight_id, text: i.text })),
+          goal: data.goal,
+        }),
+      });
+      if (!recsResponse.ok) {
+        const body = await recsResponse.json().catch(() => ({ error: 'Recommendations extraction failed' }));
+        throw new Error(body.error || 'Recommendations extraction failed');
+      }
+      const recsResult = await recsResponse.json();
+      const newRecommendations: RecommendationType[] = [];
+      for (const s of recsResult.suggestions as { text: string; related_insight_ids?: string[] }[]) {
+        const relatedInsights = s.related_insight_ids && s.related_insight_ids.length > 0
+          ? s.related_insight_ids
+          : newInsights.map(i => i.insight_id);
+        newRecommendations.push({
+          recommendation_id: Math.random().toString(16).slice(2),
+          text: s.text,
+          related_insights: relatedInsights,
+          created_at: new Date().toISOString(),
+        });
+      }
+      stats.recommendations = newRecommendations.length;
+      if (newRecommendations.length === 0) throw new Error('No recommendations could be generated from the insights.');
+      setData(prev => prev ? { ...prev, recommendations: [...prev.recommendations, ...newRecommendations] } : prev);
+
+      // Step 4: Formulate output with full traceability context
+      onWaiting('Full Auto: Formulating output...');
+      const relatedInsightIds = new Set<string>();
+      newRecommendations.forEach(r => r.related_insights.forEach(id => relatedInsightIds.add(id)));
+      const relatedInsights = newInsights.filter(i => relatedInsightIds.has(i.insight_id));
+
+      const relatedFactIds = new Set<string>();
+      relatedInsights.forEach(i => i.related_facts.forEach(id => relatedFactIds.add(id)));
+      const relatedFacts = newFacts.filter(f => relatedFactIds.has(f.fact_id));
+
+      const relatedInputIds = new Set<string>();
+      relatedFacts.forEach(f => f.related_inputs.forEach(id => relatedInputIds.add(id)));
+      const relatedInputs = data.inputs.filter(inp => relatedInputIds.has(inp.input_id));
+
+      const outputResponse = await fetch(`${API_URL}/extract/outputs`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recommendations: newRecommendations.map(r => ({ recommendation_id: r.recommendation_id, text: r.text })),
+          goal: data.goal,
+          output_type: config.outputType,
+          facts: relatedFacts.map(f => ({ text: f.text, source_excerpt: f.source_excerpt })),
+          insights: relatedInsights.map(i => ({ text: i.text })),
+          inputs: relatedInputs.map(inp => ({ title: inp.title, text: inp.text })),
+        }),
+      });
+      if (!outputResponse.ok) {
+        const body = await outputResponse.json().catch(() => ({ error: 'Output formulation failed' }));
+        throw new Error(body.error || 'Output formulation failed');
+      }
+      const outputResult = await outputResponse.json();
+      const newOutputs: OutputType[] = [];
+      for (const s of outputResult.suggestions as { text: string }[]) {
+        newOutputs.push({
+          output_id: Math.random().toString(16).slice(2),
+          text: s.text,
+          related_recommendations: newRecommendations.map(r => r.recommendation_id),
+          type: config.outputType,
+          created_at: new Date().toISOString(),
+        });
+      }
+      stats.outputs = newOutputs.length;
+      setData(prev => prev ? { ...prev, outputs: [...prev.outputs, ...newOutputs] } : prev);
+
+      onInfo('Full Auto pipeline complete.');
+    } catch (err: any) {
+      setFullAutoError(err.message || 'Pipeline failed');
+      onError(err.message || 'Full Auto pipeline failed');
+    } finally {
+      setFullAutoStats(stats);
+      setIsRunningFullAuto(false);
+      setIsFullAutoSummaryVisible(true);
+    }
+  };
+
+  const handleFullAutoUndo = () => {
+    if (fullAutoSnapshotRef.current) {
+      setData(fullAutoSnapshotRef.current);
+      fullAutoSnapshotRef.current = null;
+      onInfo('Full Auto results undone.');
+    }
+    setIsFullAutoSummaryVisible(false);
   };
 
   const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -282,6 +473,13 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         <FontAwesomeIcon icon={faPlus} size='lg' />
       </div>
       <div
+        title={!backendAvailable ? "Backend unavailable" : isRunningFullAuto ? "Pipeline running..." : data.inputs.length === 0 ? "Add inputs first" : "Full Auto Pipeline"}
+        onClick={backendAvailable && !isRunningFullAuto && data.inputs.length > 0 ? () => setIsFullAutoConfigVisible(true) : undefined}
+        className={!backendAvailable || isRunningFullAuto || data.inputs.length === 0 ? 'toolbar-disabled' : ''}
+      >
+        <FontAwesomeIcon icon={isRunningFullAuto ? faSpinner : faRocket} size='lg' spin={isRunningFullAuto} />
+      </div>
+      <div
         title={backendAvailable ? "Start Event Room" : "Backend unavailable"}
         onClick={backendAvailable ? handleStartEventRoom : undefined}
         className={backendAvailable ? '' : 'toolbar-disabled'}
@@ -316,6 +514,19 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         discoveryData={data}
         setDiscoveryData={setData}
         closeDialog={() => setIsModalVisible(false)}
+      />
+      <FullAutoConfigModal
+        isVisible={isFullAutoConfigVisible}
+        onClose={() => setIsFullAutoConfigVisible(false)}
+        onConfirm={handleRunFullAuto}
+        inputCount={data.inputs.length}
+      />
+      <FullAutoSummaryModal
+        isVisible={isFullAutoSummaryVisible}
+        onClose={() => setIsFullAutoSummaryVisible(false)}
+        onUndo={handleFullAutoUndo}
+        stats={fullAutoStats}
+        error={fullAutoError}
       />
       <Modal isVisible={!!confirmAction} onClose={() => setConfirmAction(null)} maxWidth="400px">
         <p style={{ margin: '0 0 1em' }}>{confirmAction?.message}</p>
