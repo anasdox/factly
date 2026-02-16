@@ -41,12 +41,12 @@ const DiscoveryModal: React.FC<Props> = ({
       title,
       goal,
       date,
-      // Initialize arrays for new discovery or use existing data for edit
-      inputs: discoveryData?.inputs || [],
-      facts: discoveryData?.facts || [],
-      insights: discoveryData?.insights || [],
-      recommendations: discoveryData?.recommendations || [],
-      outputs: discoveryData?.outputs || [],
+      // Keep existing items only when editing; start fresh for new discovery
+      inputs: mode === 'edit' && discoveryData ? discoveryData.inputs : [],
+      facts: mode === 'edit' && discoveryData ? discoveryData.facts : [],
+      insights: mode === 'edit' && discoveryData ? discoveryData.insights : [],
+      recommendations: mode === 'edit' && discoveryData ? discoveryData.recommendations : [],
+      outputs: mode === 'edit' && discoveryData ? discoveryData.outputs : [],
     };
     setDiscoveryData(newDiscoveryData);
     closeDialog();
