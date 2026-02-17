@@ -61,6 +61,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
   // Proposal state
   const [proposalTarget, setProposalTarget] = useState<string | null>(null);
   const [proposalData, setProposalData] = useState<{ proposed_text: string; explanation: string } | null>(null);
+  const [proposingUpdateId, setProposingUpdateId] = useState<string | null>(null);
 
 
   const openAddModal = () => {
@@ -132,40 +133,15 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
           recommendations: updatedRecommendations
         }) : prevState);
 
-        // Propose reformulation if links changed
-        if (linksChanged && existing && backendAvailable) {
-          const oldTexts = existing.related_insights
-            .map(id => data.insights.find(i => i.insight_id === id)?.text || '')
-            .filter(Boolean).join('\n\n');
-          const newTexts = recommendationData.related_insights
-            .map(id => data.insights.find(i => i.insight_id === id)?.text || '')
-            .filter(Boolean).join('\n\n');
-
-          setProposalTarget(recommendationData.recommendation_id);
-          setProposalData(null);
-          onWaiting('Sources changed — generating reformulation proposal…');
-
-          try {
-            const response = await fetch(`${API_URL}/propose/update`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                entity_type: 'recommendation',
-                current_text: existing.text,
-                upstream_change: { old_text: oldTexts, new_text: newTexts, entity_type: 'insight' },
-                goal: data.goal,
-              }),
-            });
-            if (response.ok) {
-              const result = await response.json();
-              onInfo('Reformulation proposal ready.');
-              setProposalData(result);
-            } else {
-              setProposalTarget(null);
-            }
-          } catch {
-            setProposalTarget(null);
-          }
+        // Mark as needs_review if links changed
+        if (linksChanged) {
+          setData(prev => prev ? ({
+            ...prev,
+            recommendations: prev.recommendations.map(r =>
+              r.recommendation_id === recommendationData.recommendation_id ? { ...r, status: 'needs_review' as const } : r
+            ),
+          }) : prev);
+          onInfo('Sources changed — recommendation marked for review.');
         }
       }
     }
@@ -199,6 +175,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
       return;
     }
 
+    setProposingUpdateId(recommendation.recommendation_id);
     onWaiting('Generating update proposal...');
 
     const oldText = parentInsight.versions && parentInsight.versions.length > 0
@@ -227,6 +204,8 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
       setProposalData(result);
     } catch (err: any) {
       onError(err.message || 'Proposal request failed');
+    } finally {
+      setProposingUpdateId(null);
     }
   };
 
@@ -376,6 +355,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
               onViewTraceability={() => onViewTraceability("recommendation", recommendation.recommendation_id)}
               onClearStatus={() => handleClearStatus(recommendation.recommendation_id)}
               onProposeUpdate={() => handleProposeUpdate(recommendation)}
+              proposingUpdate={proposingUpdateId === recommendation.recommendation_id}
               backendAvailable={backendAvailable}
             >
               <RecommendationItem

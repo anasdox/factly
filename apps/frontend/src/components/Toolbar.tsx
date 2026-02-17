@@ -13,6 +13,7 @@ import { StringParam, useQueryParam } from "use-query-params";
 import { useLocalStorage } from 'usehooks-ts'
 import { isObjectEmpty } from "../lib";
 import { API_URL } from "../config";
+import { findDuplicatesLocal } from "../dedup";
 
 
 type Props = {
@@ -109,9 +110,23 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
           }
         }
       }
-      stats.facts = newFacts.length;
-      if (newFacts.length === 0) throw new Error('No facts could be extracted from any input.');
-      setData(prev => prev ? { ...prev, facts: [...prev.facts, ...newFacts] } : prev);
+      // Silent dedup: filter out facts similar to existing ones
+      const existingFactItems = data.facts.map(f => ({ id: f.fact_id, text: f.text }));
+      const dedupedFacts = newFacts.filter(f => findDuplicatesLocal(f.text, existingFactItems).length === 0);
+      stats.skippedFacts = newFacts.length - dedupedFacts.length;
+      // Also dedup within the batch itself
+      const uniqueFacts: FactType[] = [];
+      for (const f of dedupedFacts) {
+        if (findDuplicatesLocal(f.text, uniqueFacts.map(u => ({ id: u.fact_id, text: u.text }))).length === 0) {
+          uniqueFacts.push(f);
+        } else {
+          stats.skippedFacts++;
+        }
+      }
+      const finalFacts = uniqueFacts;
+      stats.facts = finalFacts.length;
+      if (finalFacts.length === 0) throw new Error('No facts could be extracted from any input.');
+      setData(prev => prev ? { ...prev, facts: [...prev.facts, ...finalFacts] } : prev);
 
       // Step 2: Extract insights from new facts
       onWaiting('Full Auto: Generating insights...');
@@ -119,7 +134,7 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          facts: newFacts.map(f => ({ fact_id: f.fact_id, text: f.text })),
+          facts: finalFacts.map(f => ({ fact_id: f.fact_id, text: f.text })),
           goal: data.goal,
         }),
       });
@@ -132,7 +147,7 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
       for (const s of insightsResult.suggestions as { text: string; related_fact_ids?: string[] }[]) {
         const relatedFacts = s.related_fact_ids && s.related_fact_ids.length > 0
           ? s.related_fact_ids
-          : newFacts.map(f => f.fact_id);
+          : finalFacts.map(f => f.fact_id);
         newInsights.push({
           insight_id: Math.random().toString(16).slice(2),
           text: s.text,
@@ -140,9 +155,22 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
           created_at: new Date().toISOString(),
         });
       }
-      stats.insights = newInsights.length;
-      if (newInsights.length === 0) throw new Error('No insights could be derived from the extracted facts.');
-      setData(prev => prev ? { ...prev, insights: [...prev.insights, ...newInsights] } : prev);
+      // Silent dedup insights
+      const existingInsightItems = data.insights.map(i => ({ id: i.insight_id, text: i.text }));
+      const uniqueInsights: InsightType[] = [];
+      stats.skippedInsights = 0;
+      for (const i of newInsights) {
+        const allExisting = [...existingInsightItems, ...uniqueInsights.map(u => ({ id: u.insight_id, text: u.text }))];
+        if (findDuplicatesLocal(i.text, allExisting).length === 0) {
+          uniqueInsights.push(i);
+        } else {
+          stats.skippedInsights++;
+        }
+      }
+      const finalInsights = uniqueInsights;
+      stats.insights = finalInsights.length;
+      if (finalInsights.length === 0) throw new Error('No insights could be derived from the extracted facts.');
+      setData(prev => prev ? { ...prev, insights: [...prev.insights, ...finalInsights] } : prev);
 
       // Step 3: Extract recommendations from new insights
       onWaiting('Full Auto: Generating recommendations...');
@@ -150,7 +178,7 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          insights: newInsights.map(i => ({ insight_id: i.insight_id, text: i.text })),
+          insights: finalInsights.map(i => ({ insight_id: i.insight_id, text: i.text })),
           goal: data.goal,
         }),
       });
@@ -163,7 +191,7 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
       for (const s of recsResult.suggestions as { text: string; related_insight_ids?: string[] }[]) {
         const relatedInsights = s.related_insight_ids && s.related_insight_ids.length > 0
           ? s.related_insight_ids
-          : newInsights.map(i => i.insight_id);
+          : finalInsights.map(i => i.insight_id);
         newRecommendations.push({
           recommendation_id: Math.random().toString(16).slice(2),
           text: s.text,
@@ -171,19 +199,32 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
           created_at: new Date().toISOString(),
         });
       }
-      stats.recommendations = newRecommendations.length;
-      if (newRecommendations.length === 0) throw new Error('No recommendations could be generated from the insights.');
-      setData(prev => prev ? { ...prev, recommendations: [...prev.recommendations, ...newRecommendations] } : prev);
+      // Silent dedup recommendations
+      const existingRecItems = data.recommendations.map(r => ({ id: r.recommendation_id, text: r.text }));
+      const uniqueRecs: RecommendationType[] = [];
+      stats.skippedRecommendations = 0;
+      for (const r of newRecommendations) {
+        const allExisting = [...existingRecItems, ...uniqueRecs.map(u => ({ id: u.recommendation_id, text: u.text }))];
+        if (findDuplicatesLocal(r.text, allExisting).length === 0) {
+          uniqueRecs.push(r);
+        } else {
+          stats.skippedRecommendations++;
+        }
+      }
+      const finalRecommendations = uniqueRecs;
+      stats.recommendations = finalRecommendations.length;
+      if (finalRecommendations.length === 0) throw new Error('No recommendations could be generated from the insights.');
+      setData(prev => prev ? { ...prev, recommendations: [...prev.recommendations, ...finalRecommendations] } : prev);
 
       // Step 4: Formulate output with full traceability context
       onWaiting('Full Auto: Formulating output...');
       const relatedInsightIds = new Set<string>();
-      newRecommendations.forEach(r => r.related_insights.forEach(id => relatedInsightIds.add(id)));
-      const relatedInsights = newInsights.filter(i => relatedInsightIds.has(i.insight_id));
+      finalRecommendations.forEach(r => r.related_insights.forEach(id => relatedInsightIds.add(id)));
+      const relatedInsights = finalInsights.filter(i => relatedInsightIds.has(i.insight_id));
 
       const relatedFactIds = new Set<string>();
       relatedInsights.forEach(i => i.related_facts.forEach(id => relatedFactIds.add(id)));
-      const relatedFacts = newFacts.filter(f => relatedFactIds.has(f.fact_id));
+      const relatedFacts = finalFacts.filter(f => relatedFactIds.has(f.fact_id));
 
       const relatedInputIds = new Set<string>();
       relatedFacts.forEach(f => f.related_inputs.forEach(id => relatedInputIds.add(id)));
@@ -193,7 +234,7 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          recommendations: newRecommendations.map(r => ({ recommendation_id: r.recommendation_id, text: r.text })),
+          recommendations: finalRecommendations.map(r => ({ recommendation_id: r.recommendation_id, text: r.text })),
           goal: data.goal,
           output_type: config.outputType,
           facts: relatedFacts.map(f => ({ text: f.text, source_excerpt: f.source_excerpt })),
@@ -211,7 +252,7 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         newOutputs.push({
           output_id: Math.random().toString(16).slice(2),
           text: s.text,
-          related_recommendations: newRecommendations.map(r => r.recommendation_id),
+          related_recommendations: finalRecommendations.map(r => r.recommendation_id),
           type: config.outputType,
           created_at: new Date().toISOString(),
         });
@@ -302,9 +343,12 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
     });
   };
 
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+
   const handleStartEventRoom = async () => {
     try {
       if (data && data.discovery_id) {
+        setIsCreatingRoom(true);
         onWaiting('Creating event room...');
         const response = await fetch(`${API_URL}/rooms`, {
           method: 'POST',
@@ -325,6 +369,8 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
       }
     } catch (error) {
       onError('Network error: could not reach the server');
+    } finally {
+      setIsCreatingRoom(false);
     }
   };
 
@@ -480,11 +526,11 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         <FontAwesomeIcon icon={isRunningFullAuto ? faSpinner : faRocket} size='lg' spin={isRunningFullAuto} />
       </div>
       <div
-        title={backendAvailable ? "Start Event Room" : "Backend unavailable"}
-        onClick={backendAvailable ? handleStartEventRoom : undefined}
-        className={backendAvailable ? '' : 'toolbar-disabled'}
+        title={isCreatingRoom ? "Creating room..." : backendAvailable ? "Start Event Room" : "Backend unavailable"}
+        onClick={backendAvailable && !isCreatingRoom ? handleStartEventRoom : undefined}
+        className={!backendAvailable || isCreatingRoom ? 'toolbar-disabled' : ''}
       >
-        <FontAwesomeIcon icon={faPlayCircle} size='lg' />
+        <FontAwesomeIcon icon={isCreatingRoom ? faSpinner : faPlayCircle} size='lg' spin={isCreatingRoom} />
       </div>
       {onStartTour && (
         <div title="Guided Tour" onClick={() => {

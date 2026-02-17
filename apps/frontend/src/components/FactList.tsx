@@ -79,11 +79,32 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     setIsFactDialogVisible(true);
   };
 
-  const addFactToState = (newFact: FactType) => {
+  const addFactToState = async (newFact: FactType) => {
     setData((prevState) => prevState ? ({
       ...prevState,
       facts: [...prevState.facts, newFact]
     }) : prevState);
+
+    // Check impact on existing insights
+    if (data.insights.length > 0 && backendAvailable) {
+      onWaiting('Checking impact on existing insights…');
+      const candidates = data.insights.map(i => ({ id: i.insight_id, text: i.text }));
+      const { ids: impactedIds, usedFallback } = await checkImpact('', newFact.text, candidates, backendAvailable);
+      if (impactedIds.length > 0) {
+        setData(prev => prev ? ({
+          ...prev,
+          insights: prev.insights.map(i =>
+            impactedIds.includes(i.insight_id)
+              ? { ...i, status: 'needs_review' as const, related_facts: Array.from(new Set([...i.related_facts, newFact.fact_id])) }
+              : i
+          ),
+        }) : prev);
+        const fallbackHint = usedFallback ? ' (AI unavailable — all insights marked)' : '';
+        onInfo(`Fact added. ${impactedIds.length} insight(s) marked for review and linked.${fallbackHint}`);
+      } else {
+        onInfo('Fact added. No existing insights impacted.');
+      }
+    }
   };
 
   const saveFact = async (factData: FactType) => {
@@ -143,39 +164,15 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           facts: updatedFacts
         }) : prevState);
 
-        // Propose reformulation if links changed
-        if (linksChanged && existing && backendAvailable) {
-          const oldTexts = existing.related_inputs
-            .map(id => data.inputs.find(i => i.input_id === id)?.text || '')
-            .filter(Boolean).join('\n\n');
-          const newTexts = factData.related_inputs
-            .map(id => data.inputs.find(i => i.input_id === id)?.text || '')
-            .filter(Boolean).join('\n\n');
-
-          setProposal({ factId: factData.fact_id, proposedText: '', loading: true });
-          onWaiting('Sources changed — generating reformulation proposal…');
-
-          try {
-            const response = await fetch(`${API_URL}/propose/update`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                entity_type: 'fact',
-                current_text: existing.text,
-                upstream_change: { old_text: oldTexts, new_text: newTexts, entity_type: 'input' },
-                goal: data.goal,
-              }),
-            });
-            if (response.ok) {
-              const result = await response.json();
-              onInfo('Reformulation proposal ready.');
-              setProposal({ factId: factData.fact_id, proposedText: result.proposed_text || '', loading: false });
-            } else {
-              setProposal(null);
-            }
-          } catch {
-            setProposal(null);
-          }
+        // Mark as needs_review if links changed
+        if (linksChanged) {
+          setData(prev => prev ? ({
+            ...prev,
+            facts: prev.facts.map(f =>
+              f.fact_id === factData.fact_id ? { ...f, status: 'needs_review' as const } : f
+            ),
+          }) : prev);
+          onInfo('Sources changed — fact marked for review.');
         }
       }
     }
@@ -308,7 +305,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     }
   };
 
-  const addInsightToData = useCallback((text: string, relatedFacts: string[]) => {
+  const addInsightToData = useCallback(async (text: string, relatedFacts: string[]) => {
     const newInsight: InsightType = {
       insight_id: Math.random().toString(16).slice(2),
       text,
@@ -318,7 +315,28 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
       ...prevState,
       insights: [...prevState.insights, newInsight],
     }) : prevState);
-  }, [setData]);
+
+    // Check impact on existing recommendations
+    if (data.recommendations.length > 0 && backendAvailable) {
+      onWaiting('Checking impact on existing recommendations…');
+      const candidates = data.recommendations.map(r => ({ id: r.recommendation_id, text: r.text }));
+      const { ids: impactedIds, usedFallback } = await checkImpact('', text, candidates, backendAvailable);
+      if (impactedIds.length > 0) {
+        setData(prev => prev ? ({
+          ...prev,
+          recommendations: prev.recommendations.map(r =>
+            impactedIds.includes(r.recommendation_id)
+              ? { ...r, status: 'needs_review' as const, related_insights: Array.from(new Set([...r.related_insights, newInsight.insight_id])) }
+              : r
+          ),
+        }) : prev);
+        const fallbackHint = usedFallback ? ' (AI unavailable — all recommendations marked)' : '';
+        onInfo(`Insight added. ${impactedIds.length} recommendation(s) marked for review and linked.${fallbackHint}`);
+      } else {
+        onInfo('Insight added. No existing recommendations impacted.');
+      }
+    }
+  }, [setData, data.recommendations, onWaiting, onInfo, backendAvailable]);
 
   const handleAcceptInsight = async (suggestion: { text: string; related_fact_ids?: string[] }) => {
     const relatedFacts = suggestion.related_fact_ids && suggestion.related_fact_ids.length > 0
@@ -346,9 +364,30 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     addInsightToData(suggestion.text, relatedFacts);
   };
 
-  const addInsightFromMerge = useCallback((insight: InsightType) => {
+  const addInsightFromMerge = useCallback(async (insight: InsightType) => {
     setData(prev => prev ? { ...prev, insights: [...prev.insights, insight] } : prev);
-  }, [setData]);
+
+    // Check impact on existing recommendations
+    if (data.recommendations.length > 0 && backendAvailable) {
+      onWaiting('Checking impact on existing recommendations…');
+      const candidates = data.recommendations.map(r => ({ id: r.recommendation_id, text: r.text }));
+      const { ids: impactedIds, usedFallback } = await checkImpact('', insight.text, candidates, backendAvailable);
+      if (impactedIds.length > 0) {
+        setData(prev => prev ? ({
+          ...prev,
+          recommendations: prev.recommendations.map(r =>
+            impactedIds.includes(r.recommendation_id)
+              ? { ...r, status: 'needs_review' as const, related_insights: Array.from(new Set([...r.related_insights, insight.insight_id])) }
+              : r
+          ),
+        }) : prev);
+        const fallbackHint = usedFallback ? ' (AI unavailable — all recommendations marked)' : '';
+        onInfo(`Insight added. ${impactedIds.length} recommendation(s) marked for review and linked.${fallbackHint}`);
+      } else {
+        onInfo('Insight added. No existing recommendations impacted.');
+      }
+    }
+  }, [setData, data.recommendations, onWaiting, onInfo, backendAvailable]);
 
   const handleCloseSuggestions = useCallback(() => {
     setInsightSuggestionData(null);
@@ -421,6 +460,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
             onViewTraceability={() => onViewTraceability("fact", fact.fact_id)}
             onClearStatus={() => handleClearStatus(fact.fact_id)}
             onProposeUpdate={() => handleProposeUpdate(fact)}
+            proposingUpdate={proposal?.loading && proposal.factId === fact.fact_id}
             backendAvailable={backendAvailable}
           >
             <FactItem fact={fact} />

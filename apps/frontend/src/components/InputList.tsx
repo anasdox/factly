@@ -175,7 +175,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
     }
   };
 
-  const addFactToData = useCallback((text: string, relatedInputs: string[], sourceExcerpt?: string) => {
+  const addFactToData = useCallback(async (text: string, relatedInputs: string[], sourceExcerpt?: string) => {
     const newFact: FactType = {
       fact_id: Math.random().toString(16).slice(2),
       text,
@@ -186,7 +186,28 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
       ...prevState,
       facts: [...prevState.facts, newFact],
     }) : prevState);
-  }, [setData]);
+
+    // Check impact on existing insights
+    if (data.insights.length > 0 && backendAvailable) {
+      onWaiting('Checking impact on existing insights…');
+      const candidates = data.insights.map(i => ({ id: i.insight_id, text: i.text }));
+      const { ids: impactedIds, usedFallback } = await checkImpact('', text, candidates, backendAvailable);
+      if (impactedIds.length > 0) {
+        setData(prev => prev ? ({
+          ...prev,
+          insights: prev.insights.map(i =>
+            impactedIds.includes(i.insight_id)
+              ? { ...i, status: 'needs_review' as const, related_facts: Array.from(new Set([...i.related_facts, newFact.fact_id])) }
+              : i
+          ),
+        }) : prev);
+        const fallbackHint = usedFallback ? ' (AI unavailable — all insights marked)' : '';
+        onInfo(`Fact added. ${impactedIds.length} insight(s) marked for review and linked.${fallbackHint}`);
+      } else {
+        onInfo('Fact added. No existing insights impacted.');
+      }
+    }
+  }, [setData, data.insights, onWaiting, onInfo, backendAvailable]);
 
   const handleAcceptSuggestion = async (suggestion: { text: string; source_excerpt?: string; inputId?: string }) => {
     const relatedInputs = suggestion.inputId ? [suggestion.inputId] : Array.from(selectedInputIds);
@@ -213,9 +234,28 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
     addFactToData(suggestion.text, relatedInputs, suggestion.source_excerpt);
   };
 
-  const addFactFromMerge = useCallback((fact: FactType) => {
+  const addFactFromMerge = useCallback(async (fact: FactType) => {
     setData(prev => prev ? { ...prev, facts: [...prev.facts, fact] } : prev);
-  }, [setData]);
+
+    // Check impact on existing insights
+    if (data.insights.length > 0) {
+      onWaiting('Checking impact on existing insights…');
+      const candidates = data.insights.map(i => ({ id: i.insight_id, text: i.text }));
+      const { ids: impactedIds, usedFallback } = await checkImpact('', fact.text, candidates, backendAvailable);
+      if (impactedIds.length > 0) {
+        setData(prev => prev ? ({
+          ...prev,
+          insights: prev.insights.map(i =>
+            impactedIds.includes(i.insight_id)
+              ? { ...i, status: 'needs_review' as const, related_facts: Array.from(new Set([...i.related_facts, fact.fact_id])) }
+              : i
+          ),
+        }) : prev);
+        const fallbackHint = usedFallback ? ' (AI unavailable — all insights marked)' : '';
+        onInfo(`Fact added. ${impactedIds.length} insight(s) marked for review and linked.${fallbackHint}`);
+      }
+    }
+  }, [setData, data.insights, onWaiting, onInfo, backendAvailable]);
 
   const handleCloseSuggestions = useCallback(() => {
     setSuggestionData(null);

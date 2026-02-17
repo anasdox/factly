@@ -132,7 +132,7 @@ export class AnthropicProvider implements LLMProvider {
 
     const response = await this.client.messages.create({
       model: this.model,
-      max_tokens: 4096,
+      max_tokens: 1024,
       temperature: this.tempProposal,
       system: systemPrompt,
       messages: [
@@ -146,7 +146,7 @@ export class AnthropicProvider implements LLMProvider {
   async checkImpact(oldText: string, newText: string, children: { id: string; text: string }[]): Promise<ImpactCheckResult[]> {
     const response = await this.client.messages.create({
       model: this.model,
-      max_tokens: 2048,
+      max_tokens: 1024,
       temperature: this.tempImpact,
       system: IMPACT_CHECK_SYSTEM_PROMPT,
       messages: [

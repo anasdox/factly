@@ -10,7 +10,7 @@ type Props = {
   loading?: boolean;
   overlay?: boolean;
   renderMarkdown?: boolean;
-  onAccept: (text: string) => void;
+  onAccept: (text: string) => void | Promise<void>;
   onReject: () => void;
 };
 
@@ -26,9 +26,15 @@ const ProposalPanel: React.FC<Props> = ({
 }) => {
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(proposedText);
+  const [accepting, setAccepting] = useState(false);
 
-  const handleAccept = () => {
-    onAccept(editing ? editText : proposedText);
+  const handleAccept = async () => {
+    setAccepting(true);
+    try {
+      await onAccept(editing ? editText : proposedText);
+    } finally {
+      setAccepting(false);
+    }
   };
 
   const handleEdit = () => {
@@ -74,14 +80,18 @@ const ProposalPanel: React.FC<Props> = ({
           {explanation && <div className="proposal-explanation">{explanation}</div>}
           <div className="proposal-actions">
             {editing ? (
-              <button onClick={handleAccept}>Confirm</button>
+              <button onClick={handleAccept} disabled={accepting}>
+                {accepting ? <><FontAwesomeIcon icon={faSpinner} spin /> Applying...</> : 'Confirm'}
+              </button>
             ) : (
               <>
-                <button onClick={handleAccept}>Accept</button>
-                <button onClick={handleEdit}>Edit</button>
+                <button onClick={handleAccept} disabled={accepting}>
+                  {accepting ? <><FontAwesomeIcon icon={faSpinner} spin /> Applying...</> : 'Accept'}
+                </button>
+                <button onClick={handleEdit} disabled={accepting}>Edit</button>
               </>
             )}
-            <button onClick={onReject}>Reject</button>
+            <button onClick={onReject} disabled={accepting}>Reject</button>
           </div>
         </>
       )}

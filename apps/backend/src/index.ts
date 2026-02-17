@@ -727,8 +727,10 @@ function validateDedupScanRequest(body: any): ValidationResult {
 function validateImpactCheckRequest(body: any): ValidationResult {
   const bodyErr = requireBody(body);
   if (bodyErr) return bodyErr;
-  const oldErr = requireNonEmptyString(body, 'old_text');
-  if (oldErr) return oldErr;
+  // old_text may be empty for new entity impact checks
+  if (typeof body.old_text !== 'string') {
+    return { valid: false, error: 'Field "old_text" must be a string' };
+  }
   const newErr = requireNonEmptyString(body, 'new_text');
   if (newErr) return newErr;
   const arrErr = requireNonEmptyArray(body, 'children');

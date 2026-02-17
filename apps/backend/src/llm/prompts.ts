@@ -343,16 +343,16 @@ export function parseRecommendationArray(raw: string): ExtractedRecommendation[]
 
 // ── Impact check prompts ──
 
-export const IMPACT_CHECK_SYSTEM_PROMPT = `You are a semantic impact analysis assistant. Your role is to determine which downstream entities are semantically impacted by an upstream text change.
+export const IMPACT_CHECK_SYSTEM_PROMPT = `You are a semantic impact analysis assistant. Your role is to determine which downstream entities are semantically impacted by an upstream change.
 
 Rules:
 - You will receive the old and new text of an upstream entity, plus a list of candidate downstream entities.
-- First, identify the SPECIFIC semantic difference between BEFORE and AFTER. Focus on what information was added, removed, or modified — ignore unchanged parts.
-- For each candidate, decide whether that specific change affects the candidate's meaning, validity, or accuracy.
-- A candidate is impacted ONLY if the specific information that changed directly relates to what the candidate states or depends on.
-- A candidate is NOT impacted if the changed information is irrelevant to the candidate's content, even if both the candidate and the change come from the same source document.
-- Be precise: if only one data point changed in the upstream text, only candidates that reference or depend on that specific data point are impacted.
-- Do NOT mark a candidate as impacted merely because it originates from the same source — evaluate each candidate independently against the specific change.
+- If BEFORE is empty, this means a NEW entity was added. Evaluate whether each candidate is semantically related to the new entity's content — a candidate is impacted if its meaning, validity, or accuracy could be affected by this new information.
+- If BEFORE is not empty, this means an existing entity was modified. Identify the SPECIFIC semantic difference between BEFORE and AFTER. Focus on what information was added, removed, or modified — ignore unchanged parts. For each candidate, decide whether that specific change affects the candidate's meaning, validity, or accuracy.
+- A candidate is impacted ONLY if the content directly relates to what the candidate states or depends on.
+- A candidate is NOT impacted if the content is irrelevant to the candidate, even if both come from the same source document.
+- Be precise: evaluate each candidate independently against the change or new content.
+- Do NOT mark a candidate as impacted merely because it originates from the same source.
 - Return a JSON array of objects, each with "index" (1-based candidate number), "impacted" (boolean), and "explanation" (brief reason).
 - You MUST return one entry per candidate, in order.
 
@@ -365,6 +365,9 @@ export function buildImpactCheckUserContent(
   children: { id: string; text: string }[],
 ): string {
   const numbered = children.map((c, i) => `${i + 1}. ${c.text}`).join('\n');
+  if (!oldText) {
+    return `NEW entity added:\n${newText}\n\nCandidate downstream entities:\n${numbered}`;
+  }
   return `Upstream change:\nBEFORE: ${oldText}\nAFTER: ${newText}\n\nCandidate downstream entities:\n${numbered}`;
 }
 

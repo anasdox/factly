@@ -79,12 +79,33 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     setIsInsightDialogVisible(true);
   };
 
-  const addInsightToData = useCallback((newInsight: InsightType) => {
+  const addInsightToData = useCallback(async (newInsight: InsightType) => {
     setData((prevState) => prevState ? ({
       ...prevState,
       insights: [...prevState.insights, newInsight]
     }) : prevState);
-  }, [setData]);
+
+    // Check impact on existing recommendations
+    if (data.recommendations.length > 0 && backendAvailable) {
+      onWaiting('Checking impact on existing recommendations…');
+      const candidates = data.recommendations.map(r => ({ id: r.recommendation_id, text: r.text }));
+      const { ids: impactedIds, usedFallback } = await checkImpact('', newInsight.text, candidates, backendAvailable);
+      if (impactedIds.length > 0) {
+        setData(prev => prev ? ({
+          ...prev,
+          recommendations: prev.recommendations.map(r =>
+            impactedIds.includes(r.recommendation_id)
+              ? { ...r, status: 'needs_review' as const, related_insights: Array.from(new Set([...r.related_insights, newInsight.insight_id])) }
+              : r
+          ),
+        }) : prev);
+        const fallbackHint = usedFallback ? ' (AI unavailable — all recommendations marked)' : '';
+        onInfo(`Insight added. ${impactedIds.length} recommendation(s) marked for review and linked.${fallbackHint}`);
+      } else {
+        onInfo('Insight added. No existing recommendations impacted.');
+      }
+    }
+  }, [setData, data.recommendations, onWaiting, onInfo, backendAvailable]);
 
   const saveInsight = async (insightData: InsightType) => {
     if (modalMode === 'add') {
@@ -157,39 +178,15 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
         insights: updatedInsights
       }) : prevState);
 
-      // Propose reformulation if links changed
-      if (linksChanged && existing && backendAvailable) {
-        const oldTexts = existing.related_facts
-          .map(id => data.facts.find(f => f.fact_id === id)?.text || '')
-          .filter(Boolean).join('\n\n');
-        const newTexts = insightData.related_facts
-          .map(id => data.facts.find(f => f.fact_id === id)?.text || '')
-          .filter(Boolean).join('\n\n');
-
-        setProposal({ insightId: insightData.insight_id, proposedText: '', loading: true });
-        onWaiting('Sources changed — generating reformulation proposal…');
-
-        try {
-          const response = await fetch(`${API_URL}/propose/update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              entity_type: 'insight',
-              current_text: existing.text,
-              upstream_change: { old_text: oldTexts, new_text: newTexts, entity_type: 'fact' },
-              goal: data.goal,
-            }),
-          });
-          if (response.ok) {
-            const result = await response.json();
-            onInfo('Reformulation proposal ready.');
-            setProposal({ insightId: insightData.insight_id, proposedText: result.proposed_text || '', loading: false });
-          } else {
-            setProposal(null);
-          }
-        } catch {
-          setProposal(null);
-        }
+      // Mark as needs_review if links changed
+      if (linksChanged) {
+        setData(prev => prev ? ({
+          ...prev,
+          insights: prev.insights.map(i =>
+            i.insight_id === insightData.insight_id ? { ...i, status: 'needs_review' as const } : i
+          ),
+        }) : prev);
+        onInfo('Sources changed — insight marked for review.');
       }
     }
     setIsInsightDialogVisible(false);
@@ -441,6 +438,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
             onViewTraceability={() => onViewTraceability("insight", insight.insight_id)}
             onClearStatus={() => handleClearStatus(insight.insight_id)}
             onProposeUpdate={() => handleProposeUpdate(insight)}
+            proposingUpdate={proposal?.loading && proposal.insightId === insight.insight_id}
             backendAvailable={backendAvailable}
           >
             <InsightItem insight={insight} />

@@ -37,11 +37,13 @@ export class OpenAIProvider implements LLMProvider {
 
   private async createChatCompletion(
     params: Omit<OpenAI.Chat.ChatCompletionCreateParamsNonStreaming, 'max_tokens' | 'max_completion_tokens'>,
+    maxTokens?: number,
   ): Promise<OpenAI.Chat.ChatCompletion> {
+    const tokens = maxTokens ?? this.maxCompletionTokens;
     const withMaxCompletionTokens = {
       ...params,
       stream: false,
-      max_completion_tokens: this.maxCompletionTokens,
+      max_completion_tokens: tokens,
     };
 
     try {
@@ -53,7 +55,7 @@ export class OpenAIProvider implements LLMProvider {
         const withMaxTokens = {
           ...params,
           stream: false,
-          max_tokens: this.maxCompletionTokens,
+          max_tokens: tokens,
         };
         return await this.client.chat.completions.create(
           withMaxTokens as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
@@ -167,7 +169,7 @@ export class OpenAIProvider implements LLMProvider {
         { role: 'system', content: systemPrompt },
         { role: 'user', content: buildUpdateProposalUserContent(entityType, currentText, upstreamOldText, upstreamNewText, upstreamEntityType, goal) },
       ],
-    });
+    }, 1024);
 
     return parseUpdateProposal(this.extractText(response));
   }
@@ -183,7 +185,7 @@ export class OpenAIProvider implements LLMProvider {
         { role: 'system', content: IMPACT_CHECK_SYSTEM_PROMPT },
         { role: 'user', content: userContent },
       ],
-    });
+    }, 1024);
 
     const rawText = this.extractText(response);
     console.log('[impact-check] LLM raw response:', rawText);

@@ -31,6 +31,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
   // Proposal state
   const [proposalTarget, setProposalTarget] = useState<string | null>(null);
   const [proposalData, setProposalData] = useState<{ proposed_text: string; explanation: string } | null>(null);
+  const [proposingUpdateId, setProposingUpdateId] = useState<string | null>(null);
 
   const openAddModal = () => {
     setModalMode('add');
@@ -76,41 +77,15 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
         const updatedOutputs = data.outputs.map(o => o.output_id === outputData.output_id ? { ...o, ...outputData } : o);
         setData((prevState) => prevState ? ({ ...prevState, outputs: updatedOutputs }) : prevState);
 
-        // Propose reformulation if links changed
-        if (linksChanged && existing && backendAvailable) {
-          const oldTexts = existing.related_recommendations
-            .map(id => data.recommendations.find(r => r.recommendation_id === id)?.text || '')
-            .filter(Boolean).join('\n\n');
-          const newTexts = outputData.related_recommendations
-            .map(id => data.recommendations.find(r => r.recommendation_id === id)?.text || '')
-            .filter(Boolean).join('\n\n');
-
-          setProposalTarget(outputData.output_id);
-          setProposalData(null);
-          onWaiting('Sources changed — generating reformulation proposal…');
-
-          try {
-            const response = await fetch(`${API_URL}/propose/update`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                entity_type: 'output',
-                current_text: existing.text,
-                upstream_change: { old_text: oldTexts, new_text: newTexts, entity_type: 'recommendation' },
-                goal: data.goal,
-                output_type: existing.type,
-              }),
-            });
-            if (response.ok) {
-              const result = await response.json();
-              onInfo('Reformulation proposal ready.');
-              setProposalData(result);
-            } else {
-              setProposalTarget(null);
-            }
-          } catch {
-            setProposalTarget(null);
-          }
+        // Mark as needs_refresh if links changed (output is terminal entity)
+        if (linksChanged) {
+          setData(prev => prev ? ({
+            ...prev,
+            outputs: prev.outputs.map(o =>
+              o.output_id === outputData.output_id ? { ...o, status: 'needs_refresh' as const } : o
+            ),
+          }) : prev);
+          onInfo('Sources changed — output marked for refresh.');
         }
       }
     }
@@ -136,6 +111,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
       return;
     }
 
+    setProposingUpdateId(output.output_id);
     onWaiting('Generating update proposal...');
 
     const oldText = parentRec.versions && parentRec.versions.length > 0
@@ -165,6 +141,8 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
       setProposalData(result);
     } catch (err: any) {
       onError(err.message || 'Proposal request failed');
+    } finally {
+      setProposingUpdateId(null);
     }
   };
 
@@ -204,6 +182,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
             onViewTraceability={() => onViewTraceability("output", output.output_id)}
             onClearStatus={() => handleClearStatus(output.output_id)}
             onProposeUpdate={() => handleProposeUpdate(output)}
+            proposingUpdate={proposingUpdateId === output.output_id}
             backendAvailable={backendAvailable}
           >
             <OutputItem
