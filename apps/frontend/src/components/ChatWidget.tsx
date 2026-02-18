@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faComments, faPaperPlane, faTimes, faGripVertical, faRotateRight, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faComments, faPaperPlane, faTimes, faGripVertical, faRotateRight, faTrashCan, faExpand, faCompress } from '@fortawesome/free-solid-svg-icons';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useChatStream } from '../hooks/useChatStream';
@@ -21,10 +21,12 @@ interface ChatWidgetProps {
   setData: React.Dispatch<React.SetStateAction<DiscoveryData | null>>;
   backendAvailable: boolean;
   onToolAction: (action: ChatToolAction) => void;
+  requestConfirm: (message: string, onConfirm: () => void) => void;
 }
 
-const ChatWidget: React.FC<ChatWidgetProps> = ({ data, setData, backendAvailable, onToolAction }) => {
+const ChatWidget: React.FC<ChatWidgetProps> = ({ data, setData, backendAvailable, onToolAction, requestConfirm }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [inputText, setInputText] = useState('');
   const [references, setReferences] = useState<string[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
@@ -261,6 +263,22 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ data, setData, backendAvailable
     );
   }, []);
 
+  const toggleExpand = useCallback(() => {
+    setIsExpanded(prev => {
+      const next = !prev;
+      const w = next ? 700 : 400;
+      const h = next ? window.innerHeight * 0.8 : 500;
+      if (position.x >= 0) {
+        // Clamp to viewport
+        setPosition({
+          x: Math.min(position.x, window.innerWidth - w - 8),
+          y: Math.max(0, Math.min(position.y, window.innerHeight - h - 8)),
+        });
+      }
+      return next;
+    });
+  }, [position]);
+
   const panelStyle = position.x >= 0 ? { left: position.x, top: position.y, bottom: 'auto', right: 'auto' } : {};
 
   return (
@@ -276,13 +294,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ data, setData, backendAvailable
 
       {/* Chat panel */}
       {isOpen && (
-        <div className="chat-panel" style={panelStyle}>
+        <div className={`chat-panel${isExpanded ? ' chat-panel-expanded' : ''}`} style={panelStyle}>
           {/* Header */}
           <div className="chat-header" onMouseDown={handleDragStart}>
             <FontAwesomeIcon icon={faGripVertical} className="chat-drag-handle" />
             <span className="chat-title">Factly Chat</span>
-            <button className="chat-clear" onClick={() => setChatHistory([])} title="Clear chat history" disabled={isStreaming || chatHistory.length === 0}>
-              <FontAwesomeIcon icon={faTrashCan} />
+            <button className="chat-expand" onClick={toggleExpand} title={isExpanded ? 'Reduce' : 'Expand'}>
+              <FontAwesomeIcon icon={isExpanded ? faCompress : faExpand} />
             </button>
             <button className="chat-close" onClick={() => setIsOpen(false)}>
               <FontAwesomeIcon icon={faTimes} />
@@ -291,6 +309,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ data, setData, backendAvailable
 
           {/* Messages */}
           <div className="chat-messages">
+            {chatHistory.length > 0 && !isStreaming && (
+              <button
+                className="chat-clear"
+                onClick={() => requestConfirm('Clear chat history?', () => setChatHistory([]))}
+                title="Clear chat history"
+              >
+                <FontAwesomeIcon icon={faTrashCan} />
+              </button>
+            )}
             {chatHistory.map((msg) => {
               if (msg.role === 'assistant' && !msg.content) return null;
               return (

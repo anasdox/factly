@@ -355,7 +355,7 @@ const App: React.FC = () => {
           </div>
         </div>
       </Modal>
-      <ChatWidget data={data} setData={setData} backendAvailable={backendAvailable} onToolAction={handleChatToolAction} />
+      <ChatWidget data={data} setData={setData} backendAvailable={backendAvailable} onToolAction={handleChatToolAction} requestConfirm={requestConfirm} />
     </div >
   );
 };
