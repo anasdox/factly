@@ -2,8 +2,16 @@ import { AnthropicProvider } from './anthropic-provider';
 import { OpenAICompatibleProvider } from './openai-compatible-provider';
 import { OpenAIProvider } from './openai-provider';
 import { ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult } from './prompts';
+import { ChatToolDefinition } from './chat-prompts';
 
 export type { OutputTraceabilityContext };
+
+export interface ChatStreamCallbacks {
+  onToken: (text: string) => void;
+  onToolCall: (tool: string, params: Record<string, unknown>) => void;
+  onDone: () => void;
+  onError: (error: string) => void;
+}
 
 export interface LLMProvider {
   extractFacts(text: string, goal: string): Promise<ExtractedFact[]>;
@@ -15,6 +23,12 @@ export interface LLMProvider {
   proposeUpdate(entityType: string, currentText: string, upstreamOldText: string, upstreamNewText: string, upstreamEntityType: string, goal: string, outputType?: string): Promise<UpdateProposal>;
   checkImpact(oldText: string, newText: string, children: { id: string; text: string }[]): Promise<ImpactCheckResult[]>;
   getEmbeddings?(texts: string[]): Promise<number[][]>;
+  chatStream(
+    systemPrompt: string,
+    messages: { role: 'user' | 'assistant'; content: string }[],
+    tools: ChatToolDefinition[],
+    callbacks: ChatStreamCallbacks,
+  ): Promise<void>;
 }
 
 export function createProvider(): LLMProvider | null {

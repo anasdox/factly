@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
-import { LLMProvider, OutputTraceabilityContext } from './provider';
+import { LLMProvider, OutputTraceabilityContext, ChatStreamCallbacks } from './provider';
+import { ChatToolDefinition } from './chat-prompts';
 import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseImpactCheckResult, ExtractedFact, ExtractedInsight, ExtractedRecommendation, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult } from './prompts';
 
 export class OpenAIProvider implements LLMProvider {
@@ -206,5 +207,82 @@ export class OpenAIProvider implements LLMProvider {
     return response.data
       .sort((a, b) => a.index - b.index)
       .map((d) => d.embedding);
+  }
+
+  async chatStream(
+    systemPrompt: string,
+    messages: { role: 'user' | 'assistant'; content: string }[],
+    tools: ChatToolDefinition[],
+    callbacks: ChatStreamCallbacks,
+  ): Promise<void> {
+    const tempChat = parseFloat(process.env.LLM_TEMP_CHAT || '0.4');
+    const maxTokens = parseInt(process.env.LLM_CHAT_MAX_TOKENS || '4096', 10);
+
+    const openaiTools: OpenAI.Chat.ChatCompletionTool[] = tools.map(t => ({
+      type: 'function' as const,
+      function: {
+        name: t.name,
+        description: t.description,
+        parameters: t.input_schema,
+      },
+    }));
+
+    const stream = await this.client.chat.completions.create({
+      model: this.model,
+      temperature: tempChat,
+      max_tokens: maxTokens,
+      stream: true,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+      ],
+      tools: openaiTools,
+    });
+
+    // Accumulate tool calls across chunks
+    const toolCallAccumulators = new Map<number, { name: string; arguments: string }>();
+
+    try {
+      for await (const chunk of stream) {
+        const choice = chunk.choices[0];
+        if (!choice) continue;
+
+        const delta = choice.delta;
+
+        // Text content
+        if (delta.content) {
+          callbacks.onToken(delta.content);
+        }
+
+        // Tool calls
+        if (delta.tool_calls) {
+          for (const tc of delta.tool_calls) {
+            if (!toolCallAccumulators.has(tc.index)) {
+              toolCallAccumulators.set(tc.index, { name: '', arguments: '' });
+            }
+            const acc = toolCallAccumulators.get(tc.index)!;
+            if (tc.function?.name) acc.name = tc.function.name;
+            if (tc.function?.arguments) acc.arguments += tc.function.arguments;
+          }
+        }
+
+        // Finish
+        if (choice.finish_reason === 'tool_calls' || choice.finish_reason === 'stop') {
+          // Emit accumulated tool calls
+          toolCallAccumulators.forEach((acc) => {
+            try {
+              const params = JSON.parse(acc.arguments);
+              callbacks.onToolCall(acc.name, params);
+            } catch {
+              callbacks.onError(`Failed to parse tool call parameters for ${acc.name}`);
+            }
+          });
+        }
+      }
+
+      callbacks.onDone();
+    } catch (err: any) {
+      callbacks.onError(err?.message || 'Unknown streaming error');
+    }
   }
 }

@@ -28,7 +28,7 @@ const OutputModal: React.FC<Props> = ({
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
-    if (mode === 'edit' && outputData) {
+    if (outputData) {
       setCurrentOutputText(outputData.text);
       setCurrentRelatedRecommendations(outputData.related_recommendations);
       setCurrentOutputType(outputData.type || 'report');

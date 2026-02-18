@@ -13,6 +13,7 @@ import DiscoveryModal from './components/DiscoveryModal';
 import TraceabilityModal from './components/TraceabilityModal';
 import GuidedTour from './components/GuidedTour';
 import Modal from './components/Modal';
+import ChatWidget, { ChatToolAction } from './components/ChatWidget';
 import { API_URL } from './config';
 
 const STORAGE_KEY = 'factly_last_discovery';
@@ -63,6 +64,14 @@ const App: React.FC = () => {
   const openTraceability = useCallback((type: string, id: string) => setTraceabilityTarget({ type, id }), []);
   const [tourActive, setTourActive] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{ message: string; onConfirm: () => void } | null>(null);
+  const [chatActions, setChatActions] = useState<ChatToolAction[]>([]);
+  const handleChatToolAction = useCallback((action: ChatToolAction) => setChatActions(prev => [...prev, action]), []);
+  const clearChatActions = useCallback((filter: (a: ChatToolAction) => boolean) => {
+    setChatActions(prev => prev.filter(a => !filter(a)));
+  }, []);
+  const requestConfirm = useCallback((message: string, onConfirm: () => void) => {
+    setConfirmDialog({ message, onConfirm: () => { setConfirmDialog(null); onConfirm(); } });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -249,7 +258,10 @@ const App: React.FC = () => {
             onInfo={handleInfo}
             onWaiting={handleWaiting}
             backendAvailable={backendAvailable}
-            onViewTraceability={openTraceability} />
+            onViewTraceability={openTraceability}
+            chatActions={chatActions}
+            clearChatActions={clearChatActions}
+            requestConfirm={requestConfirm} />
           : ""}
         {
           factRefs ?
@@ -263,7 +275,10 @@ const App: React.FC = () => {
               onInfo={handleInfo}
               onWaiting={handleWaiting}
               backendAvailable={backendAvailable}
-              onViewTraceability={openTraceability} />
+              onViewTraceability={openTraceability}
+              chatActions={chatActions}
+              clearChatActions={clearChatActions}
+              requestConfirm={requestConfirm} />
             : ""}
         {
           insightRefs ?
@@ -277,7 +292,10 @@ const App: React.FC = () => {
               onInfo={handleInfo}
               onWaiting={handleWaiting}
               backendAvailable={backendAvailable}
-              onViewTraceability={openTraceability} />
+              onViewTraceability={openTraceability}
+              chatActions={chatActions}
+              clearChatActions={clearChatActions}
+              requestConfirm={requestConfirm} />
             : ""
         }
         {
@@ -292,7 +310,10 @@ const App: React.FC = () => {
               onInfo={handleInfo}
               onWaiting={handleWaiting}
               backendAvailable={backendAvailable}
-              onViewTraceability={openTraceability} />
+              onViewTraceability={openTraceability}
+              chatActions={chatActions}
+              clearChatActions={clearChatActions}
+              requestConfirm={requestConfirm} />
             : ""
         }
         {
@@ -307,7 +328,10 @@ const App: React.FC = () => {
               onInfo={handleInfo}
               onWaiting={handleWaiting}
               backendAvailable={backendAvailable}
-              onViewTraceability={openTraceability} />
+              onViewTraceability={openTraceability}
+              chatActions={chatActions}
+              clearChatActions={clearChatActions}
+              requestConfirm={requestConfirm} />
             : ""
         }
       </main >
@@ -331,6 +355,7 @@ const App: React.FC = () => {
           </div>
         </div>
       </Modal>
+      <ChatWidget data={data} setData={setData} backendAvailable={backendAvailable} onToolAction={handleChatToolAction} requestConfirm={requestConfirm} />
     </div >
   );
 };
