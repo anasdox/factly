@@ -153,7 +153,7 @@
 - On-demand "Detect Duplicates" action per column: sends all items to the LLM to identify semantically similar groups, and proposes merges
 
 ### M16: AI Quality Benchmark Tool
-**Status:** In Progress
+**Status:** Delivered (Demo validated 2026-02-18)
 **Outcome:** A standalone benchmark tool that measures the quality of each AI pipeline step (extraction, dedup, impact, update proposal) across 7 quality dimensions, supports comparing configurations (model, temperature, embedding, threshold), and tracks quality evolution over time.
 - CLI tool in `tools/benchmark/` with `run`, `compare`, `history`, `list` commands
 - 7 quality dimensions: fact extraction, insight extraction, recommendations, outputs, dedup, impact check, update proposals
@@ -166,7 +166,7 @@
 - Configurable temperatures via env vars (`LLM_TEMP_EXTRACTION`, `LLM_TEMP_DEDUP`, `LLM_TEMP_IMPACT`, `LLM_TEMP_PROPOSAL`)
 
 ### M17: Benchmark Dashboard UI
-**Status:** In Progress
+**Status:** Delivered (Demo validated 2026-02-18)
 **Outcome:** A web dashboard at `/benchmark` for viewing, comparing, and launching benchmarks visually.
 - Backend REST API: list results, get result detail, compare runs, manage configs, get improvement suggestions
 - Run selector with sort/filter by date, score, model

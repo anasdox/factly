@@ -22,6 +22,9 @@ info:
     - FS-TriggerInsightsExtraction
     - FS-DisplaySuggestedInsights
     - FS-InsightsExtractionErrorDisplay
+    - FS-SendMessage
+    - FS-StreamingResponse
+    - FS-ChatErrorDisplay
 
 servers:
   - url: http://localhost:3002
@@ -292,6 +295,62 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /chat/message:
+    post:
+      operationId: chatMessage
+      summary: Send a chat message and receive a streamed response with optional tool calls
+      description: |
+        Receives an analyst message with Discovery context and chat history.
+        Calls the LLM with tool definitions (add_item, delete_item, edit_item) and streams the response as SSE events.
+        Response is text/event-stream with event types: token, tool_call, done, error.
+      x-tsid: TS-ChatMessage
+      x-fsid-links:
+        - FS-SendMessage
+        - FS-StreamingResponse
+        - FS-AskQuestionAboutDiscovery
+        - FS-AskForGapAnalysis
+        - FS-AskForSummary
+        - FS-ChatAddItem
+        - FS-ChatDeleteItem
+        - FS-ChatEditItem
+        - FS-ChatProactiveSuggestions
+        - FS-ChatSuggestMissingConnections
+        - FS-ChatFullContextBelowThreshold
+        - FS-ChatSummarizedContextAboveThreshold
+        - FS-ChatErrorDisplay
+        - FS-ChatStreamingInterruption
+        - FS-ChatAtMentionContext
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatMessageRequest'
+      responses:
+        '200':
+          description: SSE stream of chat response tokens and tool calls
+          content:
+            text/event-stream:
+              schema:
+                description: |
+                  SSE stream with the following event types:
+                  - event: token — data: {"text": "partial text"}
+                  - event: tool_call — data: {"tool": "add_item|delete_item|edit_item", "params": {...}}
+                  - event: done — data: {"message_id": "uuid"}
+                  - event: error — data: {"error": "error message"}
+        '400':
+          description: Validation error (missing message or invalid fields)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Chat service not configured (missing LLM_PROVIDER or LLM_API_KEY)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /status:
     get:
       operationId: getStatus
@@ -479,6 +538,95 @@ components:
           items:
             type: string
           description: The fact_ids of the source Facts used for extraction
+
+    ChatMessageRequest:
+      type: object
+      required:
+        - message
+        - discovery_context
+      properties:
+        message:
+          type: string
+          minLength: 1
+          description: The analyst's chat message
+        chat_history:
+          type: array
+          items:
+            type: object
+            required:
+              - role
+              - content
+            properties:
+              role:
+                type: string
+                enum: [user, assistant]
+              content:
+                type: string
+              tool_calls:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    tool:
+                      type: string
+                    params:
+                      type: object
+                    status:
+                      type: string
+          description: Previous chat messages for conversation context
+        discovery_context:
+          type: object
+          required:
+            - goal
+            - title
+            - inputs
+            - facts
+            - insights
+            - recommendations
+            - outputs
+          properties:
+            goal:
+              type: string
+            title:
+              type: string
+            inputs:
+              type: array
+              items:
+                $ref: '#/components/schemas/Input'
+            facts:
+              type: array
+              items:
+                $ref: '#/components/schemas/Fact'
+            insights:
+              type: array
+              items:
+                $ref: '#/components/schemas/Insight'
+            recommendations:
+              type: array
+              items:
+                $ref: '#/components/schemas/Recommendation'
+            outputs:
+              type: array
+              items:
+                $ref: '#/components/schemas/Output'
+          description: Current Discovery state sent as LLM context
+        referenced_items:
+          type: array
+          items:
+            type: object
+            required:
+              - id
+              - type
+              - text
+            properties:
+              id:
+                type: string
+              type:
+                type: string
+                enum: [input, fact, insight, recommendation, output]
+              text:
+                type: string
+          description: Items explicitly referenced via @mention (always included in full context)
 
     ExtractionResponse:
       type: object
