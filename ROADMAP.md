@@ -179,6 +179,19 @@
 - Matrix builder for systematic exploration (multi-select per parameter, combination count)
 - Improvement suggestions panel (sweet spot detection, regression alerts, neighborhood exploration)
 
+### M18: Conversational Chat on Discovery
+**Status:** Not Started
+**Outcome:** An analyst can chat with Factly about the current discovery to ask questions, get explanations, and request modifications to any pipeline item — all with explicit analyst confirmation before any change is applied.
+- Chat panel accessible from an open discovery session
+- Context-aware: the chat sees the full discovery state (inputs, facts, insights, recommendations, outputs and their relationships)
+- **Add items:** the analyst asks Factly to add a fact, insight, recommendation, or output; Factly proposes the item with pre-filled fields and relationships; the analyst confirms before insertion
+- **Delete items:** the analyst asks Factly to remove an item; Factly shows which item will be deleted and warns about downstream dependencies; the analyst confirms before deletion
+- **Edit items:** the analyst asks Factly to modify any item (content, type, relationships); Factly shows a before/after diff; the analyst confirms before applying the change
+- **Ask questions:** the analyst asks questions about the discovery (e.g., "What facts support this insight?", "Are there gaps in my analysis?", "Summarize my findings"); Factly answers using the discovery context
+- **Propose solutions:** Factly can proactively suggest improvements, missing connections, or next steps based on the current discovery state
+- Human-in-the-loop: no modification is applied without explicit analyst confirmation
+- Chat history persisted per discovery session
+
 ## Risks and Dependencies
 
 | Risk | Mitigation |
@@ -196,6 +209,9 @@
 | Benchmark cost (M16) | Full matrix benchmarks consume many LLM calls | Quick config for CI; cost tracker per run; limit runs per case |
 | Gold dataset bias (M16) | Manually curated datasets may not represent real-world diversity | 3 domains; periodic dataset revision; automated vs LLM-judge cross-validation |
 | LLM-judge reliability (M16) | Judge model may have systematic biases | Use different model for judging than for testing; store reasoning for audit |
+| Chat context window limits (M18) | Large discoveries may exceed LLM context limits | Summarize or truncate discovery context; prioritize items relevant to the question |
+| Unintended modifications via chat (M18) | Chat-driven edits could break pipeline consistency | All modifications require explicit confirmation; show impact preview before applying |
+| Chat cost per interaction (M18) | Each chat message sends full discovery context to LLM | Cache discovery context; use incremental context updates where possible |
 
 ## Non-Goals (Project-Wide)
 
