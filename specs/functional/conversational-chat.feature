@@ -193,6 +193,23 @@ Feature: Conversational Chat on Discovery
     Then no item is deleted from the pipeline
     And the confirmation card is marked as cancelled
 
+  # ── Bulk Operations via Chat ──
+
+  @fsid:FS-ChatBulkDelete
+  Scenario: Analyst asks Factly to delete multiple items at once
+    Given a Discovery with Recommendations R-1, R-2, and R-3
+    When the Analyst says "Delete all recommendations"
+    Then Factly emits a single delete_item tool call with item_ids containing all recommendation IDs
+    And the frontend shows a grouped confirmation dialog listing all affected items
+    When the Analyst confirms
+    Then all listed items are removed from the pipeline
+
+  @fsid:FS-ChatBulkDeleteCancel
+  Scenario: Analyst cancels a bulk deletion
+    Given Factly has proposed deleting Recommendations R-1, R-2, and R-3 via a grouped confirmation dialog
+    When the Analyst clicks "Cancel"
+    Then no items are deleted from the pipeline
+
   # ── Edit Items via Chat ──
 
   @fsid:FS-ChatEditItem

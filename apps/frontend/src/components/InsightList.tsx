@@ -16,6 +16,7 @@ import { findDuplicates } from '../dedup';
 import { checkImpact } from '../impact';
 import { useMergeDialog } from '../hooks/useMergeDialog';
 import { useBatchDedupQueue } from '../hooks/useBatchDedupQueue';
+import { ChatToolAction } from './ChatWidget';
 
 type Props = {
   insightRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -28,6 +29,9 @@ type Props = {
   onWaiting: (msg: string) => void;
   backendAvailable: boolean;
   onViewTraceability: (entityType: string, entityId: string) => void;
+  chatActions?: ChatToolAction[];
+  clearChatActions?: (filter: (a: ChatToolAction) => boolean) => void;
+  requestConfirm?: (message: string, onConfirm: () => void) => void;
 };
 
 type RecommendationSuggestionData = {
@@ -41,7 +45,7 @@ type ProposalState = {
   loading: boolean;
 };
 
-const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability }) => {
+const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability, chatActions, clearChatActions, requestConfirm }) => {
 
   const [isInsightDialogVisible, setIsInsightDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -78,6 +82,60 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     setEditingInsight(item);
     setIsInsightDialogVisible(true);
   };
+
+  // Handle chat tool actions targeting insights
+  useEffect(() => {
+    if (!chatActions?.length || !clearChatActions) return;
+    const matching = chatActions.filter(a => a.params.entity_type === 'insight');
+    if (!matching.length) return;
+
+    clearChatActions(a => a.params.entity_type === 'insight');
+
+    // Batch deletes into one confirmation
+    const deletes = matching.filter(a => a.tool === 'delete_item');
+    if (deletes.length > 0 && requestConfirm) {
+      const ids = deletes.flatMap(a =>
+        Array.isArray(a.params.item_ids) ? (a.params.item_ids as string[]) : a.params.item_id ? [String(a.params.item_id)] : []
+      );
+      const items = data.insights.filter(n => ids.includes(n.insight_id));
+      if (items.length > 0) {
+        const label = items.length === 1
+          ? `Delete insight "${items[0].text.substring(0, 50)}"?`
+          : `Delete ${items.length} insights?`;
+        const idsToDelete = new Set(items.map(i => i.insight_id));
+        requestConfirm(label, () => {
+          setData(prev => prev ? { ...prev, insights: prev.insights.filter(n => !idsToDelete.has(n.insight_id)) } : prev);
+        });
+      }
+    }
+
+    // Handle first add action
+    const add = matching.find(a => a.tool === 'add_item');
+    if (add) {
+      setModalMode('add');
+      setEditingInsight({
+        insight_id: '',
+        text: String(add.params.text || ''),
+        related_facts: Array.isArray(add.params.related_ids) ? add.params.related_ids as string[] : [],
+      } as unknown as ItemType);
+      setIsInsightDialogVisible(true);
+    }
+
+    if (!add) {
+      const edit = matching.find(a => a.tool === 'edit_item');
+      if (edit) {
+        const insight = data.insights.find(n => n.insight_id === edit.params.item_id);
+        if (insight) {
+          setModalMode('edit');
+          setEditingInsight({
+            ...insight,
+            text: String(edit.params.new_text || insight.text),
+          } as unknown as ItemType);
+          setIsInsightDialogVisible(true);
+        }
+      }
+    }
+  }, [chatActions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addInsightToData = useCallback(async (newInsight: InsightType) => {
     setData((prevState) => prevState ? ({

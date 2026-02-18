@@ -14,6 +14,7 @@ import * as path from 'path';
 import { createProvider, LLMProvider, OutputTraceabilityContext } from './llm/provider';
 import { VALID_OUTPUT_TYPES, ExtractedFact } from './llm/prompts';
 import { embeddingCheckDuplicates, embeddingScanDuplicates } from './llm/embeddings';
+import { buildChatSystemPrompt, CHAT_TOOLS, DiscoveryContext, ReferencedItem } from './llm/chat-prompts';
 import benchmarkRoutes from './benchmark-routes';
 
 const VALID_UPDATE_ENTITY_TYPES = ['fact', 'insight', 'recommendation', 'output'];
@@ -442,6 +443,105 @@ app.post('/rooms/:id/update', async (req, res, next) => {
     res.sendStatus(204);
   } catch (err) {
     next(err);
+  }
+});
+
+// ── Chat endpoint (SSE streaming) ──
+
+const chatContextThreshold = parseInt(process.env.CHAT_CONTEXT_THRESHOLD || '50', 10);
+
+app.post('/chat/message', async (req, res, next) => {
+  try {
+    if (!llmProvider) {
+      logger.warn('[chat] LLM provider not configured');
+      return res.status(503).json({ error: 'Chat service not configured' });
+    }
+
+    const { message, chat_history, discovery_context, referenced_items } = req.body;
+    logger.info('[chat] Incoming message', { message: message?.substring(0, 100), historyLength: chat_history?.length, hasContext: !!discovery_context });
+
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      return res.status(400).json({ error: 'Field "message" is required and must be a non-empty string' });
+    }
+
+    if (!discovery_context || typeof discovery_context !== 'object') {
+      return res.status(400).json({ error: 'Field "discovery_context" is required and must be an object' });
+    }
+
+    if (!discovery_context.goal || !discovery_context.title) {
+      return res.status(400).json({ error: 'Fields "discovery_context.goal" and "discovery_context.title" are required' });
+    }
+
+    // Set up SSE response headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders();
+
+    // Build system prompt with discovery context
+    const context: DiscoveryContext = {
+      title: discovery_context.title,
+      goal: discovery_context.goal,
+      inputs: discovery_context.inputs || [],
+      facts: discovery_context.facts || [],
+      insights: discovery_context.insights || [],
+      recommendations: discovery_context.recommendations || [],
+      outputs: discovery_context.outputs || [],
+    };
+
+    const refs: ReferencedItem[] = Array.isArray(referenced_items) ? referenced_items : [];
+    const systemPrompt = buildChatSystemPrompt(context, chatContextThreshold, refs);
+    logger.debug('[chat] System prompt built', { length: systemPrompt.length, prompt: systemPrompt });
+
+    // Build message history (limit to last N exchanges to keep context focused)
+    const maxHistoryMessages = parseInt(process.env.CHAT_MAX_HISTORY || '10', 10);
+    const messages: { role: 'user' | 'assistant'; content: string }[] = [];
+    if (Array.isArray(chat_history)) {
+      const validMessages = chat_history.filter((msg: any) => msg.role && msg.content);
+      const trimmed = validMessages.slice(-maxHistoryMessages);
+      trimmed.forEach((msg: any) => {
+        messages.push({ role: msg.role, content: msg.content });
+      });
+    }
+    messages.push({ role: 'user', content: message });
+    logger.info('[chat] Sending to LLM', { messageCount: messages.length, toolCount: CHAT_TOOLS.length });
+
+    const messageId = uuid();
+    let tokenCount = 0;
+    let toolCallCount = 0;
+
+    // Stream LLM response
+    await llmProvider.chatStream(systemPrompt, messages, CHAT_TOOLS, {
+      onToken: (text: string) => {
+        tokenCount++;
+        res.write(`event: token\ndata: ${JSON.stringify({ text })}\n\n`);
+      },
+      onToolCall: (tool: string, params: Record<string, unknown>) => {
+        toolCallCount++;
+        logger.info('[chat] Tool call received', { tool, params });
+        res.write(`event: tool_call\ndata: ${JSON.stringify({ tool, params })}\n\n`);
+      },
+      onDone: () => {
+        logger.info('[chat] Stream done', { tokenCount, toolCallCount, messageId });
+        res.write(`event: done\ndata: ${JSON.stringify({ message_id: messageId })}\n\n`);
+        res.end();
+      },
+      onError: (error: string) => {
+        logger.error('[chat] Stream error', { error, tokenCount, toolCallCount });
+        res.write(`event: error\ndata: ${JSON.stringify({ error })}\n\n`);
+        res.end();
+      },
+    });
+  } catch (err: any) {
+    logger.error('[chat] Endpoint error', { error: err?.message, stack: err?.stack });
+    // If headers already sent (SSE started), emit error event
+    if (res.headersSent) {
+      res.write(`event: error\ndata: ${JSON.stringify({ error: err?.message || 'Internal server error' })}\n\n`);
+      res.end();
+    } else {
+      next(err);
+    }
   }
 });
 

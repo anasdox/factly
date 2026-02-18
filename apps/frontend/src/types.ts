@@ -57,6 +57,23 @@ type OutputType = {
   versions?: VersionEntry[];
 };
 
+type ChatToolCallStatus = 'pending' | 'confirmed' | 'cancelled' | 'applied' | 'error';
+
+type ChatToolCall = {
+  tool: 'add_item' | 'delete_item' | 'edit_item';
+  params: Record<string, unknown>;
+  status: ChatToolCallStatus;
+};
+
+type ChatMessage = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  tool_calls?: ChatToolCall[];
+  created_at: string;
+  references?: string[];
+};
+
 type DiscoveryData = {
   discovery_id: string;
   title: string;
@@ -67,6 +84,7 @@ type DiscoveryData = {
   insights: InsightType[];
   recommendations: RecommendationType[];
   outputs: OutputType[];
+  chat_history?: ChatMessage[];
 };
 
 type ItemType = InputType | FactType | InsightType | RecommendationType | OutputType;

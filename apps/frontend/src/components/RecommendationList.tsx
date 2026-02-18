@@ -13,6 +13,7 @@ import { createNewVersion, propagateImpact, clearStatus, getDirectChildren } fro
 import { findDuplicates } from '../dedup';
 import { checkImpact } from '../impact';
 import { useMergeDialog } from '../hooks/useMergeDialog';
+import { ChatToolAction } from './ChatWidget';
 
 type Props = {
   recommendationRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -25,6 +26,9 @@ type Props = {
   onWaiting: (msg: string) => void;
   backendAvailable: boolean;
   onViewTraceability: (entityType: string, entityId: string) => void;
+  chatActions?: ChatToolAction[];
+  clearChatActions?: (filter: (a: ChatToolAction) => boolean) => void;
+  requestConfirm?: (message: string, onConfirm: () => void) => void;
 };
 
 type OutputSuggestionData = {
@@ -39,7 +43,7 @@ const OUTPUT_TYPES = [
   { value: 'brief', label: 'Brief' },
 ] as const;
 
-const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability }) => {
+const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability, chatActions, clearChatActions, requestConfirm }) => {
 
   const [isRecommendationDialogVisible, setIsRecommendationDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -75,6 +79,60 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
     setEditingRecommendation(recommendation);
     setIsRecommendationDialogVisible(true);
   };
+
+  // Handle chat tool actions targeting recommendations
+  useEffect(() => {
+    if (!chatActions?.length || !clearChatActions) return;
+    const matching = chatActions.filter(a => a.params.entity_type === 'recommendation');
+    if (!matching.length) return;
+
+    clearChatActions(a => a.params.entity_type === 'recommendation');
+
+    // Batch deletes into one confirmation
+    const deletes = matching.filter(a => a.tool === 'delete_item');
+    if (deletes.length > 0 && requestConfirm) {
+      const ids = deletes.flatMap(a =>
+        Array.isArray(a.params.item_ids) ? (a.params.item_ids as string[]) : a.params.item_id ? [String(a.params.item_id)] : []
+      );
+      const items = data.recommendations.filter(r => ids.includes(r.recommendation_id));
+      if (items.length > 0) {
+        const label = items.length === 1
+          ? `Delete recommendation "${items[0].text.substring(0, 50)}"?`
+          : `Delete ${items.length} recommendations?`;
+        const idsToDelete = new Set(items.map(i => i.recommendation_id));
+        requestConfirm(label, () => {
+          setData(prev => prev ? { ...prev, recommendations: prev.recommendations.filter(r => !idsToDelete.has(r.recommendation_id)) } : prev);
+        });
+      }
+    }
+
+    // Handle first add action
+    const add = matching.find(a => a.tool === 'add_item');
+    if (add) {
+      setModalMode('add');
+      setEditingRecommendation({
+        recommendation_id: '',
+        text: String(add.params.text || ''),
+        related_insights: Array.isArray(add.params.related_ids) ? add.params.related_ids as string[] : [],
+      } as unknown as ItemType);
+      setIsRecommendationDialogVisible(true);
+    }
+
+    if (!add) {
+      const edit = matching.find(a => a.tool === 'edit_item');
+      if (edit) {
+        const rec = data.recommendations.find(r => r.recommendation_id === edit.params.item_id);
+        if (rec) {
+          setModalMode('edit');
+          setEditingRecommendation({
+            ...rec,
+            text: String(edit.params.new_text || rec.text),
+          } as unknown as ItemType);
+          setIsRecommendationDialogVisible(true);
+        }
+      }
+    }
+  }, [chatActions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addRecommendationToData = (newRecommendation: RecommendationType) => {
     setData((prevState) => prevState ? ({

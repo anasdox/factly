@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import OutputItem from './OutputItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faAdd } from '@fortawesome/free-solid-svg-icons';
@@ -7,6 +7,7 @@ import OutputModal from './OutputModal';
 import ProposalPanel from './ProposalPanel';
 import { createNewVersion, clearStatus } from '../lib';
 import { API_URL } from '../config';
+import { ChatToolAction } from './ChatWidget';
 
 type Props = {
   outputRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -19,9 +20,12 @@ type Props = {
   onWaiting: (msg: string) => void;
   backendAvailable: boolean;
   onViewTraceability: (entityType: string, entityId: string) => void;
+  chatActions?: ChatToolAction[];
+  clearChatActions?: (filter: (a: ChatToolAction) => boolean) => void;
+  requestConfirm?: (message: string, onConfirm: () => void) => void;
 };
 
-const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability }) => {
+const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability, chatActions, clearChatActions, requestConfirm }) => {
 
   const [isOutputDialogVisible, setIsOutputDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -44,6 +48,61 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
     setEditingOutput(item);
     setIsOutputDialogVisible(true);
   };
+
+  // Handle chat tool actions targeting outputs
+  useEffect(() => {
+    if (!chatActions?.length || !clearChatActions) return;
+    const matching = chatActions.filter(a => a.params.entity_type === 'output');
+    if (!matching.length) return;
+
+    clearChatActions(a => a.params.entity_type === 'output');
+
+    // Batch deletes into one confirmation
+    const deletes = matching.filter(a => a.tool === 'delete_item');
+    if (deletes.length > 0 && requestConfirm) {
+      const ids = deletes.flatMap(a =>
+        Array.isArray(a.params.item_ids) ? (a.params.item_ids as string[]) : a.params.item_id ? [String(a.params.item_id)] : []
+      );
+      const items = data.outputs.filter(o => ids.includes(o.output_id));
+      if (items.length > 0) {
+        const label = items.length === 1
+          ? `Delete output "${items[0].text.substring(0, 50)}"?`
+          : `Delete ${items.length} outputs?`;
+        const idsToDelete = new Set(items.map(i => i.output_id));
+        requestConfirm(label, () => {
+          setData(prev => prev ? { ...prev, outputs: prev.outputs.filter(o => !idsToDelete.has(o.output_id)) } : prev);
+        });
+      }
+    }
+
+    // Handle first add action
+    const add = matching.find(a => a.tool === 'add_item');
+    if (add) {
+      setModalMode('add');
+      setEditingOutput({
+        output_id: '',
+        text: String(add.params.text || ''),
+        related_recommendations: Array.isArray(add.params.related_ids) ? add.params.related_ids as string[] : [],
+        type: String(add.params.output_type || 'report') as OutputType['type'],
+      } as unknown as ItemType);
+      setIsOutputDialogVisible(true);
+    }
+
+    if (!add) {
+      const edit = matching.find(a => a.tool === 'edit_item');
+      if (edit) {
+        const output = data.outputs.find(o => o.output_id === edit.params.item_id);
+        if (output) {
+          setModalMode('edit');
+          setEditingOutput({
+            ...output,
+            text: String(edit.params.new_text || output.text),
+          } as unknown as ItemType);
+          setIsOutputDialogVisible(true);
+        }
+      }
+    }
+  }, [chatActions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveOutput = async (outputData: OutputType) => {
     if (modalMode === 'add') {

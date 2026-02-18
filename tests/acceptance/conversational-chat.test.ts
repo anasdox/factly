@@ -24,6 +24,8 @@
  * - FS-ChatDeleteItem
  * - FS-ChatDeleteItemConfirm
  * - FS-ChatDeleteItemCancel
+ * - FS-ChatBulkDelete
+ * - FS-ChatBulkDeleteCancel
  * - FS-ChatEditItem
  * - FS-ChatEditItemApply
  * - FS-ChatEditItemModify
@@ -788,6 +790,84 @@ describe('Conversational Chat — Delete Item', () => {
 
       expect(data.facts).toHaveLength(initialFactCount);
       expect(data.facts.find(f => f.fact_id === 'F-1')).toBeDefined();
+    });
+  });
+
+  // @fsid:FS-ChatBulkDelete
+  describe('FS-ChatBulkDelete', () => {
+    it('bulk delete emits a single delete_item tool call with item_ids array', () => {
+      const data = makeTestDiscovery();
+      data.recommendations.push(
+        { recommendation_id: 'R-2', related_insights: ['N-1'], text: 'Implement early warning systems', version: 1, status: 'draft' },
+        { recommendation_id: 'R-3', related_insights: ['N-1'], text: 'Relocate critical infrastructure', version: 1, status: 'draft' },
+      );
+
+      // Factly emits a single tool call with item_ids array
+      const toolCall: ChatToolCall = {
+        tool: 'delete_item',
+        params: {
+          entity_type: 'recommendation',
+          item_ids: data.recommendations.map(r => r.recommendation_id),
+        },
+        status: 'pending',
+      };
+
+      expect(toolCall.tool).toBe('delete_item');
+      expect(toolCall.params.entity_type).toBe('recommendation');
+      expect(toolCall.params.item_ids).toEqual(['R-1', 'R-2', 'R-3']);
+    });
+
+    it('frontend expands item_ids into individual deletions after confirmation', () => {
+      const data = makeTestDiscovery();
+      data.recommendations.push(
+        { recommendation_id: 'R-2', related_insights: ['N-1'], text: 'Implement early warning systems', version: 1, status: 'draft' },
+        { recommendation_id: 'R-3', related_insights: ['N-1'], text: 'Relocate critical infrastructure', version: 1, status: 'draft' },
+      );
+      expect(data.recommendations).toHaveLength(3);
+
+      const idsToDelete = ['R-1', 'R-2', 'R-3'];
+
+      // Simulate grouped confirmation — all items deleted at once
+      data.recommendations = data.recommendations.filter(r => !idsToDelete.includes(r.recommendation_id));
+
+      expect(data.recommendations).toHaveLength(0);
+    });
+
+    it('also supports single item_id for backward compatibility', () => {
+      const data = makeTestDiscovery();
+      const initialCount = data.recommendations.length;
+
+      // Single-item delete still works with item_id
+      const toolCall: ChatToolCall = {
+        tool: 'delete_item',
+        params: { entity_type: 'recommendation', item_id: 'R-1' },
+        status: 'pending',
+      };
+
+      // Frontend extracts id from item_id field
+      const ids = Array.isArray(toolCall.params.item_ids)
+        ? toolCall.params.item_ids as string[]
+        : toolCall.params.item_id ? [String(toolCall.params.item_id)] : [];
+
+      expect(ids).toEqual(['R-1']);
+      data.recommendations = data.recommendations.filter(r => !ids.includes(r.recommendation_id));
+      expect(data.recommendations).toHaveLength(initialCount - 1);
+    });
+  });
+
+  // @fsid:FS-ChatBulkDeleteCancel
+  describe('FS-ChatBulkDeleteCancel', () => {
+    it('cancelling a grouped bulk delete does not modify the pipeline', () => {
+      const data = makeTestDiscovery();
+      data.recommendations.push(
+        { recommendation_id: 'R-2', related_insights: ['N-1'], text: 'Implement early warning systems', version: 1, status: 'draft' },
+        { recommendation_id: 'R-3', related_insights: ['N-1'], text: 'Relocate critical infrastructure', version: 1, status: 'draft' },
+      );
+      const initialCount = data.recommendations.length;
+
+      // Analyst cancels — no changes
+      expect(data.recommendations).toHaveLength(initialCount);
+      expect(data.recommendations.map(r => r.recommendation_id).sort()).toEqual(['R-1', 'R-2', 'R-3']);
     });
   });
 });

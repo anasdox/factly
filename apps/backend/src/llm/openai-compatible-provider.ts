@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
-import { LLMProvider, OutputTraceabilityContext } from './provider';
+import { LLMProvider, OutputTraceabilityContext, ChatStreamCallbacks } from './provider';
+import { ChatToolDefinition } from './chat-prompts';
 import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseImpactCheckResult, ExtractedFact, ExtractedInsight, ExtractedRecommendation, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult } from './prompts';
 
 export class OpenAICompatibleProvider implements LLMProvider {
@@ -206,5 +207,120 @@ export class OpenAICompatibleProvider implements LLMProvider {
     return response.data
       .sort((a, b) => a.index - b.index)
       .map((d) => d.embedding);
+  }
+
+  async chatStream(
+    systemPrompt: string,
+    messages: { role: 'user' | 'assistant'; content: string }[],
+    tools: ChatToolDefinition[],
+    callbacks: ChatStreamCallbacks,
+  ): Promise<void> {
+    const tempChat = parseFloat(process.env.LLM_TEMP_CHAT || '0.4');
+    const maxTokens = parseInt(process.env.LLM_CHAT_MAX_TOKENS || '4096', 10);
+
+    const openaiTools: OpenAI.Chat.ChatCompletionTool[] = tools.map(t => ({
+      type: 'function' as const,
+      function: {
+        name: t.name,
+        description: t.description,
+        parameters: t.input_schema,
+      },
+    }));
+
+    console.log('[openai-compat-chat] Starting stream', { model: this.model, messageCount: messages.length, toolCount: tools.length, temperature: tempChat, maxTokens });
+    console.log('[openai-compat-chat] Tools sent:', JSON.stringify(openaiTools.map(t => (t as any).function?.name)));
+
+    let stream: any;
+    try {
+      stream = await this.client.chat.completions.create({
+        model: this.model,
+        temperature: tempChat,
+        max_tokens: maxTokens,
+        stream: true,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+        ],
+        tools: openaiTools,
+      });
+    } catch (err: any) {
+      console.error('[openai-compat-chat] Failed to create stream', { error: err?.message, status: err?.status });
+      // Retry without tools if the provider doesn't support them
+      if (err?.message?.includes('tools') || err?.status === 400) {
+        console.warn('[openai-compat-chat] Retrying WITHOUT tools (provider may not support function calling)');
+        stream = await this.client.chat.completions.create({
+          model: this.model,
+          temperature: tempChat,
+          max_tokens: maxTokens,
+          stream: true,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+          ],
+        });
+      } else {
+        throw err;
+      }
+    }
+
+    const toolCallAccumulators = new Map<number, { name: string; arguments: string }>();
+    let chunkCount = 0;
+    let tokenCount = 0;
+
+    try {
+      for await (const chunk of stream) {
+        chunkCount++;
+        const choice = chunk.choices[0];
+        if (!choice) {
+          console.log('[openai-compat-chat] Chunk with no choices', { chunkCount, chunk: JSON.stringify(chunk).substring(0, 200) });
+          continue;
+        }
+
+        const delta = choice.delta;
+
+        if (delta.content) {
+          tokenCount++;
+          callbacks.onToken(delta.content);
+        }
+
+        if (delta.tool_calls) {
+          console.log('[openai-compat-chat] Tool call delta', { chunkCount, toolCalls: JSON.stringify(delta.tool_calls) });
+          for (const tc of delta.tool_calls) {
+            if (!toolCallAccumulators.has(tc.index)) {
+              toolCallAccumulators.set(tc.index, { name: '', arguments: '' });
+            }
+            const acc = toolCallAccumulators.get(tc.index)!;
+            if (tc.function?.name) acc.name = tc.function.name;
+            if (tc.function?.arguments) acc.arguments += tc.function.arguments;
+          }
+        }
+
+        if (choice.finish_reason) {
+          console.log('[openai-compat-chat] Finish reason', { finishReason: choice.finish_reason, accumulatedToolCalls: toolCallAccumulators.size, chunkCount, tokenCount });
+        }
+
+        if (choice.finish_reason === 'tool_calls' || choice.finish_reason === 'stop') {
+          if (toolCallAccumulators.size > 0) {
+            console.log('[openai-compat-chat] Emitting tool calls', { count: toolCallAccumulators.size });
+            toolCallAccumulators.forEach((acc, idx) => {
+              console.log('[openai-compat-chat] Tool call', { index: idx, name: acc.name, argsLength: acc.arguments.length, args: acc.arguments.substring(0, 200) });
+              try {
+                const params = JSON.parse(acc.arguments);
+                callbacks.onToolCall(acc.name, params);
+              } catch (e: any) {
+                console.error('[openai-compat-chat] Failed to parse tool args', { name: acc.name, args: acc.arguments, error: e?.message });
+                callbacks.onError(`Failed to parse tool call parameters for ${acc.name}`);
+              }
+            });
+          }
+        }
+      }
+
+      console.log('[openai-compat-chat] Stream complete', { chunkCount, tokenCount, toolCallsEmitted: toolCallAccumulators.size });
+      callbacks.onDone();
+    } catch (err: any) {
+      console.error('[openai-compat-chat] Stream error', { error: err?.message, chunkCount, tokenCount });
+      callbacks.onError(err?.message || 'Unknown streaming error');
+    }
   }
 }

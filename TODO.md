@@ -16,9 +16,10 @@ Deliver M18: Conversational Chat on Discovery — an analyst can chat with Factl
 - [x] Create/update IMPLEMENTATION_PLAN.md (10 slices, 5 cross-feature dependencies)
 - [x] Write acceptance tests for M18 (45 tests in conversational-chat.test.ts, all passing)
 - [x] UoR validation of implementation plan + acceptance tests
-- [ ] Implement M18
-- [ ] All acceptance tests pass
-- [ ] Refactoring phase
+- [x] Implement M18 (10 slices: types, prompts, provider, endpoint, hook, widget, @mention, action cards, history, integration)
+- [x] All acceptance tests pass (45/45)
+- [x] TypeScript compiles cleanly (frontend + backend)
+- [x] Refactoring phase (minor: import ordering, generateId placement)
 - [ ] Demo and user validation
 
 ## Validation

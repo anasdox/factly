@@ -16,6 +16,7 @@ import { findDuplicates } from '../dedup';
 import { checkImpact } from '../impact';
 import { useMergeDialog } from '../hooks/useMergeDialog';
 import { useBatchDedupQueue } from '../hooks/useBatchDedupQueue';
+import { ChatToolAction } from './ChatWidget';
 
 type Props = {
   factRefs: React.MutableRefObject<(HTMLDivElement | null)[]>
@@ -28,6 +29,9 @@ type Props = {
   onWaiting: (msg: string) => void;
   backendAvailable: boolean;
   onViewTraceability: (entityType: string, entityId: string) => void;
+  chatActions?: ChatToolAction[];
+  clearChatActions?: (filter: (a: ChatToolAction) => boolean) => void;
+  requestConfirm?: (message: string, onConfirm: () => void) => void;
 };
 
 type InsightSuggestionData = {
@@ -41,7 +45,7 @@ type ProposalState = {
   loading: boolean;
 };
 
-const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability }) => {
+const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability, chatActions, clearChatActions, requestConfirm }) => {
 
   const [isFactDialogVisible, setIsFactDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -78,6 +82,60 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     setEditingFact(item);
     setIsFactDialogVisible(true);
   };
+
+  // Handle chat tool actions targeting facts
+  useEffect(() => {
+    if (!chatActions?.length || !clearChatActions) return;
+    const matching = chatActions.filter(a => a.params.entity_type === 'fact');
+    if (!matching.length) return;
+
+    clearChatActions(a => a.params.entity_type === 'fact');
+
+    // Batch deletes into one confirmation
+    const deletes = matching.filter(a => a.tool === 'delete_item');
+    if (deletes.length > 0 && requestConfirm) {
+      const ids = deletes.flatMap(a =>
+        Array.isArray(a.params.item_ids) ? (a.params.item_ids as string[]) : a.params.item_id ? [String(a.params.item_id)] : []
+      );
+      const items = data.facts.filter(f => ids.includes(f.fact_id));
+      if (items.length > 0) {
+        const label = items.length === 1
+          ? `Delete fact "${items[0].text.substring(0, 50)}"?`
+          : `Delete ${items.length} facts?`;
+        const idsToDelete = new Set(items.map(i => i.fact_id));
+        requestConfirm(label, () => {
+          setData(prev => prev ? { ...prev, facts: prev.facts.filter(f => !idsToDelete.has(f.fact_id)) } : prev);
+        });
+      }
+    }
+
+    // Handle first add action
+    const add = matching.find(a => a.tool === 'add_item');
+    if (add) {
+      setModalMode('add');
+      setEditingFact({
+        fact_id: '',
+        text: String(add.params.text || ''),
+        related_inputs: Array.isArray(add.params.related_ids) ? add.params.related_ids as string[] : [],
+      } as unknown as ItemType);
+      setIsFactDialogVisible(true);
+    }
+
+    if (!add) {
+      const edit = matching.find(a => a.tool === 'edit_item');
+      if (edit) {
+        const fact = data.facts.find(f => f.fact_id === edit.params.item_id);
+        if (fact) {
+          setModalMode('edit');
+          setEditingFact({
+            ...fact,
+            text: String(edit.params.new_text || fact.text),
+          } as unknown as ItemType);
+          setIsFactDialogVisible(true);
+        }
+      }
+    }
+  }, [chatActions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addFactToState = async (newFact: FactType) => {
     setData((prevState) => prevState ? ({

@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { LLMProvider } from './provider';
+import { LLMProvider, ChatStreamCallbacks } from './provider';
+import { ChatToolDefinition } from './chat-prompts';
 import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseImpactCheckResult, ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult } from './prompts';
 
 export class AnthropicProvider implements LLMProvider {
@@ -155,5 +156,83 @@ export class AnthropicProvider implements LLMProvider {
     });
 
     return parseImpactCheckResult(this.extractText(response), children);
+  }
+
+  async chatStream(
+    systemPrompt: string,
+    messages: { role: 'user' | 'assistant'; content: string }[],
+    tools: ChatToolDefinition[],
+    callbacks: ChatStreamCallbacks,
+  ): Promise<void> {
+    const tempChat = parseFloat(process.env.LLM_TEMP_CHAT || '0.4');
+    const maxTokens = parseInt(process.env.LLM_CHAT_MAX_TOKENS || '4096', 10);
+
+    const anthropicTools: Anthropic.Tool[] = tools.map(t => ({
+      name: t.name,
+      description: t.description,
+      input_schema: t.input_schema as Anthropic.Tool.InputSchema,
+    }));
+
+    console.log('[anthropic-chat] Starting stream', { model: this.model, messageCount: messages.length, toolCount: tools.length, temperature: tempChat, maxTokens });
+
+    const stream = this.client.messages.stream({
+      model: this.model,
+      max_tokens: maxTokens,
+      temperature: tempChat,
+      system: systemPrompt,
+      messages: messages.map(m => ({ role: m.role, content: m.content })),
+      tools: anthropicTools,
+    });
+
+    // Use the high-level events provided by the SDK
+    stream.on('text', (textDelta: string) => {
+      callbacks.onToken(textDelta);
+    });
+
+    // Track tool_use input JSON via inputJson event
+    const toolInputBuffers = new Map<string, { name: string; json: string }>();
+
+    stream.on('streamEvent', (event: any) => {
+      // Log all event types for debugging
+      console.log('[anthropic-chat] streamEvent', { type: event.type, index: event.index, contentBlockType: event.content_block?.type, deltaType: event.delta?.type });
+
+      if (event.type === 'content_block_start' && event.content_block?.type === 'tool_use') {
+        console.log('[anthropic-chat] Tool use block started', { index: event.index, name: event.content_block.name, id: event.content_block.id });
+        toolInputBuffers.set(String(event.index), {
+          name: event.content_block.name,
+          json: '',
+        });
+      }
+      if (event.type === 'content_block_delta' && event.delta?.type === 'input_json_delta') {
+        const buffer = toolInputBuffers.get(String(event.index));
+        if (buffer) {
+          buffer.json += event.delta.partial_json;
+        }
+      }
+      if (event.type === 'content_block_stop') {
+        const buffer = toolInputBuffers.get(String(event.index));
+        if (buffer) {
+          console.log('[anthropic-chat] Tool use block complete', { index: event.index, name: buffer.name, jsonLength: buffer.json.length, json: buffer.json.substring(0, 200) });
+          try {
+            const params = JSON.parse(buffer.json);
+            console.log('[anthropic-chat] Emitting tool call', { name: buffer.name, params });
+            callbacks.onToolCall(buffer.name, params);
+          } catch (e: any) {
+            console.error('[anthropic-chat] Failed to parse tool JSON', { name: buffer.name, json: buffer.json, error: e?.message });
+            callbacks.onError(`Failed to parse tool call parameters for ${buffer.name}`);
+          }
+          toolInputBuffers.delete(String(event.index));
+        }
+      }
+    });
+
+    try {
+      const finalMsg = await stream.finalMessage();
+      console.log('[anthropic-chat] Final message', { stopReason: finalMsg.stop_reason, contentBlocks: finalMsg.content.length, contentTypes: finalMsg.content.map(c => c.type) });
+      callbacks.onDone();
+    } catch (err: any) {
+      console.error('[anthropic-chat] Stream error', { error: err?.message, stack: err?.stack });
+      callbacks.onError(err?.message || 'Unknown streaming error');
+    }
   }
 }

@@ -13,6 +13,7 @@ import { API_URL } from '../config';
 import { createNewVersion, propagateImpact, clearStatus, getDirectChildren } from '../lib';
 import { findDuplicates } from '../dedup';
 import { checkImpact } from '../impact';
+import { ChatToolAction } from './ChatWidget';
 
 
 type Props = {
@@ -26,13 +27,16 @@ type Props = {
   onWaiting: (msg: string) => void;
   backendAvailable: boolean;
   onViewTraceability: (entityType: string, entityId: string) => void;
+  chatActions?: ChatToolAction[];
+  clearChatActions?: (filter: (a: ChatToolAction) => boolean) => void;
+  requestConfirm?: (message: string, onConfirm: () => void) => void;
 };
 
 type FactSuggestionData = {
   suggestions: { text: string; source_excerpt?: string; inputId: string }[];
 };
 
-const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability }) => {
+const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability, chatActions, clearChatActions, requestConfirm }) => {
 
   const [isInputDialogVisible, setIsInputDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -63,6 +67,47 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
     setEditingInput(item);
     setIsInputDialogVisible(true);
   };
+
+  // Handle chat tool actions targeting inputs
+  useEffect(() => {
+    if (!chatActions?.length || !clearChatActions) return;
+    const matching = chatActions.filter(a => a.params.entity_type === 'input');
+    if (!matching.length) return;
+
+    clearChatActions(a => a.params.entity_type === 'input');
+
+    // Batch deletes into one confirmation
+    const deletes = matching.filter(a => a.tool === 'delete_item');
+    if (deletes.length > 0 && requestConfirm) {
+      const ids = deletes.flatMap(a =>
+        Array.isArray(a.params.item_ids) ? (a.params.item_ids as string[]) : a.params.item_id ? [String(a.params.item_id)] : []
+      );
+      const items = data.inputs.filter(i => ids.includes(i.input_id));
+      if (items.length > 0) {
+        const label = items.length === 1
+          ? `Delete input "${items[0].title || (items[0].text ?? '').substring(0, 50)}"?`
+          : `Delete ${items.length} inputs?`;
+        const idsToDelete = new Set(items.map(i => i.input_id));
+        requestConfirm(label, () => {
+          setData(prev => prev ? { ...prev, inputs: prev.inputs.filter(inp => !idsToDelete.has(inp.input_id)) } : prev);
+        });
+      }
+    }
+
+    // Handle first edit action
+    const edit = matching.find(a => a.tool === 'edit_item');
+    if (edit) {
+      const input = data.inputs.find(i => i.input_id === edit.params.item_id);
+      if (input) {
+        setModalMode('edit');
+        setEditingInput({
+          ...input,
+          text: String(edit.params.new_text || input.text),
+        } as unknown as ItemType);
+        setIsInputDialogVisible(true);
+      }
+    }
+  }, [chatActions]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveInput = async (inputData: InputType) => {
     if (modalMode === 'add') {
