@@ -125,6 +125,17 @@ export function buildSummarizedContext(
   - Outputs: ${context.outputs.length}
   - Total: ${context.inputs.length + context.facts.length + context.insights.length + context.recommendations.length + context.outputs.length}`);
 
+  // Full ID lists (so the LLM can perform bulk operations like "delete all facts")
+  const idLists: string[] = [];
+  if (context.inputs.length > 0) idLists.push(`  - Input IDs: ${context.inputs.map(i => i.input_id).join(', ')}`);
+  if (context.facts.length > 0) idLists.push(`  - Fact IDs: ${context.facts.map(f => f.fact_id).join(', ')}`);
+  if (context.insights.length > 0) idLists.push(`  - Insight IDs: ${context.insights.map(n => n.insight_id).join(', ')}`);
+  if (context.recommendations.length > 0) idLists.push(`  - Recommendation IDs: ${context.recommendations.map(r => r.recommendation_id).join(', ')}`);
+  if (context.outputs.length > 0) idLists.push(`  - Output IDs: ${context.outputs.map(o => o.output_id).join(', ')}`);
+  if (idLists.length > 0) {
+    sections.push(`All item IDs:\n${idLists.join('\n')}`);
+  }
+
   // Key themes from first items of each column
   const themes: string[] = [];
   context.facts.slice(0, 5).forEach(f => themes.push(`  - ${f.fact_id}: ${f.text.substring(0, 100)}...`));
