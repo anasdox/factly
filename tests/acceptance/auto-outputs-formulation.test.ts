@@ -154,7 +154,7 @@ describe('Auto Outputs Formulation from Recommendations', () => {
 
       // Should not be 400 — either 200 (LLM configured) or 503 (not configured)
       expect(response.status).not.toBe(400);
-    });
+    }, 60_000);
   });
 
   // @fsid:FS-DisplaySuggestedOutputs

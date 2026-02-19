@@ -1,3 +1,5 @@
+export {};
+
 /**
  * Acceptance tests for Staleness Propagation on Edit feature.
  * @see specs/functional/staleness-propagation.feature

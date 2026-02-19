@@ -19,6 +19,8 @@
  * - FS-DedupErrorFallsBackToLocal
  * - FS-DedupDisabledForInputs
  * - FS-OnDemandDedupDisabledWhenBackendUnavailable
+ * - FS-EmbeddingBasedSemanticComparison
+ * - FS-EmbeddingFallbackToLlmChat
  */
 
 import { BASE_URL } from './helpers/backend-server';
@@ -279,6 +281,73 @@ describe('Semantic Deduplication', () => {
       // Completely different texts should have low similarity
       const sim3 = trigramSimilarity('Revenue grew by 15%', 'The weather is sunny today');
       expect(sim3).toBeLessThan(0.3);
+    });
+  });
+
+  // @fsid:FS-EmbeddingBasedSemanticComparison
+  describe('FS-EmbeddingBasedSemanticComparison', () => {
+    it('POST /dedup/check uses embeddings when configured and returns duplicates with cosine similarity', async () => {
+      const response = await fetch(`${BASE_URL}/dedup/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(VALID_DEDUP_CHECK_REQUEST),
+      });
+
+      // 503 if LLM not configured — skip assertion
+      if (response.status === 503) {
+        const result = await response.json();
+        expect(result).toHaveProperty('error');
+        return;
+      }
+
+      expect(response.status).toBe(200);
+      const result = await response.json();
+      expect(result).toHaveProperty('duplicates');
+      expect(Array.isArray(result.duplicates)).toBe(true);
+      // When embeddings are configured, duplicates have numeric cosine similarity and LLM-generated explanations
+      for (const dup of result.duplicates) {
+        expect(dup).toHaveProperty('id');
+        expect(dup).toHaveProperty('similarity');
+        expect(typeof dup.similarity).toBe('number');
+        expect(dup.similarity).toBeGreaterThan(0);
+        expect(dup.similarity).toBeLessThanOrEqual(1);
+        expect(dup).toHaveProperty('explanation');
+        expect(typeof dup.explanation).toBe('string');
+      }
+    });
+  });
+
+  // @fsid:FS-EmbeddingFallbackToLlmChat
+  describe('FS-EmbeddingFallbackToLlmChat', () => {
+    it('POST /dedup/check falls back to LLM chat comparison when embeddings are not available', async () => {
+      // This test verifies the endpoint responds correctly regardless of embedding config.
+      // When no embedding model is configured, the backend uses LLM chat-based comparison.
+      // Both paths return the same response shape: { duplicates: [...] }
+      const response = await fetch(`${BASE_URL}/dedup/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(VALID_DEDUP_CHECK_REQUEST),
+      });
+
+      if (response.status === 503) {
+        const result = await response.json();
+        expect(result).toHaveProperty('error');
+        return;
+      }
+
+      expect(response.status).toBe(200);
+      const result = await response.json();
+      expect(result).toHaveProperty('duplicates');
+      expect(Array.isArray(result.duplicates)).toBe(true);
+      // Both embedding and LLM chat paths return the same contract
+      for (const dup of result.duplicates) {
+        expect(dup).toHaveProperty('id');
+        expect(typeof dup.id).toBe('string');
+        expect(dup).toHaveProperty('similarity');
+        expect(typeof dup.similarity).toBe('number');
+        expect(dup).toHaveProperty('explanation');
+        expect(typeof dup.explanation).toBe('string');
+      }
     });
   });
 

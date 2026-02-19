@@ -1,3 +1,5 @@
+export {};
+
 /**
  * Acceptance tests for Conversational Chat on Discovery feature.
  * @see specs/functional/conversational-chat.feature
