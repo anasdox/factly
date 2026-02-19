@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import InsightItem from './InsightItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faClipboardList, faXmark, faSpinner, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faClipboardList, faXmark, faSpinner, faCheckDouble, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
+import Modal from './Modal';
 import InsightModal from './InsightModal';
 import RecommendationModal from './RecommendationModal';
 import SuggestionsPanel from './SuggestionsPanel';
@@ -53,7 +54,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
   const setInsightRef = useCallback((element: HTMLDivElement, index: number) => { insightRefs.current[index] = element; }, [insightRefs]);
 
   // Insight selection state
-  const { selectedIds: selectedInsightIds, toggleSelection: toggleInsightSelection, clearSelection, selectAll } = useItemSelection();
+  const { selectedIds: selectedInsightIds, toggleSelection: toggleInsightSelection, clearSelection, selectAll } = useItemSelection(data.insights.map(n => n.insight_id));
   const [extractingRecommendations, setExtractingRecommendations] = useState(false);
 
   // Clear selection when discovery changes
@@ -70,6 +71,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
 
   // AI proposal state
   const [proposal, setProposal] = useState<ProposalState | null>(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   const openAddModal = () => {
     setModalMode('add');
@@ -470,6 +472,10 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
             <FontAwesomeIcon icon={faClipboardList} />
             {' '}Add Recommendation
           </button>
+          <button onClick={() => setConfirmBulkDelete(true)}>
+            <FontAwesomeIcon icon={faTrashCan} />
+            {' '}Delete
+          </button>
           <button onClick={clearSelection}>
             <FontAwesomeIcon icon={faXmark} />
             {' '}Clear
@@ -521,6 +527,17 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
         recommendationData={{ recommendation_id: '', text: '', related_insights: Array.from(selectedInsightIds) } as RecommendationType}
         insights={data.insights}
       />
+      <Modal isVisible={confirmBulkDelete} onClose={() => setConfirmBulkDelete(false)} maxWidth="400px">
+        <p style={{ margin: '0 0 1em' }}>Delete {selectedInsightIds.size} selected insight(s)?</p>
+        <div className="modal-actions">
+          <div className="modal-action-group-left">
+            <button className="modal-action-save" onClick={() => { setData(prev => prev ? { ...prev, insights: prev.insights.filter(n => !selectedInsightIds.has(n.insight_id)) } : prev); clearSelection(); setConfirmBulkDelete(false); }}>Confirm</button>
+          </div>
+          <div className="modal-action-group-right">
+            <button className="modal-action-close" onClick={() => setConfirmBulkDelete(false)}>Cancel</button>
+          </div>
+        </div>
+      </Modal>
       {recommendationSuggestionData && (
         <SuggestionsPanel
           suggestions={recommendationSuggestionData.suggestions}

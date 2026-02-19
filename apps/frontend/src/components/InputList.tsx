@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import InputItem from './InputItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faXmark, faSpinner, faCheckDouble, faClipboard } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faXmark, faSpinner, faCheckDouble, faClipboard, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
+import Modal from './Modal';
 import InputModal from './InputModal';
 import FactModal from './FactModal';
 import SuggestionsPanel from './SuggestionsPanel';
@@ -44,7 +45,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
   const setInputRef = useCallback((element: HTMLDivElement, index: number) => { inputRefs.current[index] = element; }, [inputRefs]);
 
   // Input selection state
-  const { selectedIds: selectedInputIds, toggleSelection: toggleInputSelection, clearSelection, selectAll } = useItemSelection();
+  const { selectedIds: selectedInputIds, toggleSelection: toggleInputSelection, clearSelection, selectAll } = useItemSelection(data.inputs.map(i => i.input_id));
   const [extractingFacts, setExtractingFacts] = useState(false);
 
   // Clear selection when discovery changes
@@ -52,6 +53,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
 
   const [suggestionData, setSuggestionData] = useState<FactSuggestionData | null>(null);
   const [isFactModalVisible, setIsFactModalVisible] = useState(false);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   // Batch dedup queue for accepted suggestions
   const dedupQueue = useBatchDedupQueue<FactType>();
@@ -360,6 +362,10 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
             <FontAwesomeIcon icon={faClipboard} />
             {' '}Add Fact
           </button>
+          <button onClick={() => setConfirmBulkDelete(true)}>
+            <FontAwesomeIcon icon={faTrashCan} />
+            {' '}Delete
+          </button>
           <button onClick={clearSelection}>
             <FontAwesomeIcon icon={faXmark} />
             {' '}Clear
@@ -408,6 +414,17 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
         factData={{ fact_id: '', text: '', related_inputs: Array.from(selectedInputIds) } as FactType}
         inputs={data.inputs}
       />
+      <Modal isVisible={confirmBulkDelete} onClose={() => setConfirmBulkDelete(false)} maxWidth="400px">
+        <p style={{ margin: '0 0 1em' }}>Delete {selectedInputIds.size} selected input(s)?</p>
+        <div className="modal-actions">
+          <div className="modal-action-group-left">
+            <button className="modal-action-save" onClick={() => { setData(prev => prev ? { ...prev, inputs: prev.inputs.filter(i => !selectedInputIds.has(i.input_id)) } : prev); clearSelection(); setConfirmBulkDelete(false); }}>Confirm</button>
+          </div>
+          <div className="modal-action-group-right">
+            <button className="modal-action-close" onClick={() => setConfirmBulkDelete(false)}>Cancel</button>
+          </div>
+        </div>
+      </Modal>
       {suggestionData && (
         <SuggestionsPanel
           suggestions={suggestionData.suggestions}

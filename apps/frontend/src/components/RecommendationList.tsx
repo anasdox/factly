@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import RecommendationItem from './RecommendationItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faXmark, faSpinner, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faXmark, faSpinner, faCheckDouble, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
+import Modal from './Modal';
 import RecommendationModal from './RecommendationModal';
 import MergeDialog from './MergeDialog';
 import ProposalPanel from './ProposalPanel';
@@ -51,7 +52,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
   const setRecommendationRef = useCallback((element: HTMLDivElement, index: number) => { recommendationRefs.current[index] = element; }, [recommendationRefs]);
 
   // Recommendation selection state
-  const { selectedIds: selectedRecommendationIds, toggleSelection: toggleRecommendationSelection, clearSelection, selectAll } = useItemSelection();
+  const { selectedIds: selectedRecommendationIds, toggleSelection: toggleRecommendationSelection, clearSelection, selectAll } = useItemSelection(data.recommendations.map(r => r.recommendation_id));
   const [selectedOutputType, setSelectedOutputType] = useState<OutputType['type']>('report');
 
   // Clear selection when discovery changes
@@ -66,6 +67,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
   const [proposalTarget, setProposalTarget] = useState<string | null>(null);
   const [proposalData, setProposalData] = useState<{ proposed_text: string; explanation: string } | null>(null);
   const [proposingUpdateId, setProposingUpdateId] = useState<string | null>(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
 
   const openAddModal = () => {
@@ -387,6 +389,10 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
             <FontAwesomeIcon icon={extractingOutputs ? faSpinner : faWandMagicSparkles} spin={extractingOutputs} />
             {' '}Formulate Outputs
           </button>
+          <button onClick={() => setConfirmBulkDelete(true)}>
+            <FontAwesomeIcon icon={faTrashCan} />
+            {' '}Delete
+          </button>
           <button onClick={clearSelection}>
             <FontAwesomeIcon icon={faXmark} />
             {' '}Clear
@@ -432,6 +438,17 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
         recommendationData={editingRecommendation as RecommendationType}
         insights={data.insights}
       />
+      <Modal isVisible={confirmBulkDelete} onClose={() => setConfirmBulkDelete(false)} maxWidth="400px">
+        <p style={{ margin: '0 0 1em' }}>Delete {selectedRecommendationIds.size} selected recommendation(s)?</p>
+        <div className="modal-actions">
+          <div className="modal-action-group-left">
+            <button className="modal-action-save" onClick={() => { setData(prev => prev ? { ...prev, recommendations: prev.recommendations.filter(r => !selectedRecommendationIds.has(r.recommendation_id)) } : prev); clearSelection(); setConfirmBulkDelete(false); }}>Confirm</button>
+          </div>
+          <div className="modal-action-group-right">
+            <button className="modal-action-close" onClick={() => setConfirmBulkDelete(false)}>Cancel</button>
+          </div>
+        </div>
+      </Modal>
       {outputSuggestionData && (
         <SuggestionsPanel
           suggestions={outputSuggestionData.suggestions}

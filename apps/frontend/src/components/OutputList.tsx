@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import OutputItem from './OutputItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faXmark, faCheckDouble, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
+import Modal from './Modal';
 import OutputModal from './OutputModal';
 import ProposalPanel from './ProposalPanel';
+import { useItemSelection } from '../hooks/useItemSelection';
 import { createNewVersion, clearStatus } from '../lib';
 import { API_URL } from '../config';
 import { ChatToolAction } from './ChatWidget';
@@ -36,6 +38,8 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
   const [proposalTarget, setProposalTarget] = useState<string | null>(null);
   const [proposalData, setProposalData] = useState<{ proposed_text: string; explanation: string } | null>(null);
   const [proposingUpdateId, setProposingUpdateId] = useState<string | null>(null);
+  const { selectedIds: selectedOutputIds, toggleSelection: toggleOutputSelection, clearSelection, selectAll } = useItemSelection(data.outputs.map(o => o.output_id));
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   const openAddModal = () => {
     setModalMode('add');
@@ -223,13 +227,35 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
     <div className="column outputs">
       <div className="column-header">
         <h2>📤Outputs</h2>
+        {data.outputs.length > 0 && selectedOutputIds.size < data.outputs.length && (
+          <button className="select-all-button" onClick={() => selectAll(data.outputs.map(o => o.output_id))} title="Select all outputs">
+            <FontAwesomeIcon icon={faCheckDouble} /> Select All
+          </button>
+        )}
         <button className="header-add-button" onClick={openAddModal} title="Add Output"><FontAwesomeIcon icon={faAdd} /></button>
+      </div>
+      <div className={`toolbar-wrapper${selectedOutputIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
+        <div className="selection-toolbar">
+          <span>{selectedOutputIds.size} output(s) selected</span>
+          <button onClick={() => setConfirmBulkDelete(true)}>
+            <FontAwesomeIcon icon={faTrashCan} />
+            {' '}Delete
+          </button>
+          <button onClick={clearSelection}>
+            <FontAwesomeIcon icon={faXmark} />
+            {' '}Clear
+          </button>
+        </div>
       </div>
       {data.outputs.length === 0 && (
         <p className="empty-state-hint">Select recommendations to formulate deliverables.</p>
       )}
       {data.outputs.map((output, index) => (
-        <React.Fragment key={output.output_id}>
+        <div
+          key={output.output_id}
+          onClick={() => toggleOutputSelection(output.output_id)}
+          className={selectedOutputIds.has(output.output_id) ? 'item-selectable selected' : 'item-selectable'}
+        >
           <ItemWrapper
             id={"output-" + output.output_id}
             index={index}
@@ -248,7 +274,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
               output={output}
             />
           </ItemWrapper>
-        </React.Fragment>
+        </div>
       ))}
       <OutputModal
         mode={modalMode}
@@ -259,6 +285,17 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
         outputData={editingOutput as OutputType}
         recommendations={data.recommendations}
       />
+      <Modal isVisible={confirmBulkDelete} onClose={() => setConfirmBulkDelete(false)} maxWidth="400px">
+        <p style={{ margin: '0 0 1em' }}>Delete {selectedOutputIds.size} selected output(s)?</p>
+        <div className="modal-actions">
+          <div className="modal-action-group-left">
+            <button className="modal-action-save" onClick={() => { setData(prev => prev ? { ...prev, outputs: prev.outputs.filter(o => !selectedOutputIds.has(o.output_id)) } : prev); clearSelection(); setConfirmBulkDelete(false); }}>Confirm</button>
+          </div>
+          <div className="modal-action-group-right">
+            <button className="modal-action-close" onClick={() => setConfirmBulkDelete(false)}>Cancel</button>
+          </div>
+        </div>
+      </Modal>
       {proposalTarget && proposalData && (
         <ProposalPanel
           currentText={data.outputs.find(o => o.output_id === proposalTarget)?.text || ''}

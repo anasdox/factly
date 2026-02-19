@@ -336,6 +336,7 @@ input[type=text], select, textarea {
 }
 
 
+
 .welcome-screen {
   display: flex;
   flex-direction: column;

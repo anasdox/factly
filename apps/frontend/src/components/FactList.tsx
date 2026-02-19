@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import FactItem from './FactItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faLightbulb, faXmark, faSpinner, faCheckDouble } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faLightbulb, faXmark, faSpinner, faCheckDouble, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
+import Modal from './Modal';
 import FactModal from './FactModal';
 import InsightModal from './InsightModal';
 import MergeDialog from './MergeDialog';
@@ -53,7 +54,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
   const setFactRef = useCallback((element: HTMLDivElement, index: number) => { factRefs.current[index] = element; }, [factRefs]);
 
   // Fact selection state
-  const { selectedIds: selectedFactIds, toggleSelection: toggleFactSelection, clearSelection, selectAll } = useItemSelection();
+  const { selectedIds: selectedFactIds, toggleSelection: toggleFactSelection, clearSelection, selectAll } = useItemSelection(data.facts.map(f => f.fact_id));
   const [extractingInsights, setExtractingInsights] = useState(false);
 
   // Clear selection when discovery changes
@@ -70,6 +71,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
 
   // AI proposal state
   const [proposal, setProposal] = useState<ProposalState | null>(null);
+  const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
   const openAddModal = () => {
     setModalMode('add');
@@ -492,6 +494,10 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
             <FontAwesomeIcon icon={faLightbulb} />
             {' '}Add Insight
           </button>
+          <button onClick={() => setConfirmBulkDelete(true)}>
+            <FontAwesomeIcon icon={faTrashCan} />
+            {' '}Delete
+          </button>
           <button onClick={clearSelection}>
             <FontAwesomeIcon icon={faXmark} />
             {' '}Clear
@@ -543,6 +549,17 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
         insightData={{ insight_id: '', text: '', related_facts: Array.from(selectedFactIds) } as InsightType}
         facts={data.facts}
       />
+      <Modal isVisible={confirmBulkDelete} onClose={() => setConfirmBulkDelete(false)} maxWidth="400px">
+        <p style={{ margin: '0 0 1em' }}>Delete {selectedFactIds.size} selected fact(s)?</p>
+        <div className="modal-actions">
+          <div className="modal-action-group-left">
+            <button className="modal-action-save" onClick={() => { setData(prev => prev ? { ...prev, facts: prev.facts.filter(f => !selectedFactIds.has(f.fact_id)) } : prev); clearSelection(); setConfirmBulkDelete(false); }}>Confirm</button>
+          </div>
+          <div className="modal-action-group-right">
+            <button className="modal-action-close" onClick={() => setConfirmBulkDelete(false)}>Cancel</button>
+          </div>
+        </div>
+      </Modal>
       {insightSuggestionData && (
         <SuggestionsPanel
           suggestions={insightSuggestionData.suggestions}
