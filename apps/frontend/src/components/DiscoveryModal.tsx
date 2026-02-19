@@ -33,7 +33,7 @@ const DiscoveryModal: React.FC<Props> = ({
       setGoal('');
       setDate(new Date().toISOString().split('T')[0]);
     }
-  }, [mode, discoveryData]);
+  }, [mode, discoveryData, isDialogVisible]);
 
   const handleSave = () => {
     const newDiscoveryData: DiscoveryData = {

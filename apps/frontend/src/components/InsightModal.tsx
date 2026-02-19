@@ -35,7 +35,7 @@ const InsightModal: React.FC<Props> = ({
       setCurrentRelatedFacts([]);
     }
     setConfirmDelete(false);
-  }, [mode, insightData]);
+  }, [mode, insightData, isDialogVisible]);
 
   const handleSave = () => {
     const newInsightData: InsightType = {

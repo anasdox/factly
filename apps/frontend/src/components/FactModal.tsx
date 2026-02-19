@@ -35,7 +35,7 @@ const FactModal: React.FC<Props> = ({
       setCurrentRelatedInputs([]);
     }
     setConfirmDelete(false);
-  }, [mode, factData]);
+  }, [mode, factData, isDialogVisible]);
 
   const handleSave = () => {
     const newFactData: FactType = {

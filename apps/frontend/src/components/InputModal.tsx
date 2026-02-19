@@ -39,7 +39,7 @@ const InputModal: React.FC<Props> = ({
       setCurrentInputText('');
     }
     setConfirmDelete(false);
-  }, [mode, inputData]);
+  }, [mode, inputData, isDialogVisible]);
 
   const handleSave = () => {
     const newInputData: InputType = {

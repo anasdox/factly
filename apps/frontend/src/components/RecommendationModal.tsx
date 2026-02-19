@@ -35,7 +35,7 @@ const RecommendationModal: React.FC<Props> = ({
       setCurrentRelatedInsights([]);
     }
     setConfirmDelete(false);
-  }, [mode, recommendationData]);
+  }, [mode, recommendationData, isDialogVisible]);
 
   const handleSave = () => {
     const newRecommendationData: RecommendationType = {

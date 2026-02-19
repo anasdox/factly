@@ -38,7 +38,7 @@ const OutputModal: React.FC<Props> = ({
       setCurrentOutputType('report');
     }
     setConfirmDelete(false);
-  }, [mode, outputData]);
+  }, [mode, outputData, isDialogVisible]);
 
   const handleSave = () => {
     const newOutputData: OutputType = {
