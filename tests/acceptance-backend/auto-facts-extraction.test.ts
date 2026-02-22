@@ -143,45 +143,6 @@ describe('Auto Facts Extraction from Text', () => {
     });
   });
 
-  // --- Frontend: Suggestions panel (require browser, defined as todo) ---
-
-  // @fsid:FS-AcceptSuggestedFact
-  describe('FS-AcceptSuggestedFact', () => {
-    test.todo('clicking Accept on a suggested fact adds it to the Facts column linked to the source Input');
-  });
-
-  // @fsid:FS-EditSuggestedFact
-  describe('FS-EditSuggestedFact', () => {
-    test.todo('clicking Edit makes the card editable; confirming adds the modified fact to the pipeline');
-  });
-
-  // @fsid:FS-RejectSuggestedFact
-  describe('FS-RejectSuggestedFact', () => {
-    test.todo('clicking Reject removes the card without adding any fact');
-  });
-
-  // @fsid:FS-AcceptAllSuggestedFacts
-  describe('FS-AcceptAllSuggestedFacts', () => {
-    test.todo('clicking Accept All adds all remaining suggestions to the Facts column and closes the panel');
-  });
-
-  // @fsid:FS-RejectAllSuggestedFacts
-  describe('FS-RejectAllSuggestedFacts', () => {
-    test.todo('clicking Reject All discards all remaining suggestions and closes the panel');
-  });
-
-  // @fsid:FS-CloseSuggestionsPanel
-  describe('FS-CloseSuggestionsPanel', () => {
-    test.todo('closing the panel discards remaining suggestions but keeps previously accepted facts');
-  });
-
-  // @fsid:FS-ExtractFactsDisabledForNonText
-  describe('FS-ExtractFactsDisabledForNonText', () => {
-    test.todo('Extract Facts action is not displayed on non-text Input items');
-  });
-
-  // @fsid:FS-ExtractFactsDisabledForEmptyText
-  describe('FS-ExtractFactsDisabledForEmptyText', () => {
-    test.todo('Extract Facts action is displayed but disabled on text Inputs with empty content');
-  });
+  // Frontend UI scenarios for suggestions panel / selection toolbar are covered by:
+  // tests/e2e/auto-facts-extraction.spec.ts
 });

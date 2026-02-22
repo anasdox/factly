@@ -1,0 +1,13 @@
+{
+  "name": "factly-e2e-tests",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:output-management": "playwright test output-management.spec.ts",
+    "install:browsers": "playwright install"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.0"
+  }
+}

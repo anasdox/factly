@@ -1,5 +1,5 @@
 {
-  "name": "factly-acceptance-tests",
+  "name": "factly-acceptance-backend-tests",
   "private": true,
   "scripts": {
     "test": "jest --forceExit --detectOpenHandles",

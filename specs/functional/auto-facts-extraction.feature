@@ -1,4 +1,4 @@
-Feature: Auto Facts Extraction from Text
+Feature: Auto Facts Extraction from Selected Inputs
   As an Analyst
   I want to extract facts from a text Input using AI assistance
   So that I can populate the Facts column faster while keeping full control over what enters the pipeline
@@ -7,18 +7,17 @@ Feature: Auto Facts Extraction from Text
   - The Discovery goal is used as extraction context so that suggested facts are relevant to the analyst's research objective
 
   Non-goals:
-  - Extraction from non-text Input types (web, image, video, audio, pdf, csv)
   - Fully automatic extraction without analyst validation
-  - Extraction from multiple Inputs at once
   - Modification of the original Input content
   - Persisting suggested facts that are rejected
 
   @fsid:FS-TriggerFactsExtraction
-  Scenario: Trigger facts extraction from a text Input
-    Given a Discovery with a goal and at least one Input of type "text" with non-empty text content
-    When the Analyst clicks the "Extract Facts" action on that Input
-    Then the system sends the Input text and the Discovery goal to the extraction service
-    And a loading indicator is displayed on the Input item
+  Scenario: Trigger facts extraction from selected Inputs
+    Given a Discovery with a goal and at least one selectable Input with extractable content
+    When the Analyst selects one or more Inputs
+    And clicks "Generate Facts" on the selection toolbar
+    Then the system sends each selected Input content and the Discovery goal to the extraction service
+    And a loading indicator is displayed on the selection toolbar
     And the extraction service uses the Discovery goal as context to return only goal-relevant facts
 
   @fsid:FS-DisplaySuggestedFacts
@@ -86,11 +85,13 @@ Feature: Auto Facts Extraction from Text
     And the loading indicator is removed
 
   @fsid:FS-ExtractFactsDisabledForNonText
-  Scenario: Extract Facts action is not available for non-text Inputs
-    Given a Discovery contains an Input of type other than "text"
-    Then the "Extract Facts" action is not displayed on that Input item
+  Scenario: Generate Facts action is available for selected non-text Inputs supported by the UI
+    Given a Discovery contains a selectable Input of a non-text type supported by the UI
+    When the Analyst selects that Input
+    Then the "Generate Facts" action is displayed on the selection toolbar
 
   @fsid:FS-ExtractFactsDisabledForEmptyText
-  Scenario: Extract Facts action is disabled when text content is empty
+  Scenario: Generate Facts action remains available for selected text Inputs with empty content
     Given a Discovery contains a text Input with empty text content
-    Then the "Extract Facts" action is displayed but disabled on that Input item
+    When the Analyst selects that Input
+    Then the "Generate Facts" action is displayed on the selection toolbar

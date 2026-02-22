@@ -205,67 +205,6 @@ describe('Auto Outputs Formulation from Recommendations', () => {
     });
   });
 
-  // --- Frontend: Recommendation selection (require browser, defined as todo) ---
-
-  // @fsid:FS-SelectRecommendations
-  describe('FS-SelectRecommendations', () => {
-    test.todo('clicking a Recommendation item marks it as selected and shows the selection toolbar with count');
-  });
-
-  // @fsid:FS-DeselectRecommendation
-  describe('FS-DeselectRecommendation', () => {
-    test.todo('clicking an already selected Recommendation deselects it and updates the toolbar count');
-  });
-
-  // @fsid:FS-ClearRecommendationSelection
-  describe('FS-ClearRecommendationSelection', () => {
-    test.todo('clicking Clear Selection deselects all recommendations and hides the selection toolbar');
-  });
-
-  // @fsid:FS-SelectOutputType
-  describe('FS-SelectOutputType', () => {
-    test.todo('selection toolbar displays a dropdown with output types defaulting to Report');
-  });
-
-  // @fsid:FS-FormulateOutputsDisabledWithoutSelection
-  describe('FS-FormulateOutputsDisabledWithoutSelection', () => {
-    test.todo('no selection toolbar is displayed when no recommendations are selected');
-  });
-
-  // --- Frontend: Suggestions panel (require browser, defined as todo) ---
-
-  // @fsid:FS-AcceptSuggestedOutput
-  describe('FS-AcceptSuggestedOutput', () => {
-    test.todo('clicking Accept on a suggested output adds it to the Outputs column with selected type linked to source Recommendations');
-  });
-
-  // @fsid:FS-EditSuggestedOutput
-  describe('FS-EditSuggestedOutput', () => {
-    test.todo('clicking Edit makes the card editable; confirming adds the modified output to the pipeline');
-  });
-
-  // @fsid:FS-RejectSuggestedOutput
-  describe('FS-RejectSuggestedOutput', () => {
-    test.todo('clicking Reject removes the card without adding any output');
-  });
-
-  // @fsid:FS-AcceptAllSuggestedOutputs
-  describe('FS-AcceptAllSuggestedOutputs', () => {
-    test.todo('clicking Accept All adds all remaining suggestions to the Outputs column and closes the panel');
-  });
-
-  // @fsid:FS-RejectAllSuggestedOutputs
-  describe('FS-RejectAllSuggestedOutputs', () => {
-    test.todo('clicking Reject All discards all remaining suggestions and closes the panel');
-  });
-
-  // @fsid:FS-CloseSuggestionsOutputsPanel
-  describe('FS-CloseSuggestionsOutputsPanel', () => {
-    test.todo('closing the panel discards remaining suggestions but keeps previously accepted outputs');
-  });
-
-  // @fsid:FS-ManualOutputFromSelection
-  describe('FS-ManualOutputFromSelection', () => {
-    test.todo('clicking Add Output on the selection toolbar opens OutputModal with related_recommendations pre-filled');
-  });
+  // Frontend UI scenarios for recommendation selection / output suggestions are covered by:
+  // tests/e2e/auto-outputs-formulation.spec.ts
 });

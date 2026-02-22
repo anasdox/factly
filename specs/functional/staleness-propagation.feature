@@ -11,6 +11,7 @@ Feature: Staleness Propagation on Edit
   - Deeper levels are only flagged when the Analyst resolves the stale item at the current level (edit or accept proposal)
   - Non-text changes (relations, metadata) update the entity in place without versioning or propagation
   - A waiting toast informs the Analyst while versioning and impact analysis are in progress
+  - Output edits are local terminal updates (no impact analysis request)
 
   Non-goals:
   - Automatic re-generation of downstream entities (see AI-Assisted Updates feature)
@@ -59,7 +60,6 @@ Feature: Staleness Propagation on Edit
       | Fact           | Creating new version and analyzing impact on related insights...         |
       | Insight        | Creating new version and analyzing impact on related recommendations...  |
       | Recommendation | Creating new version and analyzing impact on related outputs...          |
-      | Output         | Creating new version...                                                  |
     And the waiting toast is replaced by the result toast once the analysis completes
 
   # ── Status propagation: Input edited ──

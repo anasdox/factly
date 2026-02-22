@@ -8,13 +8,15 @@ Feature: Semantic Deduplication
   - When the backend is available, the LLM performs semantic comparison (understanding meaning, not just wording)
   - When the backend is unavailable, a local trigram-based similarity check is used as fallback
   - Detected duplicates are presented to the Analyst who decides the resolution
-  - On-demand duplicate detection scans all items in a column for semantic groups
+  - The backend can scan a same-type item set for semantic duplicate groups
 
   Non-goals:
   - Cross-type deduplication (e.g., comparing Facts against Insights)
   - Cross-Discovery deduplication
   - Automatic merging without Analyst decision
+  - Editing the existing item directly inside the duplicate merge dialog
   - Deduplication of Inputs (source materials are inherently unique references)
+  - Frontend column-header "Detect Duplicates" UI (not currently implemented)
   - Real-time duplicate checking while typing
 
   # ── Deduplication at add/accept time ──
@@ -29,12 +31,12 @@ Feature: Semantic Deduplication
 
   @fsid:FS-DedupCheckOnSuggestionAccept
   Scenario: Duplicate check when Analyst accepts an AI suggestion
-    Given a Discovery with existing Insights including "Customer satisfaction is declining"
-    And the Suggestions panel shows a proposed Insight "Customer satisfaction levels are dropping"
-    When the Analyst clicks "Accept" on the proposed Insight
-    Then the system checks the proposed text against all existing Insights
+    Given a Discovery with existing Facts including "Revenue grew by 15% in Q3"
+    And the Suggestions panel shows a proposed Fact "Revenue grew by 15% in Q3"
+    When the Analyst clicks "Accept" on the proposed Fact
+    Then the system checks the proposed text against all existing Facts
     And a duplicate is detected
-    And the merge dialog opens before the Insight is added
+    And a duplicate review panel opens before the Fact is added
 
   @fsid:FS-NoDuplicateDetected
   Scenario: No duplicate found allows normal add
@@ -54,7 +56,7 @@ Feature: Semantic Deduplication
       - the similarity score or explanation
     And the dialog offers three options:
       | Option          | Description                                                |
-      | Merge           | Discard the new item; optionally update the existing item  |
+      | Merge           | Discard the new item and keep the existing item            |
       | Keep as variant  | Add the new item and link it as a variant of the existing |
       | Force add       | Add the new item regardless of similarity                  |
 
@@ -66,15 +68,6 @@ Feature: Semantic Deduplication
     And the existing Fact F-1 remains unchanged
     And the merge dialog closes
 
-  @fsid:FS-MergeWithUpdate
-  Scenario: Analyst merges and updates the existing item
-    Given the merge dialog is showing a duplicate of Fact F-1
-    When the Analyst selects "Merge" and edits the existing Fact text
-    Then the existing Fact F-1 is updated with the new text
-    And the update follows the versioning rules (substance edit creates new version)
-    And the new Fact is not added to the pipeline
-    And the merge dialog closes
-
   @fsid:FS-KeepAsVariant
   Scenario: Analyst keeps both items
     Given the merge dialog is showing a duplicate of Fact F-1
@@ -84,9 +77,9 @@ Feature: Semantic Deduplication
 
   @fsid:FS-ForceAdd
   Scenario: Analyst forces the add despite similarity
-    Given the merge dialog is showing a duplicate of an Insight
+    Given the merge dialog is showing a duplicate of an existing item
     When the Analyst selects "Force add"
-    Then the new Insight is added to the pipeline
+    Then the new item is added to the pipeline
     And the merge dialog closes
 
   # ── Backend LLM deduplication ──
@@ -112,27 +105,12 @@ Feature: Semantic Deduplication
   # ── On-demand column deduplication ──
 
   @fsid:FS-OnDemandDedupPerColumn
-  Scenario: Analyst triggers duplicate detection for an entire column
-    Given a Discovery with 5 Facts in the Facts column
+  Scenario: System scans a same-type item set for duplicates
+    Given a set of 5 Facts from a Discovery column
     And the backend is available
-    When the Analyst clicks the "Detect Duplicates" action on the Facts column header
+    When an on-demand duplicate scan is requested for that Fact set
     Then the system sends all Fact texts to the backend for semantic grouping
-    And a loading indicator is displayed on the column header
-    And the results show groups of semantically similar Facts
-
-  @fsid:FS-OnDemandDedupResultsDisplay
-  Scenario: Display on-demand deduplication results
-    Given the deduplication scan returns 2 groups of similar Facts
-    Then a results panel shows each group with:
-      - the similar Fact texts side by side
-      - a similarity explanation from the LLM
-      - "Merge" and "Keep both" actions per group
-
-  @fsid:FS-OnDemandDedupNoResults
-  Scenario: No duplicates found in column scan
-    Given the Analyst triggers "Detect Duplicates" on the Insights column
-    When the backend returns no duplicate groups
-    Then a toast notification displays "No duplicates detected in Insights."
+    And the backend returns groups of semantically similar Facts
 
   # ── Embedding-based deduplication ──
 
@@ -166,9 +144,3 @@ Feature: Semantic Deduplication
     When the Analyst adds a new Input
     Then no deduplication check is triggered
     And the Input is added directly to the pipeline
-
-  @fsid:FS-OnDemandDedupDisabledWhenBackendUnavailable
-  Scenario: On-demand deduplication is disabled when backend is unavailable
-    Given the backend is unavailable
-    Then the "Detect Duplicates" action on column headers is disabled
-    And a tooltip indicates "Backend unavailable"

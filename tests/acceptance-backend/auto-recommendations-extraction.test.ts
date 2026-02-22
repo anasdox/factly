@@ -165,62 +165,6 @@ describe('Auto Recommendations Extraction from Insights', () => {
     });
   });
 
-  // --- Frontend: Insight selection (require browser, defined as todo) ---
-
-  // @fsid:FS-SelectInsights
-  describe('FS-SelectInsights', () => {
-    test.todo('clicking an Insight item marks it as selected and shows the selection toolbar with count');
-  });
-
-  // @fsid:FS-DeselectInsight
-  describe('FS-DeselectInsight', () => {
-    test.todo('clicking an already selected Insight deselects it and updates the toolbar count');
-  });
-
-  // @fsid:FS-ClearInsightSelection
-  describe('FS-ClearInsightSelection', () => {
-    test.todo('clicking Clear Selection deselects all insights and hides the selection toolbar');
-  });
-
-  // @fsid:FS-GenerateRecommendationsDisabledWithoutSelection
-  describe('FS-GenerateRecommendationsDisabledWithoutSelection', () => {
-    test.todo('no selection toolbar is displayed when no insights are selected');
-  });
-
-  // --- Frontend: Suggestions panel (require browser, defined as todo) ---
-
-  // @fsid:FS-AcceptSuggestedRecommendation
-  describe('FS-AcceptSuggestedRecommendation', () => {
-    test.todo('clicking Accept on a suggested recommendation adds it to the Recommendations column linked to source Insights');
-  });
-
-  // @fsid:FS-EditSuggestedRecommendation
-  describe('FS-EditSuggestedRecommendation', () => {
-    test.todo('clicking Edit makes the card editable; confirming adds the modified recommendation to the pipeline');
-  });
-
-  // @fsid:FS-RejectSuggestedRecommendation
-  describe('FS-RejectSuggestedRecommendation', () => {
-    test.todo('clicking Reject removes the card without adding any recommendation');
-  });
-
-  // @fsid:FS-AcceptAllSuggestedRecommendations
-  describe('FS-AcceptAllSuggestedRecommendations', () => {
-    test.todo('clicking Accept All adds all remaining suggestions to the Recommendations column and closes the panel');
-  });
-
-  // @fsid:FS-RejectAllSuggestedRecommendations
-  describe('FS-RejectAllSuggestedRecommendations', () => {
-    test.todo('clicking Reject All discards all remaining suggestions and closes the panel');
-  });
-
-  // @fsid:FS-CloseSuggestionsRecommendationsPanel
-  describe('FS-CloseSuggestionsRecommendationsPanel', () => {
-    test.todo('closing the panel discards remaining suggestions but keeps previously accepted recommendations');
-  });
-
-  // @fsid:FS-ManualRecommendationFromSelection
-  describe('FS-ManualRecommendationFromSelection', () => {
-    test.todo('clicking Add Recommendation on the selection toolbar opens RecommendationModal with related_insights pre-filled');
-  });
+  // Frontend UI scenarios for insight selection / suggestions panel are covered by:
+  // tests/e2e/auto-recommendations-extraction.spec.ts
 });

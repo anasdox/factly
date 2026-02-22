@@ -101,7 +101,7 @@ Generate each missing foundation artifact from the validated code analysis:
 5. UoR validates technical specs before proceeding.
 
 **Phase 5: Acceptance Test Generation**
-1. For each functional spec, write acceptance tests in `tests/acceptance/`.
+1. For each functional spec, write acceptance tests in `tests/acceptance-backend/`.
 2. Tests MUST pass against the existing code as-is (they document current behavior).
 3. If a test fails against existing code, this indicates a spec/code mismatch — resolve with UoR:
    - Option A: Fix the spec to match actual code behavior.
@@ -179,7 +179,8 @@ Some deliverables may be exempt from BDD when they do not represent product beha
 - Update `IMPLEMENTATION_PLAN.md` whenever scope, sequence, or blockers change.
 
 ### 10) Acceptance Test Rules
-- Location: `tests/acceptance/`
+- Location: `tests/acceptance-backend/`
+- Browser UI end-to-end acceptance behaviors MUST be covered in `tests/e2e/` (Playwright) when a Node/Jest test cannot observe the behavior.
 - One test file per feature.
 - Tests are black-box (for HTTP, use `httptest` + fake downstream servers).
 - Gherkin is not executable (no step binding).
@@ -193,14 +194,14 @@ Some deliverables may be exempt from BDD when they do not represent product beha
 
 Mandatory implementation loop:
 1. Implement the smallest change required by validated specs/tests.
-2. Run all acceptance tests in `tests/acceptance`.
+2. Run all acceptance tests in `tests/acceptance-backend`.
 3. If any acceptance test fails, apply the smallest fix and rerun.
 4. Only when all acceptance tests pass:
    - run full tests
    - ensure CI is green
    - update `TODO.md` with `Implementation done` and `CI green`
 5. Run a refactoring phase focused on readability/maintainability without changing validated behavior.
-6. Re-run all acceptance tests in `tests/acceptance`, then run full tests and ensure CI stays green.
+6. Re-run all acceptance tests in `tests/acceptance-backend`, then run full tests and ensure CI stays green.
 
 It is forbidden to proceed to demo while acceptance tests fail or refactoring validation is incomplete.
 
@@ -288,12 +289,13 @@ Each core document has one purpose:
 Directory convention when execution starts:
 - Functional specs: `specs/functional/*.feature`
 - Technical specs: `specs/technical/`
-- Acceptance tests: `tests/acceptance/`
+- Acceptance tests (backend/API/domain): `tests/acceptance-backend/`
+- Browser E2E acceptance tests (UI workflows): `tests/e2e/`
 - Applications source codes: `apps/<app-name>/`
 
 
 Traceability expectation:
-- roadmap feature -> implementation plan slice -> FSID -> TSID -> acceptance tests must be reviewable end-to-end.
+- roadmap feature -> implementation plan slice -> FSID -> TSID -> executable tests (`tests/acceptance-backend/` and/or `tests/e2e/`) must be reviewable end-to-end.
 
 
 Validation commands:
@@ -404,7 +406,7 @@ Use this checklist to track progress through the onboarding phases (Rule 2b).
 - [ ] All technical specs validated by UoR
 
 #### Phase 5: Acceptance Tests
-- [ ] One test file per feature in `tests/acceptance/`
+- [ ] One executable test file per feature in `tests/acceptance-backend/` and/or `tests/e2e/` (depending on backend vs browser behavior)
 - [ ] All tests reference FSID(s)
 - [ ] All tests pass against existing code
 - [ ] Spec/code mismatches resolved with UoR
@@ -415,4 +417,3 @@ Use this checklist to track progress through the onboarding phases (Rule 2b).
 - [ ] Onboarding completion recorded in `LOGS.md`
 - [ ] `TODO.md` updated with conformance status
 - [ ] `AGENTS_MODE=standard` set in `.env`
-

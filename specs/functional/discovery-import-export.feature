@@ -33,8 +33,8 @@ Feature: Discovery Import/Export
     And the current discovery data is unchanged
 
   @fsid:FS-LoadInitialData
-  Scenario: Load initial discovery data on application start
-    Given the Analyst opens the application
-    Then the application fetches "/data.json"
-    And the discovery grid displays the data from the file
-    And "Loading..." is displayed while the data is being fetched
+  Scenario: Application starts on the welcome screen when no local discovery is available
+    Given the Analyst opens the application with no saved local discovery
+    Then the welcome screen is displayed
+    And no "/data.json" discovery file is fetched automatically
+    And no "Loading..." indicator is displayed

@@ -32,7 +32,7 @@ Feature: Auto Recommendations Extraction from Insights
   @fsid:FS-ClearInsightSelection
   Scenario: Clear all selected insights
     Given one or more Insights are selected
-    When the Analyst clicks "Clear Selection" on the selection toolbar
+    When the Analyst clicks "Clear" on the selection toolbar
     Then all Insights are deselected
     And the selection toolbar disappears
 
@@ -118,5 +118,5 @@ Feature: Auto Recommendations Extraction from Insights
   @fsid:FS-GenerateRecommendationsDisabledWithoutSelection
   Scenario: Generate Recommendations action is not available without selection
     Given no Insights are selected
-    Then no selection toolbar is displayed
-    And the "Generate Recommendations" action is not available
+    Then the selection toolbar is not expanded
+    And the "Generate Recommendations" action is not available to the Analyst

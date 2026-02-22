@@ -31,14 +31,14 @@ Feature: Relationship Visualization
     When the Analyst hovers over an entity
     Then the entity is visually highlighted
     And all entities reachable by forward traversal are highlighted
-    And the relationship lines connecting them are highlighted
+    And relationship lines originating from the hovered entity to direct descendants are highlighted
 
   @fsid:FS-HighlightBackwardOnHover
   Scenario: Hovering an entity highlights its upstream sources
     Given a Discovery is loaded with entities and relationships
     When the Analyst hovers over an entity
     Then all entities reachable by backward traversal are highlighted
-    And the relationship lines connecting them are highlighted
+    And upstream source highlighting is visible on the related entity cards
 
   @fsid:FS-RemoveHighlightOnLeave
   Scenario: Highlight is removed when the mouse leaves an entity

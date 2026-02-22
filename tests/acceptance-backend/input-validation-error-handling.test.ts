@@ -9,7 +9,7 @@
  * - FS-RejectInvalidUpdateBody
  * - FS-RejectInvalidRoomIdFormat
  * - FS-ReturnStructuredErrorResponse
- * - FS-DisplayErrorToastOnBackendError (validated via demo, not automated)
+ * - FS-DisplayErrorToastOnBackendError (covered in `tests/e2e/input-validation-error-handling.spec.ts`)
  */
 
 import { BASE_URL } from './helpers/backend-server';

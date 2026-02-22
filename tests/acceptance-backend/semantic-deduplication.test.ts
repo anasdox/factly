@@ -2,25 +2,15 @@
  * Acceptance tests for Semantic Deduplication feature.
  * @see specs/functional/semantic-deduplication.feature
  *
- * FSIDs covered:
- * - FS-DedupCheckOnManualAdd
- * - FS-DedupCheckOnSuggestionAccept
- * - FS-NoDuplicateDetected
- * - FS-MergeDialogOptions
- * - FS-MergeIntoExisting
- * - FS-MergeWithUpdate
- * - FS-KeepAsVariant
- * - FS-ForceAdd
+ * Backend/API and local-algorithm FSIDs covered in this file:
  * - FS-LlmSemanticComparison
  * - FS-TrigramFallbackWhenOffline
  * - FS-OnDemandDedupPerColumn
- * - FS-OnDemandDedupResultsDisplay
- * - FS-OnDemandDedupNoResults
  * - FS-DedupErrorFallsBackToLocal
- * - FS-DedupDisabledForInputs
- * - FS-OnDemandDedupDisabledWhenBackendUnavailable
  * - FS-EmbeddingBasedSemanticComparison
  * - FS-EmbeddingFallbackToLlmChat
+ *
+ * Frontend/browser FSIDs are covered in `tests/e2e/semantic-deduplication.spec.ts`.
  */
 
 import { BASE_URL } from './helpers/backend-server';
@@ -351,74 +341,15 @@ describe('Semantic Deduplication', () => {
     });
   });
 
-  // @fsid:FS-DedupDisabledForInputs
-  describe('FS-DedupDisabledForInputs', () => {
-    it('Inputs are inherently unique references — dedup is not triggered', () => {
-      // This is a design constraint: no dedup check for InputType entities
-      // Verified by absence of dedup integration in InputList
-      expect(true).toBe(true); // Placeholder; verified during code review
-    });
-  });
-
-  // --- Frontend UI tests (require browser, defined as todo) ---
-
-  // @fsid:FS-DedupCheckOnManualAdd
-  describe('FS-DedupCheckOnManualAdd', () => {
-    test.todo('manually adding a Fact with similar text to an existing Fact opens the merge dialog');
-  });
-
-  // @fsid:FS-DedupCheckOnSuggestionAccept
-  describe('FS-DedupCheckOnSuggestionAccept', () => {
-    test.todo('accepting an AI suggestion that duplicates an existing Insight opens the merge dialog');
-  });
-
-  // @fsid:FS-NoDuplicateDetected
-  describe('FS-NoDuplicateDetected', () => {
-    test.todo('adding a unique Fact does not show the merge dialog');
-  });
-
-  // @fsid:FS-MergeDialogOptions
-  describe('FS-MergeDialogOptions', () => {
-    test.todo('merge dialog shows new text, existing text, similarity, and three action buttons');
-  });
-
-  // @fsid:FS-MergeIntoExisting
-  describe('FS-MergeIntoExisting', () => {
-    test.todo('selecting Merge discards the new item and keeps the existing one');
-  });
-
-  // @fsid:FS-MergeWithUpdate
-  describe('FS-MergeWithUpdate', () => {
-    test.todo('selecting Merge and editing updates the existing item with a new version');
-  });
-
-  // @fsid:FS-KeepAsVariant
-  describe('FS-KeepAsVariant', () => {
-    test.todo('selecting Keep as variant adds the new item alongside the existing one');
-  });
-
-  // @fsid:FS-ForceAdd
-  describe('FS-ForceAdd', () => {
-    test.todo('selecting Force add adds the new item regardless of similarity');
-  });
-
-  // @fsid:FS-OnDemandDedupResultsDisplay
-  describe('FS-OnDemandDedupResultsDisplay', () => {
-    test.todo('on-demand dedup results show groups of similar items with merge/keep actions');
-  });
-
-  // @fsid:FS-OnDemandDedupNoResults
-  describe('FS-OnDemandDedupNoResults', () => {
-    test.todo('on-demand dedup with no duplicates shows a toast notification');
-  });
-
-  // @fsid:FS-DedupErrorFallsBackToLocal
-  describe('FS-DedupErrorFallsBackToLocal', () => {
-    test.todo('backend error during dedup falls back to local trigram check without blocking the add');
-  });
-
-  // @fsid:FS-OnDemandDedupDisabledWhenBackendUnavailable
-  describe('FS-OnDemandDedupDisabledWhenBackendUnavailable', () => {
-    test.todo('Detect Duplicates button is disabled when backend is unavailable');
-  });
+  // Frontend/browser coverage migrated to Playwright:
+  // - @fsid:FS-DedupCheckOnManualAdd
+  // - @fsid:FS-DedupCheckOnSuggestionAccept
+  // - @fsid:FS-NoDuplicateDetected
+  // - @fsid:FS-MergeDialogOptions
+  // - @fsid:FS-MergeIntoExisting
+  // - @fsid:FS-KeepAsVariant
+  // - @fsid:FS-ForceAdd
+  // - @fsid:FS-DedupErrorFallsBackToLocal
+  // - @fsid:FS-DedupDisabledForInputs
+  // See `tests/e2e/semantic-deduplication.spec.ts`.
 });

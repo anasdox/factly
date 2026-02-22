@@ -32,7 +32,7 @@ Feature: Auto Insights Extraction from Facts
   @fsid:FS-ClearFactSelection
   Scenario: Clear all selected facts
     Given one or more Facts are selected
-    When the Analyst clicks "Clear Selection" on the selection toolbar
+    When the Analyst clicks "Clear" on the selection toolbar
     Then all Facts are deselected
     And the selection toolbar disappears
 
@@ -118,5 +118,5 @@ Feature: Auto Insights Extraction from Facts
   @fsid:FS-GenerateInsightsDisabledWithoutSelection
   Scenario: Generate Insights action is not available without selection
     Given no Facts are selected
-    Then no selection toolbar is displayed
-    And the "Generate Insights" action is not available
+    Then the selection toolbar is not expanded
+    And the "Generate Insights" action is not available to the Analyst

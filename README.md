@@ -139,7 +139,8 @@ apps/backend/      Express API + SSE
 apps/frontend/     React SPA
 specs/functional/  Gherkin specifications
 specs/technical/   OpenAPI / AsyncAPI
-tests/acceptance/  Acceptance tests
+tests/acceptance-backend/  Acceptance backend/API tests (Jest + Node)
+tests/e2e/       Browser E2E acceptance tests (Playwright)
 ```
 
 Key documentation:

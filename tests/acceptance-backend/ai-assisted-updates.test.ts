@@ -227,35 +227,6 @@ describe('AI-Assisted Update Proposals', () => {
     });
   });
 
-  // --- Frontend UI tests (require browser, defined as todo) ---
-
-  // @fsid:FS-AcceptAiUpdateProposal
-  describe('FS-AcceptAiUpdateProposal', () => {
-    test.todo('accepting an AI-proposed update creates a new version and clears status to validated');
-  });
-
-  // @fsid:FS-EditAiUpdateProposal
-  describe('FS-EditAiUpdateProposal', () => {
-    test.todo('editing an AI-proposed update before accepting creates a version with the modified text');
-  });
-
-  // @fsid:FS-RejectAiUpdateProposal
-  describe('FS-RejectAiUpdateProposal', () => {
-    test.todo('rejecting an AI-proposed update closes the panel without changing the entity');
-  });
-
-  // @fsid:FS-ProposeUpdateDisabledWhenBackendUnavailable
-  describe('FS-ProposeUpdateDisabledWhenBackendUnavailable', () => {
-    test.todo('propose update button is disabled when backend is unavailable');
-  });
-
-  // @fsid:FS-ProposeUpdateNotShownForValidItems
-  describe('FS-ProposeUpdateNotShownForValidItems', () => {
-    test.todo('propose update action is not displayed on items with status validated');
-  });
-
-  // @fsid:FS-ProposeUpdateShownForAllActionableStatuses
-  describe('FS-ProposeUpdateShownForAllActionableStatuses', () => {
-    test.todo('propose update action is available for needs_review, needs_refresh, unsupported, weak, risky');
-  });
+  // Frontend UI scenarios for proposal panel / propose-update availability are covered by:
+  // tests/e2e/ai-assisted-updates.spec.ts
 });

@@ -165,62 +165,6 @@ describe('Auto Insights Extraction from Facts', () => {
     });
   });
 
-  // --- Frontend: Fact selection (require browser, defined as todo) ---
-
-  // @fsid:FS-SelectFacts
-  describe('FS-SelectFacts', () => {
-    test.todo('clicking a Fact item marks it as selected and shows the selection toolbar with count');
-  });
-
-  // @fsid:FS-DeselectFact
-  describe('FS-DeselectFact', () => {
-    test.todo('clicking an already selected Fact deselects it and updates the toolbar count');
-  });
-
-  // @fsid:FS-ClearFactSelection
-  describe('FS-ClearFactSelection', () => {
-    test.todo('clicking Clear Selection deselects all facts and hides the selection toolbar');
-  });
-
-  // @fsid:FS-GenerateInsightsDisabledWithoutSelection
-  describe('FS-GenerateInsightsDisabledWithoutSelection', () => {
-    test.todo('no selection toolbar is displayed when no facts are selected');
-  });
-
-  // --- Frontend: Suggestions panel (require browser, defined as todo) ---
-
-  // @fsid:FS-AcceptSuggestedInsight
-  describe('FS-AcceptSuggestedInsight', () => {
-    test.todo('clicking Accept on a suggested insight adds it to the Insights column linked to source Facts');
-  });
-
-  // @fsid:FS-EditSuggestedInsight
-  describe('FS-EditSuggestedInsight', () => {
-    test.todo('clicking Edit makes the card editable; confirming adds the modified insight to the pipeline');
-  });
-
-  // @fsid:FS-RejectSuggestedInsight
-  describe('FS-RejectSuggestedInsight', () => {
-    test.todo('clicking Reject removes the card without adding any insight');
-  });
-
-  // @fsid:FS-AcceptAllSuggestedInsights
-  describe('FS-AcceptAllSuggestedInsights', () => {
-    test.todo('clicking Accept All adds all remaining suggestions to the Insights column and closes the panel');
-  });
-
-  // @fsid:FS-RejectAllSuggestedInsights
-  describe('FS-RejectAllSuggestedInsights', () => {
-    test.todo('clicking Reject All discards all remaining suggestions and closes the panel');
-  });
-
-  // @fsid:FS-CloseSuggestionsInsightsPanel
-  describe('FS-CloseSuggestionsInsightsPanel', () => {
-    test.todo('closing the panel discards remaining suggestions but keeps previously accepted insights');
-  });
-
-  // @fsid:FS-ManualInsightFromSelection
-  describe('FS-ManualInsightFromSelection', () => {
-    test.todo('clicking Add Insight on the selection toolbar opens InsightModal with related_facts pre-filled');
-  });
+  // Frontend UI scenarios for fact selection / suggestions panel are covered by:
+  // tests/e2e/auto-insights-extraction.spec.ts
 });

@@ -14,6 +14,14 @@
 
 ## Decisions log
 
+- **Date:** 2026-02-22
+- **Decision:** Align semantic-deduplication and staleness specs to current observable UI while migrating remaining UI placeholders to Playwright E2E.
+- **Consequence:** Removed unsupported/placeholder UI scenarios (`semantic-deduplication` on-demand column UI + merge-with-update), added executable E2E coverage for remaining FSIDs, and restored `traceability_check: OK`.
+
+- **Date:** 2026-02-22
+- **Decision:** Split backend acceptance (Jest/Node) and UI E2E (Playwright); migrated Output Management coverage to `tests/e2e/output-management.spec.ts`.
+- **Consequence:** Traceability now scans both `tests/acceptance-backend` and `tests/e2e`; remaining `test.todo` UI placeholders are surfaced as uncovered executable coverage.
+
 - **Date:** 2026-02-06
 - **Decision:** M6 (Fix Room Lifecycle Bugs) validated as complete — all 5 bugs (BUG-01 to BUG-05) resolved in existing code.
 - **Consequence:** Proceed to M7 assessment.

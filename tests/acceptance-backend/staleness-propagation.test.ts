@@ -4,7 +4,7 @@ export {};
  * Acceptance tests for Staleness Propagation on Edit feature.
  * @see specs/functional/staleness-propagation.feature
  *
- * FSIDs covered:
+ * Feature FSIDs related to staleness propagation (coverage split across this file + Playwright E2E):
  * - FS-TextEditCreatesVersion
  * - FS-NonTextEditNoVersion
  * - FS-VersionBadgeDisplay
@@ -33,6 +33,8 @@ export {};
  * - FS-ArchiveCascadeRemainsTransitive
  * - FS-LazyLevelByLevelResolution
  * - FS-ConfirmValidNoDownstreamPropagation
+ *
+ * Browser UI interactions are covered in `tests/e2e/staleness-propagation.spec.ts`.
  */
 
 // --- Consistency engine unit tests (pure functions, no browser needed) ---
@@ -313,70 +315,19 @@ describe('Staleness Propagation on Edit', () => {
     });
   });
 
-  // --- Frontend UI tests (require browser, defined as todo) ---
-
-  // @fsid:FS-WaitingToastDuringImpactAnalysis
-  describe('FS-WaitingToastDuringImpactAnalysis', () => {
-    test.todo('editing Input text shows waiting toast "Creating new version and analyzing impact on related facts..."');
-    test.todo('editing Fact text shows waiting toast "Creating new version and analyzing impact on related insights..."');
-    test.todo('editing Insight text shows waiting toast "Creating new version and analyzing impact on related recommendations..."');
-    test.todo('editing Recommendation text shows waiting toast "Creating new version and analyzing impact on related outputs..."');
-    test.todo('editing Output text shows waiting toast "Creating new version..."');
-    test.todo('waiting toast is replaced by the result toast once analysis completes');
-  });
-
-  // @fsid:FS-ToolbarClickDoesNotSelectItem
-  describe('FS-ToolbarClickDoesNotSelectItem', () => {
-    test.todo('clicking the edit button in the item toolbar does not toggle item selection');
-    test.todo('clicking the traceability button in the item toolbar does not toggle item selection');
-    test.todo('clicking the confirm valid button in the item toolbar does not toggle item selection');
-    test.todo('clicking the propose update button in the item toolbar does not toggle item selection');
-  });
-
-  // @fsid:FS-VersionBadgeDisplay
-  describe('FS-VersionBadgeDisplay', () => {
-    test.todo('version badge "v3" is displayed on items at version 3');
-  });
-
-  // @fsid:FS-VersionBadgeHiddenForV1
-  describe('FS-VersionBadgeHiddenForV1', () => {
-    test.todo('no version badge is displayed on items at version 1');
-  });
-
-  // @fsid:FS-StatusChipDisplay
-  describe('FS-StatusChipDisplay', () => {
-    test.todo('status chip with text "needs review" is displayed on items with status needs_review');
-  });
-
-  // @fsid:FS-StatusChipNotShownForDraft
-  describe('FS-StatusChipNotShownForDraft', () => {
-    test.todo('no status chip is displayed on items with status draft or validated');
-  });
-
-  // @fsid:FS-StaleBorderIndicator
-  describe('FS-StaleBorderIndicator', () => {
-    test.todo('colored left border is displayed on items with actionable status');
-  });
-
-  // @fsid:FS-StatusColorMapping
-  describe('FS-StatusColorMapping', () => {
-    test.todo('each actionable status maps to the correct color category');
-  });
-
-  // @fsid:FS-ConfirmValidNotShownForNonActionable
-  describe('FS-ConfirmValidNotShownForNonActionable', () => {
-    test.todo('confirm valid action is not shown for items with status draft or validated');
-  });
-
-  // @fsid:FS-PropagationToastNotification
-  describe('FS-PropagationToastNotification', () => {
-    test.todo('toast notification displays "Updated to vN. X downstream item(s) marked for review." after text edit');
-  });
-
-  // @fsid:FS-ArchiveToastNotification
-  describe('FS-ArchiveToastNotification', () => {
-    test.todo('toast notification displays "Input archived. X downstream item(s) affected." after archiving an Input');
-  });
+  // Frontend/browser coverage migrated to Playwright:
+  // - @fsid:FS-WaitingToastDuringImpactAnalysis
+  // - @fsid:FS-ToolbarClickDoesNotSelectItem
+  // - @fsid:FS-VersionBadgeDisplay
+  // - @fsid:FS-VersionBadgeHiddenForV1
+  // - @fsid:FS-StatusChipDisplay
+  // - @fsid:FS-StatusChipNotShownForDraft
+  // - @fsid:FS-StaleBorderIndicator
+  // - @fsid:FS-StatusColorMapping
+  // - @fsid:FS-ConfirmValidNotShownForNonActionable
+  // - @fsid:FS-PropagationToastNotification
+  // - @fsid:FS-ArchiveToastNotification
+  // See `tests/e2e/staleness-propagation.spec.ts`.
 
   // ── Smart Propagation tests ──
 

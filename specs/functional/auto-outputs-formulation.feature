@@ -37,7 +37,7 @@ Feature: Auto Outputs Formulation from Recommendations
   @fsid:FS-ClearRecommendationSelection
   Scenario: Clear all selected recommendations
     Given one or more Recommendations are selected
-    When the Analyst clicks "Clear Selection" on the selection toolbar
+    When the Analyst clicks "Clear" on the selection toolbar
     Then all Recommendations are deselected
     And the selection toolbar disappears
 
@@ -121,14 +121,13 @@ Feature: Auto Outputs Formulation from Recommendations
     And the loading indicator is removed
 
   @fsid:FS-ManualOutputFromSelection
-  Scenario: Create an output manually with pre-filled related recommendations
+  Scenario: Manual output creation shortcut is not available from the recommendation selection toolbar
     Given one or more Recommendations are selected
-    When the Analyst clicks "Add Output" on the selection toolbar
-    Then the Output creation modal opens with related_recommendations pre-filled with the selected recommendation IDs
-    And the Analyst can edit the output text, type, and related_recommendations before saving
+    Then no "Add Output" action is displayed on the recommendation selection toolbar
+    And manual output creation remains available from the Outputs column add button
 
   @fsid:FS-FormulateOutputsDisabledWithoutSelection
   Scenario: Formulate Outputs action is not available without selection
     Given no Recommendations are selected
-    Then no selection toolbar is displayed
-    And the "Formulate Outputs" action is not available
+    Then the selection toolbar is not expanded
+    And the "Formulate Outputs" action is not available to the Analyst

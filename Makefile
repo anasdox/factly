@@ -4,21 +4,22 @@ SHELL := /bin/bash
 
 BACKEND_DIR    := apps/backend
 FRONTEND_DIR   := apps/frontend
-TESTS_DIR      := tests/acceptance
+TESTS_DIR      := tests/acceptance-backend
+E2E_TESTS_DIR  := tests/e2e
 BENCHMARK_DIR  := tools/benchmark
 BACKEND_PID    := /tmp/factly-backend.pid
 
-.PHONY: install install-backend install-frontend install-tests install-benchmark \
+.PHONY: install install-backend install-frontend install-tests install-e2e install-benchmark \
         start-backend stop-backend restart-backend start-frontend start \
         build-backend build-frontend build \
         typecheck typecheck-backend typecheck-frontend typecheck-benchmark \
-        test test-backend test-acceptance \
+        test test-backend test-acceptance test-e2e \
         demo demo-m8 demo-m9 demo-m16 demo-m17 \
         clean lint
 
 ## Install
 
-install: install-backend install-frontend install-tests install-benchmark
+install: install-backend install-frontend install-tests install-e2e install-benchmark
 
 install-backend:
 	cd $(BACKEND_DIR) && npm install
@@ -28,6 +29,13 @@ install-frontend:
 
 install-tests:
 	cd $(TESTS_DIR) && npm install
+
+install-e2e:
+	@if [ -d $(E2E_TESTS_DIR) ]; then \
+		cd $(E2E_TESTS_DIR) && npm install && npx playwright install; \
+	else \
+		echo "No $(E2E_TESTS_DIR) directory yet"; \
+	fi
 
 install-benchmark:
 	cd $(BENCHMARK_DIR) && npm install
@@ -103,6 +111,9 @@ test-acceptance: restart-backend
 
 test: test-acceptance
 
+test-e2e:
+	cd $(E2E_TESTS_DIR) && npx playwright test
+
 test-backend: restart-backend
 	cd $(TESTS_DIR) && npx jest --no-coverage --forceExit --detectOpenHandles --runInBand room-management collaborative-session; \
 	status=$$?; \
@@ -137,6 +148,8 @@ clean:
 	rm -rf $(BACKEND_DIR)/node_modules $(BACKEND_DIR)/dist
 	rm -rf $(FRONTEND_DIR)/node_modules $(FRONTEND_DIR)/build
 	rm -rf $(TESTS_DIR)/node_modules
+	rm -rf $(E2E_TESTS_DIR)/node_modules
+	rm -rf $(E2E_TESTS_DIR)/playwright-report $(E2E_TESTS_DIR)/test-results
 	rm -rf $(BENCHMARK_DIR)/node_modules
 
 ## Logs

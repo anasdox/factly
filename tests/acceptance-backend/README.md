@@ -1,6 +1,8 @@
-# Acceptance Tests
+# Acceptance Backend Tests
 
-This directory contains acceptance tests that validate functional specifications. These tests are designed to ensure that the application meets the requirements defined in the specifications and behaves as expected from an end-user perspective.
+This directory contains Node/Jest acceptance tests for backend/API/domain behaviors.
+
+Browser UI workflows are covered in `tests/e2e/` (Playwright).
 
 ## Rules (from AGENTS.md)
 
