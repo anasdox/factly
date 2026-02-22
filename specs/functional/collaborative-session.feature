@@ -20,6 +20,15 @@ Feature: Collaborative Session
     And receives a "credentials" message with a uuid and username
     And stores the uuid and username in localStorage
 
+  @fsid:FS-JoinRoomViaInviteFirstUse
+  Scenario: First-time user opening a room link lands in the room directly
+    Given a room exists with a valid room ID
+    And the browser has no locally saved discovery
+    When an Analyst opens the application with a "room" query parameter for that room
+    Then the frontend does not display the welcome home screen before room bootstrap completes
+    And the frontend fetches the room data from the backend
+    And the room discovery is displayed once the room data is loaded
+
   @fsid:FS-JoinRoomWithExistingCredentials
   Scenario: Join a room with existing credentials from localStorage
     Given the Analyst has a uuid and username stored in localStorage

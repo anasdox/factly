@@ -1,5 +1,12 @@
 # TODO
 
+## Hotfix
+Fix first-time room invite navigation so a user opening `?room=<id>` without local discovery data lands in the room directly instead of the welcome home screen.
+
+- [x] Add/adjust BDD spec coverage for first-time room join via invite link
+- [x] Add frontend regression test for initial room bootstrap from URL query
+- [x] Fix frontend bootstrap flow so room data loads before welcome screen renders
+
 ## Intent
 Deliver M18: Conversational Chat on Discovery — an analyst can chat with Factly about the current discovery to ask questions, get explanations, and request modifications (add/delete/edit items) with explicit confirmation before any change is applied.
 
