@@ -66,6 +66,36 @@ export class OpenAIProvider implements LLMProvider {
     }
   }
 
+  private async createChatCompletionStream(
+    params: Omit<OpenAI.Chat.ChatCompletionCreateParamsStreaming, 'max_tokens' | 'max_completion_tokens' | 'stream'>,
+    maxTokens?: number,
+  ): Promise<any> {
+    const tokens = maxTokens ?? this.maxCompletionTokens;
+    const withMaxCompletionTokens = {
+      ...params,
+      stream: true,
+      max_completion_tokens: tokens,
+    };
+
+    try {
+      return await this.client.chat.completions.create(
+        withMaxCompletionTokens as OpenAI.Chat.ChatCompletionCreateParamsStreaming,
+      );
+    } catch (err: any) {
+      if (this.isUnsupportedParamError(err, 'max_completion_tokens')) {
+        const withMaxTokens = {
+          ...params,
+          stream: true,
+          max_tokens: tokens,
+        };
+        return await this.client.chat.completions.create(
+          withMaxTokens as OpenAI.Chat.ChatCompletionCreateParamsStreaming,
+        );
+      }
+      throw err;
+    }
+  }
+
   async extractFacts(text: string, goal: string): Promise<ExtractedFact[]> {
     const response = await this.createChatCompletion({
       model: this.model,
@@ -227,17 +257,15 @@ export class OpenAIProvider implements LLMProvider {
       },
     }));
 
-    const stream = await this.client.chat.completions.create({
+    const stream = await this.createChatCompletionStream({
       model: this.model,
       temperature: tempChat,
-      max_tokens: maxTokens,
-      stream: true,
       messages: [
         { role: 'system', content: systemPrompt },
         ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
       ],
       tools: openaiTools,
-    });
+    }, maxTokens);
 
     // Accumulate tool calls across chunks
     const toolCallAccumulators = new Map<number, { name: string; arguments: string }>();

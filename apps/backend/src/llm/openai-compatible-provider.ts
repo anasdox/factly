@@ -66,6 +66,36 @@ export class OpenAICompatibleProvider implements LLMProvider {
     }
   }
 
+  private async createChatCompletionStream(
+    params: Omit<OpenAI.Chat.ChatCompletionCreateParamsStreaming, 'max_tokens' | 'max_completion_tokens' | 'stream'>,
+    maxTokens?: number,
+  ): Promise<any> {
+    const tokens = maxTokens ?? this.maxCompletionTokens;
+    const withMaxTokens = {
+      ...params,
+      stream: true,
+      max_tokens: tokens,
+    };
+
+    try {
+      return await this.client.chat.completions.create(
+        withMaxTokens as OpenAI.Chat.ChatCompletionCreateParamsStreaming,
+      );
+    } catch (err: any) {
+      if (this.isUnsupportedParamError(err, 'max_tokens')) {
+        const withMaxCompletionTokens = {
+          ...params,
+          stream: true,
+          max_completion_tokens: tokens,
+        };
+        return await this.client.chat.completions.create(
+          withMaxCompletionTokens as OpenAI.Chat.ChatCompletionCreateParamsStreaming,
+        );
+      }
+      throw err;
+    }
+  }
+
   async extractFacts(text: string, goal: string): Promise<ExtractedFact[]> {
     const response = await this.createChatCompletion({
       model: this.model,
@@ -232,32 +262,28 @@ export class OpenAICompatibleProvider implements LLMProvider {
 
     let stream: any;
     try {
-      stream = await this.client.chat.completions.create({
+      stream = await this.createChatCompletionStream({
         model: this.model,
         temperature: tempChat,
-        max_tokens: maxTokens,
-        stream: true,
         messages: [
           { role: 'system', content: systemPrompt },
           ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
         ],
         tools: openaiTools,
-      });
+      }, maxTokens);
     } catch (err: any) {
       console.error('[openai-compat-chat] Failed to create stream', { error: err?.message, status: err?.status });
       // Retry without tools if the provider doesn't support them
       if (err?.message?.includes('tools') || err?.status === 400) {
         console.warn('[openai-compat-chat] Retrying WITHOUT tools (provider may not support function calling)');
-        stream = await this.client.chat.completions.create({
+        stream = await this.createChatCompletionStream({
           model: this.model,
           temperature: tempChat,
-          max_tokens: maxTokens,
-          stream: true,
           messages: [
             { role: 'system', content: systemPrompt },
             ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
           ],
-        });
+        }, maxTokens);
       } else {
         throw err;
       }
