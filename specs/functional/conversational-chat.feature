@@ -100,6 +100,14 @@ Feature: Conversational Chat on Discovery
     Then the item reference is appended to the chat input as a styled tag
     And the chat input field is focused
 
+  @fsid:FS-ChatDragItemToMention
+  Scenario: Analyst drags a pipeline item into the chat input to mention it
+    Given the chat widget is open
+    When the Analyst drags an item from the pipeline and drops it into the chat input field
+    Then an @mention for the item is inserted into the chat input
+    And the mention is shown as a selected tag in the chat input area
+    And the chat input field is focused
+
   @fsid:FS-ChatAtMentionInResponse
   Scenario: Factly references items in its responses
     Given Factly responds with references to pipeline items

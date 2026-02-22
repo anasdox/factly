@@ -42,14 +42,24 @@ const ItemWrapper: React.FC<Props> = ({
   const status = item.status;
   const version = item.version;
   const actionable = isActionableStatus(status);
+  const itemId = id.replace(/^[^-]+-/, '');
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.dataTransfer.setData('application/x-factly-item-id', itemId);
+    e.dataTransfer.setData('text/plain', itemId);
+    e.dataTransfer.effectAllowed = 'copy';
+  };
 
   return (
     <div
       id={id}
+      data-chat-item-id={itemId}
       className={`wrapper ${actionable && status ? 'status-' + formatStatus(status, '-') : ''}`}
       ref={el => el ? setItemRef(el, index) : null}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      draggable
+      onDragStart={handleDragStart}
     >
       {actionable && status && (
         <span className={`status-chip ${formatStatus(status, '-')}`}>{formatStatus(status, ' ')}</span>

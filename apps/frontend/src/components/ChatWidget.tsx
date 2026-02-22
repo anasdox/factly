@@ -11,6 +11,8 @@ const generateId = () =>
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
+const CHAT_ITEM_DROP_MIME = 'application/x-factly-item-id';
+
 export interface ChatToolAction {
   tool: 'add_item' | 'delete_item' | 'edit_item';
   params: Record<string, unknown>;
@@ -218,6 +220,58 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ data, setData, backendAvailable
     inputRef.current?.focus();
   }, [inputText, mentionStartPos, mentionFilter]);
 
+  const insertDroppedReference = useCallback((itemId: string) => {
+    const textarea = inputRef.current;
+    const start = textarea?.selectionStart ?? inputText.length;
+    const end = textarea?.selectionEnd ?? inputText.length;
+    const before = inputText.substring(0, start);
+    const after = inputText.substring(end);
+    const token = `@${itemId}`;
+    const prefix = before.length > 0 && !/\s$/.test(before) ? ' ' : '';
+    const suffix = after.length === 0 || !/^\s/.test(after) ? ' ' : '';
+    const inserted = `${prefix}${token}${suffix}`;
+    const nextText = `${before}${inserted}${after}`;
+    const nextCursorPos = before.length + inserted.length;
+
+    setInputText(nextText);
+    setReferences(prev => prev.includes(itemId) ? prev : [...prev, itemId]);
+    setShowMention(false);
+    setMentionFilter('');
+    setMentionStartPos(-1);
+
+    requestAnimationFrame(() => {
+      if (!inputRef.current) return;
+      inputRef.current.focus();
+      inputRef.current.setSelectionRange(nextCursorPos, nextCursorPos);
+    });
+  }, [inputText]);
+
+  const extractDroppedItemId = useCallback((e: React.DragEvent<HTMLTextAreaElement>) => {
+    const fromCustom = e.dataTransfer.getData(CHAT_ITEM_DROP_MIME);
+    if (fromCustom) return fromCustom.trim();
+
+    const rawText = e.dataTransfer.getData('text/plain').trim();
+    if (!rawText) return '';
+    return rawText.replace(/^@/, '').replace(/^\[/, '').replace(/\]$/, '').trim();
+  }, []);
+
+  const handleInputDragOver = useCallback((e: React.DragEvent<HTMLTextAreaElement>) => {
+    if (isStreaming || !backendAvailable) return;
+    const hasCustom = e.dataTransfer.types.includes(CHAT_ITEM_DROP_MIME);
+    const hasText = e.dataTransfer.types.includes('text/plain');
+    if (!hasCustom && !hasText) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  }, [isStreaming, backendAvailable]);
+
+  const handleInputDrop = useCallback((e: React.DragEvent<HTMLTextAreaElement>) => {
+    if (isStreaming || !backendAvailable) return;
+    const itemId = extractDroppedItemId(e);
+    if (!itemId) return;
+    e.preventDefault();
+    insertDroppedReference(itemId);
+  }, [isStreaming, backendAvailable, extractDroppedItemId, insertDroppedReference]);
+
   // Dragging handlers
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     setIsDragging(true);
@@ -389,6 +443,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ data, setData, backendAvailable
                 value={inputText}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
+                onDragOver={handleInputDragOver}
+                onDrop={handleInputDrop}
                 placeholder={backendAvailable ? 'Ask Factly about your discovery...' : 'Backend unavailable'}
                 disabled={isStreaming || !backendAvailable}
                 rows={1}
