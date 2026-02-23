@@ -58,7 +58,7 @@ const app = express();
 const port = parseInt(process.env.PORT || '3002', 10);
 
 // Add middleware
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '5mb' }));
 app.use(cors());
 app.use('/benchmark', benchmarkRoutes);
 
