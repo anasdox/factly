@@ -61,7 +61,7 @@ if [ -z "$fsids" ]; then
   exit 1
 fi
 
-search_dirs="tests/acceptance-backend tests/e2e"
+search_dirs="tests/blackbox tests/e2e"
 missing=0
 
 {

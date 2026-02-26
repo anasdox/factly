@@ -10,7 +10,7 @@ Fix first-time room invite navigation so a user opening `?room=<id>` without loc
 ## Test Governance Audit Hardening
 Make acceptance traceability and spec linting reflect executable coverage instead of counting placeholder references.
 
-- [x] Audit `tests/acceptance-backend` for `test.todo` / placeholder patterns
+- [x] Audit `tests/blackbox` for `test.todo` / placeholder patterns
 - [x] Fix `tools/spec-lint/spec_lint.sh` acceptance test file glob (`*.test.ts`)
 - [x] Tighten `tools/traceability/traceability_check.sh` to require executable `@fsid` blocks (not `test.todo`)
 - [x] Generate updated `traceability-report.md` and review uncovered FSIDs
@@ -24,7 +24,7 @@ Introduce Playwright for browser-based UI scenarios and migrate Output Managemen
 - [x] Install Playwright dependency + browsers locally and run `tests/e2e/output-management.spec.ts`
 
 ## E2E UI Coverage Expansion
-Continue migrating browser-only placeholder acceptance tests (`test.todo`) from `tests/acceptance-backend/` to executable Playwright specs in `tests/e2e/`.
+Continue migrating browser-only placeholder acceptance tests (`test.todo`) from `tests/blackbox/` to executable Playwright specs in `tests/e2e/`.
 
 - [x] Migrate `Discovery Management` to Playwright E2E (`discovery-management.spec.ts`)
 - [x] Migrate `Input Management` to Playwright E2E and align functional spec with current UI behavior
@@ -35,7 +35,7 @@ Continue migrating browser-only placeholder acceptance tests (`test.todo`) from 
 - [x] Migrate `Relationship Visualization` to Playwright E2E and align hover-highlight specs with current UI behavior
 - [x] Migrate remaining UI placeholders inside mixed acceptance files (`auto-*`, `ai-assisted-updates`, `staleness-propagation`, `semantic-deduplication`)
 - [x] Add E2E coverage for remaining traceability gaps (`FS-DisplayErrorToastOnBackendError`, `FS-JoinRoomViaInviteFirstUse`)
-- [x] Remove all `test.todo` from `tests/acceptance-backend` and restore `traceability_check: OK`
+- [x] Remove all `test.todo` from `tests/blackbox` and restore `traceability_check: OK`
 
 ## Intent
 Deliver M18: Conversational Chat on Discovery — an analyst can chat with Factly about the current discovery to ask questions, get explanations, and request modifications (add/delete/edit items) with explicit confirmation before any change is applied.

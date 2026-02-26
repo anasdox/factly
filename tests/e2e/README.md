@@ -1,6 +1,6 @@
 # E2E Tests (Playwright)
 
-This directory contains browser-based end-to-end tests for UI behaviors that cannot be reliably covered by the Node-based `tests/acceptance-backend` suite.
+This directory contains browser-based end-to-end tests for UI behaviors that cannot be reliably covered by the Node-based `tests/blackbox` suite.
 
 ## Install
 
@@ -24,5 +24,5 @@ npm run test:output-management
 
 ## Scope
 
-- Use `tests/acceptance-backend/` for backend/API/domain acceptance tests (Node + Jest).
+- Use `tests/blackbox/` for backend/API/domain acceptance tests (Node + Jest).
 - Use `tests/e2e/` for UI interaction workflows (browser rendering, hover, modal flows, drag, etc.).

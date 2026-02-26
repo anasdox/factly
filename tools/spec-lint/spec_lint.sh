@@ -72,10 +72,10 @@ if [ -d specs/technical ]; then
   fi
 fi
 
-if [ -d tests/acceptance-backend ]; then
-  acceptance_tests=$(find tests/acceptance-backend -type f -name "*.test.ts" 2>/dev/null || true)
+if [ -d tests/blackbox ]; then
+  acceptance_tests=$(find tests/blackbox -type f -name "*.test.ts" 2>/dev/null || true)
   if [ -z "$acceptance_tests" ]; then
-    echo "ERROR: tests/acceptance-backend exists but contains no *.test.ts acceptance tests." >&2
+    echo "ERROR: tests/blackbox exists but contains no *.test.ts acceptance tests." >&2
     fail=1
   fi
 fi

@@ -4,7 +4,7 @@ SHELL := /bin/bash
 
 BACKEND_DIR    := apps/backend
 FRONTEND_DIR   := apps/frontend
-TESTS_DIR      := tests/acceptance-backend
+TESTS_DIR      := tests/blackbox
 E2E_TESTS_DIR  := tests/e2e
 BENCHMARK_DIR  := tools/benchmark
 BACKEND_PID    := /tmp/factly-backend.pid

@@ -4,7 +4,7 @@
 **Status:** Approved by UoR
 
 ## Context
-The repository currently uses `tests/acceptance-backend/` (Jest + Node environment) for acceptance testing. Many UI-oriented scenarios are represented as `test.todo()` placeholders because they require a real browser rendering environment (hover interactions, modal behavior, visual toolbars, and other user-driven workflows).
+The repository currently uses `tests/blackbox/` (Jest + Node environment) for acceptance testing. Many UI-oriented scenarios are represented as `test.todo()` placeholders because they require a real browser rendering environment (hover interactions, modal behavior, visual toolbars, and other user-driven workflows).
 
 The traceability tooling historically counted FSIDs as covered based on plain text references, which allowed placeholder tests to appear covered even when no executable test existed.
 
@@ -20,10 +20,10 @@ UI behaviors defined in functional specs are not being validated by executable t
 ## Decision
 **Option 3: Split the strategy.**
 
-- Keep `tests/acceptance-backend/` for backend/API/domain acceptance tests (Jest, Node).
+- Keep `tests/blackbox/` for backend/API/domain acceptance tests (Jest, Node).
 - Introduce `tests/e2e/` for browser-executed UI acceptance coverage (Playwright).
 - Migrate `Output Management` from a placeholder acceptance file to executable Playwright E2E tests as the pilot.
-- Update traceability checks to scan both `tests/acceptance-backend` and `tests/e2e`.
+- Update traceability checks to scan both `tests/blackbox` and `tests/e2e`.
 
 ## Consequences
 
@@ -40,5 +40,5 @@ UI behaviors defined in functional specs are not being validated by executable t
 ## Affected Features
 - Output Management (FS-AddOutput, FS-SaveNewOutput, FS-EditOutput, FS-SaveEditedOutput, FS-DeleteOutput)
 - `tools/traceability/traceability_check.sh`
-- `tests/acceptance-backend/` (scope clarified as backend/API/domain)
+- `tests/blackbox/` (scope clarified as backend/API/domain)
 - `tests/e2e/` (new UI E2E test suite)

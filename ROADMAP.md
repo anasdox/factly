@@ -34,8 +34,8 @@
 - Import from JSON file (file picker)
 
 ### M5: Room-Based Session Management (Backend)
-**Status:** Partially Delivered
-**Outcome:** The backend can create and retrieve rooms, but deletion is buggy and real-time sync is non-functional.
+**Status:** Delivered (bugs fixed in M6)
+**Outcome:** The backend can create, retrieve, and delete rooms with real-time sync via SSE.
 - `POST /rooms` — create room with data
 - `GET /rooms/:id` — retrieve room data
 - `DELETE /rooms/:id` — stop room (bug: clears ALL rooms)
@@ -191,6 +191,16 @@
 - **Propose solutions:** Factly can proactively suggest improvements, missing connections, or next steps based on the current discovery state
 - Human-in-the-loop: no modification is applied without explicit analyst confirmation
 - Chat history persisted per discovery session
+
+### M19: Export Discovery to PDF
+**Status:** Not Started
+**Outcome:** An analyst can export the current discovery session as a structured PDF document, including all pipeline items and their relationships.
+- "Export PDF" button accessible from an open discovery session
+- PDF includes: discovery title, goal, date, and all items organized by pipeline column (Inputs → Facts → Insights → Recommendations → Outputs)
+- Relationship traceability visible in the PDF (which facts come from which inputs, etc.)
+- Visual relationship graph included in the export
+- Handles edge cases: empty discovery (no items), partial discovery (some columns empty)
+- PDF downloaded directly to the analyst's browser
 
 ## Risks and Dependencies
 

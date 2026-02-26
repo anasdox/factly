@@ -20,7 +20,7 @@
 
 - **Date:** 2026-02-22
 - **Decision:** Split backend acceptance (Jest/Node) and UI E2E (Playwright); migrated Output Management coverage to `tests/e2e/output-management.spec.ts`.
-- **Consequence:** Traceability now scans both `tests/acceptance-backend` and `tests/e2e`; remaining `test.todo` UI placeholders are surfaced as uncovered executable coverage.
+- **Consequence:** Traceability now scans both `tests/blackbox` and `tests/e2e`; remaining `test.todo` UI placeholders are surfaced as uncovered executable coverage.
 
 - **Date:** 2026-02-06
 - **Decision:** M6 (Fix Room Lifecycle Bugs) validated as complete — all 5 bugs (BUG-01 to BUG-05) resolved in existing code.
