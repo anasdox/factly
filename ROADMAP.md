@@ -180,7 +180,7 @@
 - Improvement suggestions panel (sweet spot detection, regression alerts, neighborhood exploration)
 
 ### M18: Conversational Chat on Discovery
-**Status:** Not Started
+**Status:** Delivered (Demo validated 2026-02-18)
 **Outcome:** An analyst can chat with Factly about the current discovery to ask questions, get explanations, and request modifications to any pipeline item — all with explicit analyst confirmation before any change is applied.
 - Chat panel accessible from an open discovery session
 - Context-aware: the chat sees the full discovery state (inputs, facts, insights, recommendations, outputs and their relationships)
