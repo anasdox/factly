@@ -198,7 +198,6 @@
 - "Export PDF" button accessible from an open discovery session
 - PDF includes: discovery title, goal, date, and all items organized by pipeline column (Inputs → Facts → Insights → Recommendations → Outputs)
 - Relationship traceability visible in the PDF (which facts come from which inputs, etc.)
-- Visual relationship graph included in the export
 - Handles edge cases: empty discovery (no items), partial discovery (some columns empty)
 - PDF downloaded directly to the analyst's browser
 
