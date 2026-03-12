@@ -437,6 +437,8 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
         deleteRecommendation={deleteRecommendation}
         recommendationData={editingRecommendation as RecommendationType}
         insights={data.insights}
+        backendAvailable={backendAvailable}
+        goal={data.goal}
       />
       <Modal isVisible={confirmBulkDelete} onClose={() => setConfirmBulkDelete(false)} maxWidth="400px">
         <p style={{ margin: '0 0 1em' }}>Delete {selectedRecommendationIds.size} selected recommendation(s)?</p>

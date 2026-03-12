@@ -229,6 +229,84 @@ input[type=text], select, textarea {
   /* Additional styling for the close/delete buttons if needed */
 }
 
+.reformulate-button-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.25em;
+  margin-bottom: 0.5em;
+}
+
+.modal-action-reformulate {
+  border-radius: 8px;
+  padding: 6px 12px;
+  background: var(--bg-btn);
+  color: var(--text-primary);
+  cursor: pointer;
+  border: 1px solid var(--border-btn);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85em;
+}
+
+.modal-action-reformulate:hover:not(:disabled) {
+  border-color: var(--border-btn-hover);
+  transition: 0.2s;
+}
+
+.modal-action-reformulate:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.reformulation-suggestions {
+  margin-bottom: 0.75em;
+  border: 1px solid var(--border-btn);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.reformulation-suggestions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4em 0.6em;
+  font-size: 0.85em;
+  font-weight: 600;
+  background: var(--bg-btn);
+}
+
+.reformulation-dismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1em;
+  color: var(--text-primary);
+  padding: 0 4px;
+}
+
+.reformulation-suggestion-card {
+  padding: 0.5em 0.6em;
+  cursor: pointer;
+  border-top: 1px solid var(--border-btn);
+  transition: background 0.15s;
+}
+
+.reformulation-suggestion-card:hover {
+  background: var(--bg-btn);
+}
+
+.reformulation-suggestion-text {
+  font-size: 0.9em;
+}
+
+.reformulation-suggestion-justification {
+  font-size: 0.78em;
+  opacity: 0.65;
+  margin-top: 0.2em;
+  font-style: italic;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;

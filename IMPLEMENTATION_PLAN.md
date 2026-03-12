@@ -1,72 +1,60 @@
 # Implementation Plan
 
 ## Context
-- Planning scope (program/release): M18 — Conversational Chat on Discovery
-- Roadmap links: M18 (Conversational Chat on Discovery)
+- Planning scope (program/release): M20 — AI-Assisted Reformulation Suggestions
+- Roadmap links: M20 (AI-Assisted Reformulation Suggestions)
 - Planning horizon: Single release cycle
-- Scope summary: Floating chat widget with @mention support, streaming LLM responses via SSE, tool calling for pipeline modifications (add/delete/edit) with analyst confirmation, persistent chat history
-- Assumptions: M1–M17 delivered; existing LLM provider infrastructure reused; Anthropic SDK supports streaming with tools; no new npm packages required
+- Scope summary: "Reformulate" button in create/edit modals for facts, insights, and recommendations. Backend endpoint calls LLM with item text + related items context + goal, returns 2-3 suggestions with justifications. Analyst picks, edits, or dismisses.
+- Assumptions: M1–M18 delivered; existing LLM provider infrastructure reused; no new npm packages required
 
 ## Global feature sequencing
 | Order | Feature | Outcome | Depends on | FSIDs | TSIDs | Acceptance tests | Owner | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Data model: ChatMessage types | DiscoveryData extended with chat_history, ChatMessage type defined | — | FS-ChatHistoryPersisted, FS-ChatHistorySavedWithDiscovery, FS-ChatHistoryClearedOnNewDiscovery | TS-ConversationalChat | conversational-chat.test.ts | — | Planned |
-| 2 | Backend: chat prompt builder | System prompt, context builder (full/summarized), tool definitions | — | FS-ChatFullContextBelowThreshold, FS-ChatSummarizedContextAboveThreshold, FS-ChatAtMentionContext | TS-ConversationalChat | conversational-chat.test.ts | — | Planned |
-| 3 | Backend: LLMProvider chatStream method | New chatStream() on provider interface + Anthropic/OpenAI implementations with streaming | 2 | FS-StreamingResponse, FS-ChatStreamingInterruption | TS-ConversationalChat | conversational-chat.test.ts | — | Planned |
-| 4 | Backend: POST /chat/message endpoint | Express route with SSE response, request validation, context building, LLM streaming | 2, 3 | FS-SendMessage, FS-StreamingResponse, FS-ChatErrorDisplay, FS-ChatAddItem, FS-ChatDeleteItem, FS-ChatEditItem | TS-ChatMessage | conversational-chat.test.ts | — | Planned |
-| 5 | Frontend: useChatStream hook | fetch + ReadableStream SSE consumer, token/tool_call/done/error event handling | — | FS-SendMessage, FS-StreamingResponse, FS-SendMessageDisabledDuringResponse, FS-ChatStreamingInterruption | TS-ConversationalChat | conversational-chat.test.ts | — | Planned |
-| 6 | Frontend: ChatWidget shell | ChatButton (FAB), ChatPanel (floating, draggable), ChatHeader, MessageList, ChatInput | — | FS-ChatWidgetToggle, FS-ChatWidgetHiddenWithoutDiscovery, FS-ChatWidgetDraggable | TS-ConversationalChat | conversational-chat.test.ts | — | Planned |
-| 7 | Frontend: @mention autocomplete | AtMentionDropdown triggered by @, grouped items, keyboard nav, Ctrl+Click from pipeline | 6 | FS-ChatAtMentionAutocomplete, FS-ChatAtMentionSelect, FS-ChatClickItemToReference, FS-ChatAtMentionInResponse | TS-ConversationalChat | conversational-chat.test.ts | — | Planned |
-| 8 | Frontend: ActionCards (add/delete/edit) | Confirmation cards for tool calls with confirm/edit/cancel actions, pipeline state mutation | 5, 6 | FS-ChatAddItem, FS-ChatAddItemConfirm, FS-ChatAddItemEdit, FS-ChatAddItemCancel, FS-ChatDeleteItem, FS-ChatDeleteItemConfirm, FS-ChatDeleteItemCancel, FS-ChatEditItem, FS-ChatEditItemApply, FS-ChatEditItemModify, FS-ChatEditItemCancel, FS-ChatActionErrorRollback | TS-ConversationalChat | conversational-chat.test.ts | — | Planned |
-| 9 | Frontend: chat history persistence | Store/load chat_history in DiscoveryData, export/import, clear on new discovery | 1, 6 | FS-ChatHistoryPersisted, FS-ChatHistorySavedWithDiscovery, FS-ChatHistoryClearedOnNewDiscovery | TS-ConversationalChat | conversational-chat.test.ts | — | Planned |
-| 10 | Integration: end-to-end wiring | Connect ChatWidget to App.tsx, wire useChatStream to backend, @mention to ActionCards pipeline | 4, 5, 6, 7, 8, 9 | FS-AskQuestionAboutDiscovery, FS-AskForGapAnalysis, FS-AskForSummary, FS-ChatProactiveSuggestions, FS-ChatSuggestMissingConnections | TS-ConversationalChat | conversational-chat.test.ts | — | Planned |
+| 1 | Backend: reformulation prompt + types | REFORMULATION_SYSTEM_PROMPT, buildReformulationUserContent, parseReformulationSuggestions, ReformulationSuggestion type | — | FS-ReformulationUsesRelatedItemsContext, FS-ReformulationUsesDiscoveryGoal | TS-AiReformulationSuggestions | ai-reformulation-suggestions.test.ts | — | Planned |
+| 2 | Backend: LLMProvider reformulate method | New reformulate() on provider interface + Anthropic/OpenAI/OpenAI-compatible implementations | 1 | FS-TriggerReformulationOnClick, FS-ReformulateButtonHiddenWhenNoLLM | TS-AiReformulationSuggestions | ai-reformulation-suggestions.test.ts | — | Planned |
+| 3 | Backend: POST /reformulate endpoint | Express route with validation, LLM call, error handling | 1, 2 | FS-TriggerReformulationOnClick, FS-DisplayReformulationSuggestions, FS-ReformulationErrorShowsMessage, FS-ReformulationTimeoutShowsMessage | TS-Reformulate | ai-reformulation-suggestions.test.ts | — | Planned |
+| 4 | Frontend: Reformulate button + suggestions UI in FactModal | "Reformulate" button, loading state, inline suggestions list, selection/dismiss behavior | 3 | FS-ReformulateButtonVisibleInFactModal, FS-ReformulateButtonDisabledWhenTextEmpty, FS-ReformulateButtonEnabledWhenTextPresent, FS-DisplayReformulationSuggestions, FS-SelectSuggestionReplacesText, FS-EditAfterSelectingSuggestion, FS-DismissSuggestionsKeepsOriginal, FS-ReformulateAgainAfterEdit | TS-AiReformulationSuggestions | ai-reformulation-suggestions.test.ts | — | Planned |
+| 5 | Frontend: Reformulate in InsightModal + RecommendationModal | Replicate reformulation UI from FactModal to InsightModal and RecommendationModal | 4 | FS-ReformulateButtonVisibleInInsightModal, FS-ReformulateButtonVisibleInRecommendationModal | TS-AiReformulationSuggestions | ai-reformulation-suggestions.test.ts | — | Planned |
 
 ## Cross-feature dependencies and blockers
 | Dependency | Upstream | Downstream | Impact if late | Mitigation | Owner | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| ChatMessage types | Slice 1 (types.ts) | Slices 5, 6, 8, 9 (hook, widget, cards, persistence) | Blocks all frontend chat components | Deliver first, zero risk | — | Open |
-| Chat prompt builder | Slice 2 (chat-prompts.ts) | Slices 3, 4 (provider method, endpoint) | Blocks backend streaming | Deliver alongside provider method | — | Open |
-| LLM chatStream method | Slice 3 (providers) | Slice 4 (endpoint) | Blocks the endpoint | Can mock for frontend development | — | Open |
-| Backend endpoint | Slice 4 | Slice 10 (integration) | Frontend can develop against mock data | Define SSE event contract early | — | Open |
-| Existing pipeline utilities | lib.ts (createNewVersion, propagateImpact) | Slice 8 (ActionCards) | ActionCards reuse existing logic | Already delivered in M14/M15 | — | Resolved |
+| Reformulation types + prompt | Slice 1 (prompts.ts) | Slices 2, 3 (provider, endpoint) | Blocks backend | Deliver first, zero risk | — | Open |
+| LLM provider method | Slice 2 (providers) | Slice 3 (endpoint) | Blocks the endpoint | Can mock for frontend development | — | Open |
+| Backend endpoint | Slice 3 | Slices 4, 5 (frontend modals) | Frontend can develop against mock data | Define response contract early (done in OpenAPI) | — | Open |
+| FactModal reformulation UI | Slice 4 | Slice 5 (other modals) | Identical pattern, low risk | Extract shared logic in slice 4 for reuse in slice 5 | — | Open |
 
 ## Critical path and milestones
-- Critical path: S1-Types → S2-Prompts → S3-Provider → S4-Endpoint → S10-Integration
-- Parallel track: S5-Hook + S6-Widget + S7-Mention + S8-ActionCards (can develop with mocks)
-- Milestone: M18 Complete
+- Critical path: S1-Prompt → S2-Provider → S3-Endpoint → S4-FactModal → S5-OtherModals
+- No parallel track needed (small feature, sequential delivery)
+- Milestone: M20 Complete
   - Target date: —
-  - Exit criteria: All acceptance tests pass, chat widget functional with streaming, all action types (add/delete/edit) confirmed working, chat history persists across sessions
+  - Exit criteria: All acceptance tests pass, "Reformulate" button works in all 3 modals, suggestions display with justifications, selection replaces text, dismiss preserves original
 
 ## Validation checkpoints
-- [ ] Functional specs validated for planned slices
-- [ ] Technical specs validated for planned slices
-- [ ] Acceptance tests validated for planned slices
-- [ ] Implementation done for current milestone
+- [x] Functional specs validated (17 scenarios)
+- [x] Technical specs validated (TS-AiReformulationSuggestions + TS-Reformulate in OpenAPI)
+- [ ] Acceptance tests validated
+- [ ] Implementation done
 - [ ] CI green (all acceptance tests pass, TypeScript clean)
 - [ ] Refactoring validated (acceptance + full tests green)
 - [ ] Demo prepared and validated by UoR
 
 ## Risks and trade-offs
-- Risk: Streaming with tool calls requires different handling per LLM provider
-  - Trigger: Anthropic uses content_block events, OpenAI uses delta.tool_calls
-  - Response: Abstract in chatStream() method; implement Anthropic first (primary provider)
-- Risk: Large Discovery context exceeds LLM token limits
-  - Trigger: Discoveries with >100 items even with summarization
-  - Response: Configurable threshold (CHAT_CONTEXT_THRESHOLD), @mentioned items always in full, rest summarized
-- Risk: SSE streaming via POST requires manual parsing (no native EventSource)
-  - Trigger: Browser EventSource only supports GET
-  - Response: Use fetch + ReadableStream with manual SSE parsing; well-tested pattern
-- Risk: Chat-driven modifications could conflict with ongoing collaborative sessions
-  - Trigger: Two analysts in same room, one uses chat to modify items
-  - Response: Standard room broadcast applies; chat modifications go through setData like all other edits
-- Risk: Tool call JSON accumulation during streaming may be incomplete
-  - Trigger: Network interruption during tool call streaming
-  - Response: Only emit tool_call event after complete accumulation; display error on interruption
+- Risk: LLM returns fewer than 3 suggestions or inconsistent JSON
+  - Trigger: Some models may return 1-2 suggestions instead of 3
+  - Response: Accept 1-3 suggestions; parseReformulationSuggestions handles variable-length arrays
+- Risk: Reformulation latency perceived as slow in modal context
+  - Trigger: LLM call takes 2-5 seconds while analyst waits in modal
+  - Response: Clear loading spinner on button; text field remains editable during loading
+- Risk: Suggestions for recommendations may not be actionable enough
+  - Trigger: LLM reformulates recommendation as insight-like statement
+  - Response: Prompt explicitly instructs per entity_type; analyst can dismiss and reformulate again
 
 ## Open questions
 - None currently
 
 ## Change log
-- 2026-02-18:
-  - Change: New plan created for M18 (replacing M14+M15 plan)
-  - Reason: M14+M15 delivered and validated; starting M18 Conversational Chat
+- 2026-03-12:
+  - Change: New plan created for M20 (replacing M18 plan)
+  - Reason: M18 delivered and validated; starting M20 AI-Assisted Reformulation Suggestions

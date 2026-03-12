@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { LLMProvider, OutputTraceabilityContext, ChatStreamCallbacks } from './provider';
 import { ChatToolDefinition } from './chat-prompts';
-import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseImpactCheckResult, ExtractedFact, ExtractedInsight, ExtractedRecommendation, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult } from './prompts';
+import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, REFORMULATION_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, buildReformulationUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseImpactCheckResult, parseReformulationSuggestions, ExtractedFact, ExtractedInsight, ExtractedRecommendation, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult, ReformulationSuggestion } from './prompts';
 
 export class OpenAICompatibleProvider implements LLMProvider {
   private client: OpenAI;
@@ -224,6 +224,20 @@ export class OpenAICompatibleProvider implements LLMProvider {
     const result = parseImpactCheckResult(rawText, children);
     console.log('[impact-check] Parsed result:', JSON.stringify(result));
     return result;
+  }
+
+  async reformulate(text: string, entityType: string, goal: string, relatedItems: { text: string; type: string }[]): Promise<ReformulationSuggestion[]> {
+    const tempReformulation = parseFloat(process.env.LLM_TEMP_REFORMULATION || '0.5');
+    const response = await this.createChatCompletion({
+      model: this.model,
+      temperature: tempReformulation,
+      messages: [
+        { role: 'system', content: REFORMULATION_SYSTEM_PROMPT },
+        { role: 'user', content: buildReformulationUserContent(text, entityType, goal, relatedItems) },
+      ],
+    }, 2048);
+
+    return parseReformulationSuggestions(this.extractText(response));
   }
 
   async getEmbeddings(texts: string[]): Promise<number[][]> {

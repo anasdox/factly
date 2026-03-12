@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Modal from './Modal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faPlus, faTrashCan, faFloppyDisk } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faPlus, faTrashCan, faFloppyDisk, faWandMagicSparkles, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import ReformulationSuggestions, { ReformulationSuggestion } from './ReformulationSuggestions';
+import { API_URL } from '../config';
 
 type Props = {
   mode: 'add' | 'edit';
@@ -11,6 +13,8 @@ type Props = {
   deleteInsight: (insightId: string) => void;
   insightData: InsightType | null;
   facts: FactType[] | null;
+  backendAvailable?: boolean;
+  goal?: string;
 };
 
 const InsightModal: React.FC<Props> = ({
@@ -20,11 +24,15 @@ const InsightModal: React.FC<Props> = ({
   saveInsight,
   deleteInsight,
   insightData,
-  facts
+  facts,
+  backendAvailable,
+  goal,
 }) => {
   const [currentInsightText, setCurrentInsightText] = useState("");
   const [currentInsightRelatedFacts, setCurrentRelatedFacts] = useState<string[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [suggestions, setSuggestions] = useState<ReformulationSuggestion[]>([]);
+  const [isReformulating, setIsReformulating] = useState(false);
 
   useEffect(() => {
     if (insightData) {
@@ -35,6 +43,7 @@ const InsightModal: React.FC<Props> = ({
       setCurrentRelatedFacts([]);
     }
     setConfirmDelete(false);
+    setSuggestions([]);
   }, [mode, insightData, isDialogVisible]);
 
   const handleSave = () => {
@@ -51,6 +60,37 @@ const InsightModal: React.FC<Props> = ({
     if (insightData && insightData.insight_id) {
       deleteInsight(insightData.insight_id);
       closeDialog();
+    }
+  };
+
+  const handleReformulate = async () => {
+    setIsReformulating(true);
+    setSuggestions([]);
+    try {
+      const relatedItems = (facts || [])
+        .filter(f => currentInsightRelatedFacts.includes(f.fact_id))
+        .map(f => ({ text: f.text, type: 'fact' }));
+
+      const response = await fetch(`${API_URL}/reformulate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: currentInsightText,
+          entity_type: 'insight',
+          goal: goal || '',
+          related_items: relatedItems,
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Reformulation failed');
+      }
+      const data = await response.json();
+      setSuggestions(data.suggestions || []);
+    } catch {
+      // Silently handle — user can retry
+    } finally {
+      setIsReformulating(false);
     }
   };
 
@@ -81,6 +121,24 @@ const InsightModal: React.FC<Props> = ({
               onChange={(event) => {
                 setCurrentInsightText(event.target.value);
               }} />
+            {backendAvailable && (
+              <div className="reformulate-button-wrapper">
+                <button
+                  type="button"
+                  className="modal-action-reformulate"
+                  disabled={!currentInsightText.trim() || isReformulating}
+                  onClick={handleReformulate}
+                  title={!currentInsightText.trim() ? 'Enter text first' : 'Suggest alternative wordings'}
+                >
+                  <FontAwesomeIcon icon={isReformulating ? faSpinner : faWandMagicSparkles} spin={isReformulating} /> Reformulate
+                </button>
+              </div>
+            )}
+            <ReformulationSuggestions
+              suggestions={suggestions}
+              onSelect={(text) => { setCurrentInsightText(text); setSuggestions([]); }}
+              onDismiss={() => setSuggestions([])}
+            />
             <label htmlFor="insight-related-facts">Related Facts</label>
             <select
               id="insight-related-facts"

@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { LLMProvider, ChatStreamCallbacks } from './provider';
 import { ChatToolDefinition } from './chat-prompts';
-import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseImpactCheckResult, ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult } from './prompts';
+import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, REFORMULATION_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, buildReformulationUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseImpactCheckResult, parseReformulationSuggestions, ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult, ReformulationSuggestion } from './prompts';
 
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic;
@@ -156,6 +156,21 @@ export class AnthropicProvider implements LLMProvider {
     });
 
     return parseImpactCheckResult(this.extractText(response), children);
+  }
+
+  async reformulate(text: string, entityType: string, goal: string, relatedItems: { text: string; type: string }[]): Promise<ReformulationSuggestion[]> {
+    const tempReformulation = parseFloat(process.env.LLM_TEMP_REFORMULATION || '0.5');
+    const response = await this.client.messages.create({
+      model: this.model,
+      max_tokens: 2048,
+      temperature: tempReformulation,
+      system: REFORMULATION_SYSTEM_PROMPT,
+      messages: [
+        { role: 'user', content: buildReformulationUserContent(text, entityType, goal, relatedItems) },
+      ],
+    });
+
+    return parseReformulationSuggestions(this.extractText(response));
   }
 
   async chatStream(

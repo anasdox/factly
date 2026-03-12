@@ -539,6 +539,8 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
         deleteFact={deleteFact}
         factData={editingFact as FactType}
         inputs={data.inputs}
+        backendAvailable={backendAvailable}
+        goal={data.goal}
       />
       <InsightModal
         mode="add"
@@ -548,6 +550,8 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
         deleteInsight={() => {}}
         insightData={{ insight_id: '', text: '', related_facts: Array.from(selectedFactIds) } as InsightType}
         facts={data.facts}
+        backendAvailable={backendAvailable}
+        goal={data.goal}
       />
       <Modal isVisible={confirmBulkDelete} onClose={() => setConfirmBulkDelete(false)} maxWidth="400px">
         <p style={{ margin: '0 0 1em' }}>Delete {selectedFactIds.size} selected fact(s)?</p>

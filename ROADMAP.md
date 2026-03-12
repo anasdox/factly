@@ -192,14 +192,16 @@
 - Human-in-the-loop: no modification is applied without explicit analyst confirmation
 - Chat history persisted per discovery session
 
-### M19: Export Discovery to PDF
-**Status:** Not Started
-**Outcome:** An analyst can export the current discovery session as a structured PDF document, including all pipeline items and their relationships.
-- "Export PDF" button accessible from an open discovery session
-- PDF includes: discovery title, goal, date, and all items organized by pipeline column (Inputs → Facts → Insights → Recommendations → Outputs)
-- Relationship traceability visible in the PDF (which facts come from which inputs, etc.)
-- Handles edge cases: empty discovery (no items), partial discovery (some columns empty)
-- PDF downloaded directly to the analyst's browser
+### M20: AI-Assisted Reformulation Suggestions
+**Status:** Delivered (Demo validated 2026-03-12)
+**Outcome:** When an analyst creates or edits an item (fact, insight, or recommendation), a "Reformulate" button in the modal proposes alternative wordings to improve clarity, precision, or actionability.
+- A "Reformulate" button is present in the create/edit modal, next to the text field
+- The analyst writes their text first, then clicks "Reformulate" to get suggestions
+- The LLM receives the item text, its type (fact/insight/recommendation), and surrounding context (related items) to propose 2-3 alternative formulations
+- Suggestions appear inline in the modal (e.g., as a selectable list below the text field)
+- The analyst can: pick a suggestion (replaces the text field content), edit further after picking, or ignore and keep their original text
+- Human-in-the-loop: no reformulation is applied without analyst choice
+- Works for all three item types: facts, insights, and recommendations
 
 ## Risks and Dependencies
 
@@ -221,6 +223,8 @@
 | Chat context window limits (M18) | Large discoveries may exceed LLM context limits | Summarize or truncate discovery context; prioritize items relevant to the question |
 | Unintended modifications via chat (M18) | Chat-driven edits could break pipeline consistency | All modifications require explicit confirmation; show impact preview before applying |
 | Chat cost per interaction (M18) | Each chat message sends full discovery context to LLM | Cache discovery context; use incremental context updates where possible |
+| Reformulation latency (M20) | LLM call adds delay to the create/edit flow | Make reformulation optional and async (non-blocking); analyst can save without waiting |
+| Reformulation cost (M20) | Each create/edit could trigger an LLM call | Only trigger on explicit analyst action ("Suggest reformulations"), not automatically |
 
 ## Non-Goals (Project-Wide)
 

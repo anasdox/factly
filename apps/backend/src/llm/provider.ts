@@ -1,7 +1,7 @@
 import { AnthropicProvider } from './anthropic-provider';
 import { OpenAICompatibleProvider } from './openai-compatible-provider';
 import { OpenAIProvider } from './openai-provider';
-import { ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult } from './prompts';
+import { ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult, ReformulationSuggestion } from './prompts';
 import { ChatToolDefinition } from './chat-prompts';
 
 export type { OutputTraceabilityContext };
@@ -22,6 +22,7 @@ export interface LLMProvider {
   scanDuplicates(items: { id: string; text: string }[]): Promise<DedupGroup[]>;
   proposeUpdate(entityType: string, currentText: string, upstreamOldText: string, upstreamNewText: string, upstreamEntityType: string, goal: string, outputType?: string): Promise<UpdateProposal>;
   checkImpact(oldText: string, newText: string, children: { id: string; text: string }[]): Promise<ImpactCheckResult[]>;
+  reformulate(text: string, entityType: string, goal: string, relatedItems: { text: string; type: string }[]): Promise<ReformulationSuggestion[]>;
   getEmbeddings?(texts: string[]): Promise<number[][]>;
   chatStream(
     systemPrompt: string,

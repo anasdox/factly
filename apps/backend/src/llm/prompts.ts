@@ -341,6 +341,60 @@ export function parseRecommendationArray(raw: string): ExtractedRecommendation[]
     }));
 }
 
+// ── Reformulation prompts ──
+
+export const REFORMULATION_SYSTEM_PROMPT = `You are a reformulation assistant. Your role is to propose alternative wordings for a given item (fact, insight, or recommendation) to improve its clarity, precision, or actionability.
+
+Rules:
+- Propose exactly 3 alternative reformulations.
+- Each reformulation must preserve the original meaning while improving one or more of: clarity, precision, specificity, actionability.
+- For facts: favor precise, verifiable, measurable language. Remove vague qualifiers.
+- For insights: favor analytical depth, clear cause-effect or pattern-based language.
+- For recommendations: favor concrete, actionable, specific phrasing with clear expected outcomes.
+- Use vocabulary consistent with the provided related items context.
+- Align reformulations with the research goal.
+- For each suggestion, provide a short justification (1 sentence) explaining what the reformulation improves.
+- Do not change the fundamental meaning or add new information not present in the original.
+- Return a JSON array of objects, each with "text" (the reformulated item) and "justification" (why this reformulation is better).
+
+Respond ONLY with a valid JSON array. No explanation, no markdown.
+Example: [{"text": "Reformulated text here", "justification": "More specific with measurable outcome"}]`;
+
+export type ReformulationSuggestion = { text: string; justification: string };
+
+export function buildReformulationUserContent(
+  text: string,
+  entityType: string,
+  goal: string,
+  relatedItems: { text: string; type: string }[],
+): string {
+  let content = `Research goal: ${goal}\n\nItem type: ${entityType}`;
+
+  if (relatedItems.length > 0) {
+    const itemsList = relatedItems.map((item, i) => `${i + 1}. [${item.type}] ${item.text}`).join('\n');
+    content += `\n\nRelated items for context:\n${itemsList}`;
+  }
+
+  content += `\n\nText to reformulate:\n${text}\n\nPropose 3 alternative reformulations.`;
+  return content;
+}
+
+export function parseReformulationSuggestions(raw: string): ReformulationSuggestion[] {
+  const cleaned = stripCodeFences(raw);
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((item: any) => typeof item === 'object' && item !== null && typeof item.text === 'string')
+      .map((item: any) => ({
+        text: String(item.text),
+        justification: typeof item.justification === 'string' ? item.justification : '',
+      }));
+  } catch {
+    return [];
+  }
+}
+
 // ── Impact check prompts ──
 
 export const IMPACT_CHECK_SYSTEM_PROMPT = `You are a semantic impact analysis assistant. Your role is to determine which downstream entities are semantically impacted by an upstream change.

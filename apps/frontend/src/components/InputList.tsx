@@ -413,6 +413,8 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
         deleteFact={() => {}}
         factData={{ fact_id: '', text: '', related_inputs: Array.from(selectedInputIds) } as FactType}
         inputs={data.inputs}
+        backendAvailable={backendAvailable}
+        goal={data.goal}
       />
       <Modal isVisible={confirmBulkDelete} onClose={() => setConfirmBulkDelete(false)} maxWidth="400px">
         <p style={{ margin: '0 0 1em' }}>Delete {selectedInputIds.size} selected input(s)?</p>

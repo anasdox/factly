@@ -25,6 +25,9 @@ info:
     - FS-SendMessage
     - FS-StreamingResponse
     - FS-ChatErrorDisplay
+    - FS-TriggerReformulationOnClick
+    - FS-DisplayReformulationSuggestions
+    - FS-ReformulationErrorShowsMessage
 
 servers:
   - url: http://localhost:3002
@@ -351,6 +354,85 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /reformulate:
+    post:
+      operationId: reformulate
+      summary: Propose alternative reformulations for an item using AI
+      description: Sends item text, type, discovery goal, and related items context to an LLM provider. Returns 2-3 alternative reformulations with justifications.
+      x-tsid: TS-Reformulate
+      x-fsid-links:
+        - FS-TriggerReformulationOnClick
+        - FS-DisplayReformulationSuggestions
+        - FS-ReformulationUsesRelatedItemsContext
+        - FS-ReformulationUsesDiscoveryGoal
+        - FS-ReformulationErrorShowsMessage
+        - FS-ReformulationTimeoutShowsMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+                - entity_type
+                - goal
+                - related_items
+              properties:
+                text:
+                  type: string
+                  minLength: 1
+                  description: The item text to reformulate
+                entity_type:
+                  type: string
+                  enum: [fact, insight, recommendation]
+                  description: The type of item being reformulated
+                goal:
+                  type: string
+                  minLength: 1
+                  description: The Discovery goal used as reformulation context
+                related_items:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - text
+                      - type
+                    properties:
+                      text:
+                        type: string
+                        description: The text of the related item
+                      type:
+                        type: string
+                        enum: [input, fact, insight]
+                        description: The type of the related item
+                  description: Related items providing context for reformulation
+      responses:
+        '200':
+          description: Reformulation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReformulationResponse'
+        '400':
+          description: Validation error (missing or invalid fields)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: LLM provider error (timeout, invalid response)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Reformulation service not configured (missing LLM_PROVIDER or LLM_API_KEY)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /status:
     get:
       operationId: getStatus
@@ -627,6 +709,27 @@ components:
               text:
                 type: string
           description: Items explicitly referenced via @mention (always included in full context)
+
+    ReformulationResponse:
+      type: object
+      required:
+        - suggestions
+      properties:
+        suggestions:
+          type: array
+          items:
+            type: object
+            required:
+              - text
+              - justification
+            properties:
+              text:
+                type: string
+                description: An alternative reformulation of the item
+              justification:
+                type: string
+                description: Short explanation of why this reformulation improves the original
+          description: List of 2-3 reformulation suggestions for analyst selection
 
     ExtractionResponse:
       type: object

@@ -517,6 +517,8 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
         deleteInsight={deleteInsight}
         insightData={editingInsight as InsightType}
         facts={data.facts}
+        backendAvailable={backendAvailable}
+        goal={data.goal}
       />
       <RecommendationModal
         mode="add"
@@ -526,6 +528,8 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
         deleteRecommendation={() => {}}
         recommendationData={{ recommendation_id: '', text: '', related_insights: Array.from(selectedInsightIds) } as RecommendationType}
         insights={data.insights}
+        backendAvailable={backendAvailable}
+        goal={data.goal}
       />
       <Modal isVisible={confirmBulkDelete} onClose={() => setConfirmBulkDelete(false)} maxWidth="400px">
         <p style={{ margin: '0 0 1em' }}>Delete {selectedInsightIds.size} selected insight(s)?</p>

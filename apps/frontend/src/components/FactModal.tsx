@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Modal from './Modal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faPlus, faTrashCan, faFloppyDisk } from '@fortawesome/free-solid-svg-icons';
+import { faXmark, faPlus, faTrashCan, faFloppyDisk, faWandMagicSparkles, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import ReformulationSuggestions, { ReformulationSuggestion } from './ReformulationSuggestions';
+import { API_URL } from '../config';
 
 type Props = {
   mode: 'add' | 'edit';
@@ -11,6 +13,8 @@ type Props = {
   deleteFact: (factId: string) => void;
   factData: FactType | null;
   inputs: InputType[] | null;
+  backendAvailable?: boolean;
+  goal?: string;
 };
 
 const FactModal: React.FC<Props> = ({
@@ -20,11 +24,15 @@ const FactModal: React.FC<Props> = ({
   saveFact,
   deleteFact,
   factData,
-  inputs
+  inputs,
+  backendAvailable,
+  goal,
 }) => {
   const [currentFactText, setCurrentFactText] = useState("");
   const [currentFactRelatedInputs, setCurrentRelatedInputs] = useState<string[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [suggestions, setSuggestions] = useState<ReformulationSuggestion[]>([]);
+  const [isReformulating, setIsReformulating] = useState(false);
 
   useEffect(() => {
     if (factData) {
@@ -35,6 +43,7 @@ const FactModal: React.FC<Props> = ({
       setCurrentRelatedInputs([]);
     }
     setConfirmDelete(false);
+    setSuggestions([]);
   }, [mode, factData, isDialogVisible]);
 
   const handleSave = () => {
@@ -51,6 +60,37 @@ const FactModal: React.FC<Props> = ({
     if (factData && factData.fact_id) {
       deleteFact(factData.fact_id);
       closeDialog();
+    }
+  };
+
+  const handleReformulate = async () => {
+    setIsReformulating(true);
+    setSuggestions([]);
+    try {
+      const relatedItems = (inputs || [])
+        .filter(inp => currentFactRelatedInputs.includes(inp.input_id))
+        .map(inp => ({ text: inp.text || inp.title, type: 'input' }));
+
+      const response = await fetch(`${API_URL}/reformulate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: currentFactText,
+          entity_type: 'fact',
+          goal: goal || '',
+          related_items: relatedItems,
+        }),
+      });
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error || 'Reformulation failed');
+      }
+      const data = await response.json();
+      setSuggestions(data.suggestions || []);
+    } catch {
+      // Silently handle — user can retry
+    } finally {
+      setIsReformulating(false);
     }
   };
 
@@ -81,6 +121,24 @@ const FactModal: React.FC<Props> = ({
               onChange={(event: { target: { value: React.SetStateAction<string>; }; }) => {
                 setCurrentFactText(event.target.value);
               }} />
+            {backendAvailable && (
+              <div className="reformulate-button-wrapper">
+                <button
+                  type="button"
+                  className="modal-action-reformulate"
+                  disabled={!currentFactText.trim() || isReformulating}
+                  onClick={handleReformulate}
+                  title={!currentFactText.trim() ? 'Enter text first' : 'Suggest alternative wordings'}
+                >
+                  <FontAwesomeIcon icon={isReformulating ? faSpinner : faWandMagicSparkles} spin={isReformulating} /> Reformulate
+                </button>
+              </div>
+            )}
+            <ReformulationSuggestions
+              suggestions={suggestions}
+              onSelect={(text) => { setCurrentFactText(text); setSuggestions([]); }}
+              onDismiss={() => setSuggestions([])}
+            />
             <label htmlFor="fact-related-inputs">Related Inputs</label>
             <select
               id="fact-related-inputs"

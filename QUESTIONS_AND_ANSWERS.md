@@ -46,3 +46,23 @@
 - **Context:** Les gros discoveries peuvent dépasser les limites de contexte du LLM.
 - **Options:** 1) Discovery complète toujours, 2) Contexte adaptatif, 3) Complète + résumé au-delà d'un seuil
 - **Answer:** Option 3 — Discovery complète envoyée en détail sous un seuil d'items. Au-delà, un résumé est généré pour rester dans les limites de contexte.
+
+## M20: AI-Assisted Reformulation Suggestions
+
+### Q1: Le LLM doit-il recevoir le contexte des items liés ou seulement le texte de l'item ?
+- **Date:** 2026-03-12
+- **Context:** Le bouton "Reformuler" dans la modale de création/édition envoie le texte au LLM.
+- **Options:** 1) Texte seul, 2) Texte + contexte des items liés, 3) Autre
+- **Answer:** Option 2 — Texte + contexte des items liés. Permet des reformulations plus cohérentes avec le reste de l'analyse.
+
+### Q2: Les suggestions doivent-elles inclure une justification ?
+- **Date:** 2026-03-12
+- **Context:** Présentation des reformulations proposées dans la modale.
+- **Options:** 1) Texte alternatif seul, 2) Texte + courte justification, 3) Autre
+- **Answer:** Option 2 — Texte + courte justification. Aide l'analyste à choisir en connaissance de cause.
+
+### Q3: Comportement du bouton "Reformuler" quand le champ texte est vide ?
+- **Date:** 2026-03-12
+- **Context:** Le bouton pourrait servir à générer un brouillon ou être désactivé.
+- **Options:** 1) Désactivé si vide, 2) Actif même si vide (suggérer un brouillon), 3) Autre
+- **Answer:** Option 1 — Désactivé si vide. Le bouton sert uniquement à reformuler un texte existant.

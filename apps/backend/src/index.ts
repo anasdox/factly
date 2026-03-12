@@ -409,6 +409,37 @@ app.post('/propose/update', async (req, res, next) => {
   }
 });
 
+// ── Reformulation endpoint ──
+
+const VALID_REFORMULATE_ENTITY_TYPES = ['fact', 'insight', 'recommendation'];
+
+app.post('/reformulate', async (req, res, next) => {
+  try {
+    const validation = validateReformulateRequest(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    if (!llmProvider) {
+      return res.status(503).json({ error: 'Reformulation service not configured' });
+    }
+
+    const { text, entity_type, goal, related_items } = req.body;
+    logger.info(`Reformulating ${entity_type} with ${related_items.length} related items`);
+
+    let suggestions;
+    try {
+      suggestions = await llmProvider.reformulate(text, entity_type, goal, related_items);
+    } catch (err: any) {
+      return handleLLMError(err, res);
+    }
+
+    res.json({ suggestions });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.get('/status', (req, res) => {
   const status = Array.from(subscribers.entries()).reduce((prev: any, [roomId, sockets]) => {
     prev[roomId] = sockets.size;
@@ -837,6 +868,22 @@ function validateImpactCheckRequest(body: any): ValidationResult {
   if (arrErr) return arrErr;
   const itemErr = validateArrayItems(body.children, 'id', 'child');
   if (itemErr) return itemErr;
+  return VALID_RESULT;
+}
+
+function validateReformulateRequest(body: any): ValidationResult {
+  const bodyErr = requireBody(body);
+  if (bodyErr) return bodyErr;
+  const textErr = requireNonEmptyString(body, 'text');
+  if (textErr) return textErr;
+  if (typeof body.entity_type !== 'string' || !VALID_REFORMULATE_ENTITY_TYPES.includes(body.entity_type)) {
+    return { valid: false, error: `Field "entity_type" must be one of: ${VALID_REFORMULATE_ENTITY_TYPES.join(', ')}` };
+  }
+  const goalErr = requireNonEmptyString(body, 'goal');
+  if (goalErr) return goalErr;
+  if (!Array.isArray(body.related_items)) {
+    return { valid: false, error: 'Field "related_items" is required and must be an array' };
+  }
   return VALID_RESULT;
 }
 
