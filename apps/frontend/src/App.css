@@ -27,8 +27,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-left: 2em;
-  padding-right: 2em;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
   flex: 1;
   min-width: 0;
   max-height: calc(100vh - 120px);
@@ -36,11 +36,42 @@
   scrollbar-width: thin;
 }
 
+.column.inputs {
+  flex: 0.7;
+}
+
 .column > h2,
 .column-header h2 {
   font-size: 1.2em;
   overflow: hidden;
   white-space: nowrap;
+}
+
+.review-select-btn {
+  border: 1px solid var(--color-status-needs-review);
+  border-radius: 6px;
+  padding: 3px 8px;
+  background: var(--bg-btn);
+  color: var(--color-status-needs-review);
+  cursor: pointer;
+  font-size: 0.75em;
+  white-space: nowrap;
+}
+
+.review-select-btn:hover {
+  background: var(--color-status-needs-review);
+  color: var(--bg-page);
+  transition: 0.2s;
+}
+
+.toolbar-review-btn {
+  border-color: var(--color-status-needs-review) !important;
+  color: var(--color-status-needs-review) !important;
+}
+
+.toolbar-review-btn:hover {
+  background: var(--color-status-needs-review) !important;
+  color: var(--bg-page) !important;
 }
 
 .column-sticky-top {
@@ -130,6 +161,13 @@
   filter: contrast(1.4);
   cursor: pointer;
   box-shadow: 0 0 0 2px var(--border-btn-hover);
+}
+
+input[type=range] {
+  width: 100%;
+  margin-top: 6px;
+  margin-bottom: 16px;
+  accent-color: var(--color-weight, #e8a735);
 }
 
 input[type=text], select, textarea {
@@ -655,6 +693,19 @@ input[type=text], select, textarea {
 .status-chip.risky { color: var(--color-status-risky); border: 1px solid var(--color-status-risky); }
 .status-chip.outdated { color: var(--text-secondary); border: 1px solid var(--text-secondary); }
 
+.weight-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 8px;
+  font-size: 0.6em;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: var(--color-weight, #e8a735);
+  border: 1px solid var(--color-weight, #e8a735);
+  z-index: 1;
+}
+
 .version-badge {
   position: absolute;
   top: 4px;
@@ -667,12 +718,7 @@ input[type=text], select, textarea {
 
 .wrapper[class*="status-"] > .item { padding-top: 1.6em; }
 
-.wrapper.status-needs-review { border-left: 3px solid var(--border-status-needs-review); }
-.wrapper.status-needs-refresh { border-left: 3px solid var(--border-status-needs-refresh); }
-.wrapper.status-unsupported { border-left: 3px solid var(--border-status-unsupported); }
-.wrapper.status-weak { border-left: 3px solid var(--border-status-weak); }
-.wrapper.status-risky { border-left: 3px solid var(--border-status-risky); }
-.wrapper.status-outdated { border-left: 3px solid var(--text-secondary); opacity: 0.6; }
+.wrapper.status-outdated { opacity: 0.6; }
 
 
 /* ── Merge dialog ── */

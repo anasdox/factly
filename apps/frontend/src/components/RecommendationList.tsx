@@ -1,16 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import RecommendationItem from './RecommendationItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faXmark, faSpinner, faCheckDouble, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faXmark, faSpinner, faCheckDouble, faTrashCan, faClipboardCheck } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import Modal from './Modal';
 import RecommendationModal from './RecommendationModal';
 import MergeDialog from './MergeDialog';
 import ProposalPanel from './ProposalPanel';
+import BulkReviewPanel, { ReviewItem } from './BulkReviewPanel';
 import SuggestionsPanel from './SuggestionsPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { API_URL } from '../config';
-import { createNewVersion, propagateImpact, clearStatus, getDirectChildren } from '../lib';
+import { createNewVersion, propagateImpact, clearStatus, getDirectChildren, isActionableStatus } from '../lib';
 import { findDuplicates } from '../dedup';
 import { checkImpact } from '../impact';
 import { useMergeDialog } from '../hooks/useMergeDialog';
@@ -46,6 +47,9 @@ const OUTPUT_TYPES = [
 
 const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability, chatActions, clearChatActions, requestConfirm }) => {
 
+  const dataRef = useRef(data);
+  dataRef.current = data;
+
   const [isRecommendationDialogVisible, setIsRecommendationDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [editingRecommendation, setEditingRecommendation] = useState<ItemType | null>(null);
@@ -68,6 +72,9 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
   const [proposalData, setProposalData] = useState<{ proposed_text: string; explanation: string } | null>(null);
   const [proposingUpdateId, setProposingUpdateId] = useState<string | null>(null);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [bulkReviewItems, setBulkReviewItems] = useState<ReviewItem[] | null>(null);
+
+  const reviewableCount = data.recommendations.filter(r => isActionableStatus(r.status)).length;
 
 
   const openAddModal = () => {
@@ -181,17 +188,24 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
           const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
           onInfo(`Updated to v${updated.version}. ${impactedCount} downstream item(s) flagged.${fallbackHint}`);
       } else {
-        // No text change — update fields and check if links changed
+        // No text change — update fields and check if links or weight changed
         const linksChanged = existing &&
           JSON.stringify([...existing.related_insights].sort()) !== JSON.stringify([...recommendationData.related_insights].sort());
+        const weightChanged = existing && existing.weight !== recommendationData.weight;
 
         const updatedRecommendations = data.recommendations.map(r =>
           r.recommendation_id === recommendationData.recommendation_id ? { ...r, ...recommendationData } : r
         );
-        setData((prevState) => prevState ? ({
-          ...prevState,
-          recommendations: updatedRecommendations
-        }) : prevState);
+        let updatedData = { ...data, recommendations: updatedRecommendations };
+
+        // Propagate downstream if weight changed
+        if (weightChanged) {
+          const { data: propagated, impactedCount } = propagateImpact(updatedData, 'recommendation', recommendationData.recommendation_id, 'edited');
+          updatedData = propagated;
+          onInfo(`Weight changed. ${impactedCount} downstream output(s) marked for refresh.`);
+        }
+
+        setData(updatedData);
 
         // Mark as needs_review if links changed
         if (linksChanged) {
@@ -201,7 +215,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
               r.recommendation_id === recommendationData.recommendation_id ? { ...r, status: 'needs_review' as const } : r
             ),
           }) : prev);
-          onInfo('Sources changed — recommendation marked for review.');
+          if (!weightChanged) onInfo('Sources changed — recommendation marked for review.');
         }
       }
     }
@@ -288,6 +302,61 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
 
   // MergeDialog callbacks use the hook
 
+  // Bulk review
+  const handleSelectReviewable = () => {
+    const reviewable = data.recommendations.filter(r => isActionableStatus(r.status));
+    selectAll(reviewable.map(r => r.recommendation_id));
+    if (reviewable.length > 0) {
+      const el = document.getElementById(`recommendation-${reviewable[0].recommendation_id}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+
+  const handleBulkReview = () => {
+    const reviewable = data.recommendations.filter(
+      r => selectedRecommendationIds.has(r.recommendation_id) && isActionableStatus(r.status)
+    );
+    const items: ReviewItem[] = reviewable
+      .map(rec => {
+        const parentInsight = data.insights.find(i => rec.related_insights.includes(i.insight_id));
+        if (!parentInsight) return null;
+        const oldText = parentInsight.versions?.length
+          ? parentInsight.versions[parentInsight.versions.length - 1].text
+          : '';
+        return {
+          id: rec.recommendation_id,
+          entityType: 'recommendation',
+          currentText: rec.text,
+          upstreamOldText: oldText,
+          upstreamNewText: parentInsight.text || '',
+          upstreamEntityType: 'insight',
+          goal: data.goal || '',
+        };
+      })
+      .filter((x): x is ReviewItem => x !== null);
+    if (items.length === 0) { onError('No reviewable recommendations with valid upstream found.'); return; }
+    setBulkReviewItems(items);
+  };
+
+  const handleBulkReviewAccept = async (id: string, _entityType: string, newText: string) => {
+    const latest = dataRef.current;
+    const existing = latest.recommendations.find(r => r.recommendation_id === id);
+    if (!existing) return;
+    const versioned = createNewVersion(existing, newText) as RecommendationType;
+    let updatedData = { ...latest, recommendations: latest.recommendations.map(r => r.recommendation_id === id ? versioned : r) };
+    updatedData = clearStatus(updatedData, 'recommendation', id);
+    const children = getDirectChildren('recommendation', id, updatedData);
+    const { ids: impactedIds, usedFallback } = await checkImpact(existing.text, newText, children, backendAvailable);
+    const { data: propagated, impactedCount } = propagateImpact(updatedData, 'recommendation', id, 'edited', impactedIds);
+    setData(propagated);
+    const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
+    onInfo(`Recommendation updated to v${versioned.version}. ${impactedCount} downstream item(s) marked.${fallbackHint}`);
+  };
+
+  const handleBulkReviewReject = (id: string) => {
+    setData(prev => prev ? clearStatus(prev, 'recommendation', id) : prev);
+  };
+
   // Formulate outputs from selected recommendations with full traceability
   const handleFormulateOutputs = async () => {
     const selected = data.recommendations.filter(r => selectedRecommendationIds.has(r.recommendation_id));
@@ -368,6 +437,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
       <div className="column-sticky-top">
         <div className="column-header">
           <h2>Recommendations</h2>
+          {reviewableCount > 0 && <button className="review-select-btn" onClick={handleSelectReviewable}>{reviewableCount} to review</button>}
           {data.recommendations.length > 0 && selectedRecommendationIds.size < data.recommendations.length && (
             <button className="select-all-button" onClick={() => selectAll(data.recommendations.map(r => r.recommendation_id))} title="Select all recommendations">
               <FontAwesomeIcon icon={faCheckDouble} /> Select All
@@ -378,6 +448,12 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
         <div className={`toolbar-wrapper${selectedRecommendationIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
           <div className="selection-toolbar">
             <span>{selectedRecommendationIds.size} recommendation(s) selected</span>
+            {data.recommendations.some(r => selectedRecommendationIds.has(r.recommendation_id) && isActionableStatus(r.status)) && backendAvailable && (
+              <button className="toolbar-review-btn" onClick={handleBulkReview} title="AI review proposals for flagged items">
+                <FontAwesomeIcon icon={faClipboardCheck} />
+                {' '}Review
+              </button>
+            )}
             <select
               value={selectedOutputType}
               onChange={(e) => setSelectedOutputType(e.target.value as OutputType['type'])}
@@ -490,6 +566,14 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
           overlay
           onAccept={(text) => acceptProposal(proposalTarget, text)}
           onReject={() => { setProposalTarget(null); setProposalData(null); }}
+        />
+      )}
+      {bulkReviewItems && (
+        <BulkReviewPanel
+          items={bulkReviewItems}
+          onAccept={handleBulkReviewAccept}
+          onReject={handleBulkReviewReject}
+          onClose={() => setBulkReviewItems(null)}
         />
       )}
     </div>

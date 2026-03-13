@@ -194,3 +194,69 @@
 .suggestion-markdown th {
   background: var(--bg-suggestion-table-header);
 }
+
+/* Bulk review panel */
+.bulk-review-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+
+.bulk-review-type {
+  font-size: 0.7em;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  opacity: 0.5;
+}
+
+.bulk-review-label {
+  font-size: 0.7em;
+  font-weight: 600;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.bulk-review-current p,
+.bulk-review-proposed p {
+  margin: 0.2em 0 0;
+  font-size: 0.9em;
+  line-height: 1.4;
+}
+
+.bulk-review-current {
+  padding: 0.4em 0.6em;
+  background: var(--bg-surface);
+  border-radius: 6px;
+  opacity: 0.7;
+}
+
+.bulk-review-proposed {
+  padding: 0.4em 0.6em;
+  border-radius: 6px;
+  border-left: 3px solid var(--color-suggestion-accept, #4caf50);
+}
+
+.bulk-review-proposed textarea {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid var(--border-input);
+  border-radius: 4px;
+  box-sizing: border-box;
+  resize: vertical;
+  font-size: 0.9em;
+  margin-top: 0.3em;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.bulk-review-loading,
+.bulk-review-error {
+  font-size: 0.85em;
+  padding: 0.5em 0;
+  opacity: 0.6;
+}
+
+.bulk-review-error {
+  color: var(--color-suggestion-reject, #e53935);
+}

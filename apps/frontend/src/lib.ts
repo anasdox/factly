@@ -101,10 +101,7 @@ export function handleMouseEnter(entityType: string, entityId: string, data: Dis
 
   [...relatedEntities, ...parentRelatedEntities].forEach((relatedEntity) => {
     const relatedElement = document.getElementById(`${relatedEntity.type}-${relatedEntity.id}`);
-    if (relatedElement) {
-      relatedElement.classList.add('highlighted');
-      relatedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    relatedElement?.classList.add('highlighted');
   });
 }
 

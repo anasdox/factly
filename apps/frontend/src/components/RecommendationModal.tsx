@@ -30,6 +30,7 @@ const RecommendationModal: React.FC<Props> = ({
 }) => {
   const [currentRecommendationText, setCurrentRecommendationText] = useState("");
   const [currentRecommendationRelatedInsights, setCurrentRelatedInsights] = useState<string[]>([]);
+  const [currentWeight, setCurrentWeight] = useState<number | undefined>(undefined);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [suggestions, setSuggestions] = useState<ReformulationSuggestion[]>([]);
   const [isReformulating, setIsReformulating] = useState(false);
@@ -38,9 +39,11 @@ const RecommendationModal: React.FC<Props> = ({
     if (recommendationData) {
       setCurrentRecommendationText(recommendationData.text || '');
       setCurrentRelatedInsights(recommendationData.related_insights || []);
+      setCurrentWeight(recommendationData.weight);
     } else {
       setCurrentRecommendationText('');
       setCurrentRelatedInsights([]);
+      setCurrentWeight(undefined);
     }
     setConfirmDelete(false);
     setSuggestions([]);
@@ -51,6 +54,7 @@ const RecommendationModal: React.FC<Props> = ({
       recommendation_id: recommendationData ? recommendationData.recommendation_id : Math.random().toString(16).slice(2),
       text: currentRecommendationText,
       related_insights: currentRecommendationRelatedInsights,
+      weight: currentWeight,
     };
     saveRecommendation(newRecommendationData);
     closeDialog();
@@ -138,6 +142,15 @@ const RecommendationModal: React.FC<Props> = ({
               suggestions={suggestions}
               onSelect={(text) => { setCurrentRecommendationText(text); setSuggestions([]); }}
               onDismiss={() => setSuggestions([])}
+            />
+            <label htmlFor="recommendation-weight">Weight ({currentWeight ?? '—'}/10)</label>
+            <input
+              id="recommendation-weight"
+              type="range"
+              min={0}
+              max={10}
+              value={currentWeight ?? 5}
+              onChange={(e) => setCurrentWeight(Number(e.target.value))}
             />
             <label htmlFor="recommendation-related-insights">Related Insights</label>
             <select

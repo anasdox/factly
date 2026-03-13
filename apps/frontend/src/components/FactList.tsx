@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import FactItem from './FactItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faLightbulb, faXmark, faSpinner, faCheckDouble, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faLightbulb, faXmark, faSpinner, faCheckDouble, faTrashCan, faClipboardCheck } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import Modal from './Modal';
 import FactModal from './FactModal';
@@ -9,10 +9,11 @@ import InsightModal from './InsightModal';
 import MergeDialog from './MergeDialog';
 import BatchDedupReviewPanel from './BatchDedupReviewPanel';
 import ProposalPanel from './ProposalPanel';
+import BulkReviewPanel, { ReviewItem } from './BulkReviewPanel';
 import SuggestionsPanel from './SuggestionsPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { API_URL } from '../config';
-import { createNewVersion, propagateImpact, clearStatus, getDirectChildren } from '../lib';
+import { createNewVersion, propagateImpact, clearStatus, getDirectChildren, isActionableStatus } from '../lib';
 import { findDuplicates } from '../dedup';
 import { checkImpact } from '../impact';
 import { useMergeDialog } from '../hooks/useMergeDialog';
@@ -48,6 +49,9 @@ type ProposalState = {
 
 const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability, chatActions, clearChatActions, requestConfirm }) => {
 
+  const dataRef = useRef(data);
+  dataRef.current = data;
+
   const [isFactDialogVisible, setIsFactDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [editingFact, setEditingFact] = useState<ItemType | null>(null);
@@ -72,6 +76,9 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
   // AI proposal state
   const [proposal, setProposal] = useState<ProposalState | null>(null);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [bulkReviewItems, setBulkReviewItems] = useState<ReviewItem[] | null>(null);
+
+  const reviewableCount = data.facts.filter(f => isActionableStatus(f.status)).length;
 
   const openAddModal = () => {
     setModalMode('add');
@@ -212,17 +219,25 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
           onInfo(`Updated to v${versioned.version}. ${impactedCount} downstream item(s) marked for review.${fallbackHint}`);
       } else {
-        // No text change — update fields and check if links changed
+        // No text change — update fields and check if links or weight changed
         const linksChanged = existing &&
           JSON.stringify([...existing.related_inputs].sort()) !== JSON.stringify([...factData.related_inputs].sort());
+        const weightChanged = existing && existing.weight !== factData.weight;
 
         const updatedFacts = data.facts.map((fact) =>
           fact.fact_id === factData.fact_id ? { ...fact, ...factData } : fact
         );
-        setData((prevState) => prevState ? ({
-          ...prevState,
-          facts: updatedFacts
-        }) : prevState);
+        let updatedData = data;
+        updatedData = { ...updatedData, facts: updatedFacts };
+
+        // Propagate downstream if weight changed
+        if (weightChanged) {
+          const { data: propagated, impactedCount } = propagateImpact(updatedData, 'fact', factData.fact_id, 'edited');
+          updatedData = propagated;
+          onInfo(`Weight changed. ${impactedCount} downstream item(s) marked for review.`);
+        }
+
+        setData(updatedData);
 
         // Mark as needs_review if links changed
         if (linksChanged) {
@@ -232,7 +247,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
               f.fact_id === factData.fact_id ? { ...f, status: 'needs_review' as const } : f
             ),
           }) : prev);
-          onInfo('Sources changed — fact marked for review.');
+          if (!weightChanged) onInfo('Sources changed — fact marked for review.');
         }
       }
     }
@@ -330,6 +345,68 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     setProposal(null);
   };
 
+  // Bulk review: select reviewable items
+  const handleSelectReviewable = () => {
+    const reviewable = data.facts.filter(f => isActionableStatus(f.status));
+    selectAll(reviewable.map(f => f.fact_id));
+    // Scroll to first reviewable item
+    if (reviewable.length > 0) {
+      const el = document.getElementById(`fact-${reviewable[0].fact_id}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+
+  // Bulk review: open review panel with AI proposals
+  const handleBulkReview = () => {
+    const reviewableFacts = data.facts.filter(
+      f => selectedFactIds.has(f.fact_id) && isActionableStatus(f.status)
+    );
+    const items: ReviewItem[] = reviewableFacts
+      .map(fact => {
+        const parentInput = data.inputs.find(i => fact.related_inputs.includes(i.input_id));
+        if (!parentInput) return null;
+        const oldText = parentInput.versions?.length
+          ? parentInput.versions[parentInput.versions.length - 1].text
+          : '';
+        return {
+          id: fact.fact_id,
+          entityType: 'fact',
+          currentText: fact.text,
+          upstreamOldText: oldText,
+          upstreamNewText: parentInput.text || '',
+          upstreamEntityType: 'input',
+          goal: data.goal || '',
+        };
+      })
+      .filter((x): x is ReviewItem => x !== null);
+
+    if (items.length === 0) {
+      onError('No reviewable facts with valid upstream found.');
+      return;
+    }
+    setBulkReviewItems(items);
+  };
+
+  const handleBulkReviewAccept = async (id: string, _entityType: string, newText: string) => {
+    const latest = dataRef.current;
+    const fact = latest.facts.find(f => f.fact_id === id);
+    if (!fact) return;
+
+    const versioned = createNewVersion(fact, newText) as FactType;
+    let updatedData = clearStatus(latest, 'fact', id);
+    const children = getDirectChildren('fact', id, updatedData);
+    const { ids: impactedIds, usedFallback } = await checkImpact(fact.text, newText, children, backendAvailable);
+    const { data: propagated, impactedCount } = propagateImpact(updatedData, 'fact', id, 'edited', impactedIds);
+    const updatedFacts = propagated.facts.map(f => f.fact_id === id ? versioned : f);
+    setData({ ...propagated, facts: updatedFacts });
+    const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
+    onInfo(`Fact updated to v${versioned.version}. ${impactedCount} downstream item(s) marked.${fallbackHint}`);
+  };
+
+  const handleBulkReviewReject = (id: string) => {
+    setData(prev => prev ? clearStatus(prev, 'fact', id) : prev);
+  };
+
   // Generate insights from selected facts
   const handleExtractInsights = async () => {
     const selected = data.facts.filter(f => selectedFactIds.has(f.fact_id));
@@ -398,7 +475,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     }
   }, [setData, data.recommendations, onWaiting, onInfo, backendAvailable]);
 
-  const handleAcceptInsight = async (suggestion: { text: string; related_fact_ids?: string[] }) => {
+  const handleAcceptInsight = async (suggestion: { text: string; related_fact_ids?: string[]; weight?: number }) => {
     const relatedFacts = suggestion.related_fact_ids && suggestion.related_fact_ids.length > 0
       ? suggestion.related_fact_ids
       : Array.from(selectedFactIds);
@@ -406,6 +483,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
       insight_id: Math.random().toString(16).slice(2),
       text: suggestion.text,
       related_facts: relatedFacts,
+      weight: suggestion.weight,
     };
     insightDedupQueue.trackStart();
     onWaiting('Checking for duplicates…');
@@ -477,6 +555,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
       <div className="column-sticky-top">
         <div className="column-header">
           <h2>📊Facts</h2>
+          {reviewableCount > 0 && <button className="review-select-btn" onClick={handleSelectReviewable}>{reviewableCount} to review</button>}
           {data.facts.length > 0 && selectedFactIds.size < data.facts.length && (
             <button className="select-all-button" onClick={() => selectAll(data.facts.map(f => f.fact_id))} title="Select all facts">
               <FontAwesomeIcon icon={faCheckDouble} /> Select All
@@ -487,6 +566,12 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
         <div className={`toolbar-wrapper${selectedFactIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
           <div className="selection-toolbar">
             <span>{selectedFactIds.size} fact(s) selected</span>
+            {data.facts.some(f => selectedFactIds.has(f.fact_id) && isActionableStatus(f.status)) && backendAvailable && (
+              <button className="toolbar-review-btn" onClick={handleBulkReview} title="AI review proposals for flagged items">
+                <FontAwesomeIcon icon={faClipboardCheck} />
+                {' '}Review
+              </button>
+            )}
             <button onClick={handleExtractInsights} disabled={extractingInsights || !backendAvailable} title={!backendAvailable ? 'Backend unavailable' : ''}>
               <FontAwesomeIcon icon={extractingInsights ? faSpinner : faWandMagicSparkles} spin={extractingInsights} />
               {' '}Generate Insights
@@ -621,6 +706,14 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           overlay
           onAccept={handleAcceptProposal}
           onReject={handleRejectProposal}
+        />
+      )}
+      {bulkReviewItems && (
+        <BulkReviewPanel
+          items={bulkReviewItems}
+          onAccept={handleBulkReviewAccept}
+          onReject={handleBulkReviewReject}
+          onClose={() => setBulkReviewItems(null)}
         />
       )}
     </div>

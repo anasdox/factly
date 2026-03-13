@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import InsightItem from './InsightItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faClipboardList, faXmark, faSpinner, faCheckDouble, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faClipboardList, faXmark, faSpinner, faCheckDouble, faTrashCan, faClipboardCheck } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import Modal from './Modal';
 import InsightModal from './InsightModal';
@@ -10,9 +10,10 @@ import SuggestionsPanel from './SuggestionsPanel';
 import MergeDialog from './MergeDialog';
 import BatchDedupReviewPanel from './BatchDedupReviewPanel';
 import ProposalPanel from './ProposalPanel';
+import BulkReviewPanel, { ReviewItem } from './BulkReviewPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { API_URL } from '../config';
-import { createNewVersion, propagateImpact, clearStatus, getDirectChildren } from '../lib';
+import { createNewVersion, propagateImpact, clearStatus, getDirectChildren, isActionableStatus } from '../lib';
 import { findDuplicates } from '../dedup';
 import { checkImpact } from '../impact';
 import { useMergeDialog } from '../hooks/useMergeDialog';
@@ -48,6 +49,9 @@ type ProposalState = {
 
 const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability, chatActions, clearChatActions, requestConfirm }) => {
 
+  const dataRef = useRef(data);
+  dataRef.current = data;
+
   const [isInsightDialogVisible, setIsInsightDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [editingInsight, setEditingInsight] = useState<ItemType | null>(null);
@@ -72,6 +76,9 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
   // AI proposal state
   const [proposal, setProposal] = useState<ProposalState | null>(null);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [bulkReviewItems, setBulkReviewItems] = useState<ReviewItem[] | null>(null);
+
+  const reviewableCount = data.insights.filter(i => isActionableStatus(i.status)).length;
 
   const openAddModal = () => {
     setModalMode('add');
@@ -226,17 +233,24 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
           return;
       }
 
-      // No text change — update fields and check if links changed
+      // No text change — update fields and check if links or weight changed
       const linksChanged = existing &&
         JSON.stringify([...existing.related_facts].sort()) !== JSON.stringify([...insightData.related_facts].sort());
+      const weightChanged = existing && existing.weight !== insightData.weight;
 
       const updatedInsights = data.insights.map((insight) =>
         insight.insight_id === insightData.insight_id ? { ...insight, ...insightData } : insight
       );
-      setData((prevState) => prevState ? ({
-        ...prevState,
-        insights: updatedInsights
-      }) : prevState);
+      let updatedData = { ...data, insights: updatedInsights };
+
+      // Propagate downstream if weight changed
+      if (weightChanged) {
+        const { data: propagated, impactedCount } = propagateImpact(updatedData, 'insight', insightData.insight_id, 'edited');
+        updatedData = propagated;
+        onInfo(`Weight changed. ${impactedCount} downstream item(s) marked for review.`);
+      }
+
+      setData(updatedData);
 
       // Mark as needs_review if links changed
       if (linksChanged) {
@@ -246,7 +260,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
             i.insight_id === insightData.insight_id ? { ...i, status: 'needs_review' as const } : i
           ),
         }) : prev);
-        onInfo('Sources changed — insight marked for review.');
+        if (!weightChanged) onInfo('Sources changed — insight marked for review.');
       }
     }
     setIsInsightDialogVisible(false);
@@ -344,6 +358,61 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     setProposal(null);
   };
 
+  // Bulk review
+  const handleSelectReviewable = () => {
+    const reviewable = data.insights.filter(i => isActionableStatus(i.status));
+    selectAll(reviewable.map(i => i.insight_id));
+    if (reviewable.length > 0) {
+      const el = document.getElementById(`insight-${reviewable[0].insight_id}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+
+  const handleBulkReview = () => {
+    const reviewable = data.insights.filter(
+      i => selectedInsightIds.has(i.insight_id) && isActionableStatus(i.status)
+    );
+    const items: ReviewItem[] = reviewable
+      .map(insight => {
+        const parentFact = data.facts.find(f => insight.related_facts.includes(f.fact_id));
+        if (!parentFact) return null;
+        const oldText = parentFact.versions?.length
+          ? parentFact.versions[parentFact.versions.length - 1].text
+          : '';
+        return {
+          id: insight.insight_id,
+          entityType: 'insight',
+          currentText: insight.text,
+          upstreamOldText: oldText,
+          upstreamNewText: parentFact.text || '',
+          upstreamEntityType: 'fact',
+          goal: data.goal || '',
+        };
+      })
+      .filter((x): x is ReviewItem => x !== null);
+    if (items.length === 0) { onError('No reviewable insights with valid upstream found.'); return; }
+    setBulkReviewItems(items);
+  };
+
+  const handleBulkReviewAccept = async (id: string, _entityType: string, newText: string) => {
+    const latest = dataRef.current;
+    const insight = latest.insights.find(i => i.insight_id === id);
+    if (!insight) return;
+    const versioned = createNewVersion(insight, newText) as InsightType;
+    let updatedData = { ...latest, insights: latest.insights.map(i => i.insight_id === id ? versioned : i) };
+    updatedData = clearStatus(updatedData, 'insight', id);
+    const children = getDirectChildren('insight', id, updatedData);
+    const { ids: impactedIds, usedFallback } = await checkImpact(insight.text, newText, children, backendAvailable);
+    const { data: propagated, impactedCount } = propagateImpact(updatedData, 'insight', id, 'edited', impactedIds);
+    setData(propagated);
+    const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
+    onInfo(`Insight updated to v${versioned.version}. ${impactedCount} downstream item(s) marked.${fallbackHint}`);
+  };
+
+  const handleBulkReviewReject = (id: string) => {
+    setData(prev => prev ? clearStatus(prev, 'insight', id) : prev);
+  };
+
   const deleteInsight = (insightId: string) => {
     const updatedInsights = data.insights.filter((insight) => insight.insight_id !== insightId);
     setData((prevState) => prevState ? ({
@@ -400,7 +469,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     }) : prevState);
   }, [setData]);
 
-  const handleAcceptRecommendation = async (suggestion: { text: string; related_insight_ids?: string[] }) => {
+  const handleAcceptRecommendation = async (suggestion: { text: string; related_insight_ids?: string[]; weight?: number }) => {
     const relatedInsights = suggestion.related_insight_ids && suggestion.related_insight_ids.length > 0
       ? suggestion.related_insight_ids
       : Array.from(selectedInsightIds);
@@ -408,6 +477,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
       recommendation_id: Math.random().toString(16).slice(2),
       text: suggestion.text,
       related_insights: relatedInsights,
+      weight: suggestion.weight,
     };
     recommendationDedupQueue.trackStart();
     const duplicates = await findDuplicates(
@@ -455,6 +525,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
       <div className="column-sticky-top">
         <div className="column-header">
           <h2>💡Insights</h2>
+          {reviewableCount > 0 && <button className="review-select-btn" onClick={handleSelectReviewable}>{reviewableCount} to review</button>}
           {data.insights.length > 0 && selectedInsightIds.size < data.insights.length && (
             <button className="select-all-button" onClick={() => selectAll(data.insights.map(i => i.insight_id))} title="Select all insights">
               <FontAwesomeIcon icon={faCheckDouble} /> Select All
@@ -465,6 +536,12 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
         <div className={`toolbar-wrapper${selectedInsightIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
           <div className="selection-toolbar">
             <span>{selectedInsightIds.size} insight(s) selected</span>
+            {data.insights.some(i => selectedInsightIds.has(i.insight_id) && isActionableStatus(i.status)) && backendAvailable && (
+              <button className="toolbar-review-btn" onClick={handleBulkReview} title="AI review proposals for flagged items">
+                <FontAwesomeIcon icon={faClipboardCheck} />
+                {' '}Review
+              </button>
+            )}
             <button onClick={handleExtractRecommendations} disabled={extractingRecommendations || !backendAvailable} title={!backendAvailable ? 'Backend unavailable' : ''}>
               <FontAwesomeIcon icon={extractingRecommendations ? faSpinner : faWandMagicSparkles} spin={extractingRecommendations} />
               {' '}Generate Recommendations
@@ -601,6 +678,14 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
           overlay
           onAccept={handleAcceptProposal}
           onReject={handleRejectProposal}
+        />
+      )}
+      {bulkReviewItems && (
+        <BulkReviewPanel
+          items={bulkReviewItems}
+          onAccept={handleBulkReviewAccept}
+          onReject={handleBulkReviewReject}
+          onClose={() => setBulkReviewItems(null)}
         />
       )}
     </div>

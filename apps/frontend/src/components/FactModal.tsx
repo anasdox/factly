@@ -30,6 +30,7 @@ const FactModal: React.FC<Props> = ({
 }) => {
   const [currentFactText, setCurrentFactText] = useState("");
   const [currentFactRelatedInputs, setCurrentRelatedInputs] = useState<string[]>([]);
+  const [currentWeight, setCurrentWeight] = useState<number | undefined>(undefined);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [suggestions, setSuggestions] = useState<ReformulationSuggestion[]>([]);
   const [isReformulating, setIsReformulating] = useState(false);
@@ -38,9 +39,11 @@ const FactModal: React.FC<Props> = ({
     if (factData) {
       setCurrentFactText(factData.text);
       setCurrentRelatedInputs(factData.related_inputs);
+      setCurrentWeight(factData.weight);
     } else {
       setCurrentFactText('');
       setCurrentRelatedInputs([]);
+      setCurrentWeight(undefined);
     }
     setConfirmDelete(false);
     setSuggestions([]);
@@ -51,6 +54,7 @@ const FactModal: React.FC<Props> = ({
       fact_id: factData ? factData.fact_id : "",
       text: currentFactText,
       related_inputs: currentFactRelatedInputs,
+      weight: currentWeight,
     };
     saveFact(newFactData);
     closeDialog();
@@ -138,6 +142,15 @@ const FactModal: React.FC<Props> = ({
               suggestions={suggestions}
               onSelect={(text) => { setCurrentFactText(text); setSuggestions([]); }}
               onDismiss={() => setSuggestions([])}
+            />
+            <label htmlFor="fact-weight">Weight ({currentWeight ?? '—'}/10)</label>
+            <input
+              id="fact-weight"
+              type="range"
+              min={0}
+              max={10}
+              value={currentWeight ?? 5}
+              onChange={(e) => setCurrentWeight(Number(e.target.value))}
             />
             <label htmlFor="fact-related-inputs">Related Inputs</label>
             <select

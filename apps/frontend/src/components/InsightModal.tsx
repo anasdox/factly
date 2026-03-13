@@ -30,6 +30,7 @@ const InsightModal: React.FC<Props> = ({
 }) => {
   const [currentInsightText, setCurrentInsightText] = useState("");
   const [currentInsightRelatedFacts, setCurrentRelatedFacts] = useState<string[]>([]);
+  const [currentWeight, setCurrentWeight] = useState<number | undefined>(undefined);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [suggestions, setSuggestions] = useState<ReformulationSuggestion[]>([]);
   const [isReformulating, setIsReformulating] = useState(false);
@@ -38,9 +39,11 @@ const InsightModal: React.FC<Props> = ({
     if (insightData) {
       setCurrentInsightText(insightData.text || '');
       setCurrentRelatedFacts(insightData.related_facts || []);
+      setCurrentWeight(insightData.weight);
     } else {
       setCurrentInsightText('');
       setCurrentRelatedFacts([]);
+      setCurrentWeight(undefined);
     }
     setConfirmDelete(false);
     setSuggestions([]);
@@ -51,6 +54,7 @@ const InsightModal: React.FC<Props> = ({
       insight_id: insightData ? insightData.insight_id : Math.random().toString(16).slice(2),
       text: currentInsightText,
       related_facts: currentInsightRelatedFacts,
+      weight: currentWeight,
     };
     saveInsight(newInsightData);
     closeDialog();
@@ -138,6 +142,15 @@ const InsightModal: React.FC<Props> = ({
               suggestions={suggestions}
               onSelect={(text) => { setCurrentInsightText(text); setSuggestions([]); }}
               onDismiss={() => setSuggestions([])}
+            />
+            <label htmlFor="insight-weight">Weight ({currentWeight ?? '—'}/10)</label>
+            <input
+              id="insight-weight"
+              type="range"
+              min={0}
+              max={10}
+              value={currentWeight ?? 5}
+              onChange={(e) => setCurrentWeight(Number(e.target.value))}
             />
             <label htmlFor="insight-related-facts">Related Facts</label>
             <select

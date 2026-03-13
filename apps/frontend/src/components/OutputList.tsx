@@ -1,13 +1,14 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import OutputItem from './OutputItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faXmark, faCheckDouble, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faXmark, faCheckDouble, faTrashCan, faClipboardCheck, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import Modal from './Modal';
 import OutputModal from './OutputModal';
 import ProposalPanel from './ProposalPanel';
+import BulkReviewPanel, { ReviewItem } from './BulkReviewPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
-import { createNewVersion, clearStatus } from '../lib';
+import { createNewVersion, clearStatus, isActionableStatus } from '../lib';
 import { API_URL } from '../config';
 import { ChatToolAction } from './ChatWidget';
 
@@ -29,6 +30,9 @@ type Props = {
 
 const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability, chatActions, clearChatActions, requestConfirm }) => {
 
+  const dataRef = useRef(data);
+  dataRef.current = data;
+
   const [isOutputDialogVisible, setIsOutputDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [editingOutput, setEditingOutput] = useState<ItemType | null>(null);
@@ -40,6 +44,9 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
   const [proposingUpdateId, setProposingUpdateId] = useState<string | null>(null);
   const { selectedIds: selectedOutputIds, toggleSelection: toggleOutputSelection, clearSelection, selectAll } = useItemSelection(data.outputs.map(o => o.output_id));
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+  const [bulkReviewItems, setBulkReviewItems] = useState<ReviewItem[] | null>(null);
+
+  const reviewableCount = data.outputs.filter(o => isActionableStatus(o.status)).length;
 
   const openAddModal = () => {
     setModalMode('add');
@@ -223,11 +230,64 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
     onInfo(`Output updated to v${updated.version}.`);
   };
 
+  // Bulk review
+  const handleSelectReviewable = () => {
+    const reviewable = data.outputs.filter(o => isActionableStatus(o.status));
+    selectAll(reviewable.map(o => o.output_id));
+    if (reviewable.length > 0) {
+      const el = document.getElementById(`output-${reviewable[0].output_id}`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+
+  const handleBulkReview = () => {
+    const reviewable = data.outputs.filter(
+      o => selectedOutputIds.has(o.output_id) && isActionableStatus(o.status)
+    );
+    const items: ReviewItem[] = reviewable
+      .map(output => {
+        const parentRec = data.recommendations.find(r => output.related_recommendations.includes(r.recommendation_id));
+        if (!parentRec) return null;
+        const oldText = parentRec.versions?.length
+          ? parentRec.versions[parentRec.versions.length - 1].text
+          : '';
+        return {
+          id: output.output_id,
+          entityType: 'output',
+          currentText: output.text,
+          upstreamOldText: oldText,
+          upstreamNewText: parentRec.text || '',
+          upstreamEntityType: 'recommendation',
+          goal: data.goal || '',
+        };
+      })
+      .filter((x): x is ReviewItem => x !== null);
+    if (items.length === 0) { onError('No reviewable outputs with valid upstream found.'); return; }
+    setBulkReviewItems(items);
+  };
+
+  const handleBulkReviewAccept = async (id: string, _entityType: string, newText: string) => {
+    const latest = dataRef.current;
+    const existing = latest.outputs.find(o => o.output_id === id);
+    if (!existing) return;
+    const versioned = createNewVersion(existing, newText) as OutputType;
+    const updated = { ...versioned, type: existing.type };
+    let updatedData = { ...latest, outputs: latest.outputs.map(o => o.output_id === id ? updated : o) };
+    updatedData = clearStatus(updatedData, 'output', id);
+    setData(updatedData);
+    onInfo(`Output updated to v${updated.version}.`);
+  };
+
+  const handleBulkReviewReject = (id: string) => {
+    setData(prev => prev ? clearStatus(prev, 'output', id) : prev);
+  };
+
   return (
     <div className="column outputs">
       <div className="column-sticky-top">
         <div className="column-header">
           <h2>📤Outputs</h2>
+          {reviewableCount > 0 && <button className="review-select-btn" onClick={handleSelectReviewable}>{reviewableCount} to review</button>}
           {data.outputs.length > 0 && selectedOutputIds.size < data.outputs.length && (
             <button className="select-all-button" onClick={() => selectAll(data.outputs.map(o => o.output_id))} title="Select all outputs">
               <FontAwesomeIcon icon={faCheckDouble} /> Select All
@@ -238,6 +298,12 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
         <div className={`toolbar-wrapper${selectedOutputIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
           <div className="selection-toolbar">
             <span>{selectedOutputIds.size} output(s) selected</span>
+            {data.outputs.some(o => selectedOutputIds.has(o.output_id) && isActionableStatus(o.status)) && backendAvailable && (
+              <button className="toolbar-review-btn" onClick={handleBulkReview} title="AI review proposals for flagged items">
+                <FontAwesomeIcon icon={faClipboardCheck} />
+                {' '}Review
+              </button>
+            )}
             <button onClick={() => setConfirmBulkDelete(true)}>
               <FontAwesomeIcon icon={faTrashCan} />
               {' '}Delete
@@ -308,6 +374,14 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
           renderMarkdown
           onAccept={(text) => acceptProposal(proposalTarget, text)}
           onReject={() => { setProposalTarget(null); setProposalData(null); }}
+        />
+      )}
+      {bulkReviewItems && (
+        <BulkReviewPanel
+          items={bulkReviewItems}
+          onAccept={handleBulkReviewAccept}
+          onReject={handleBulkReviewReject}
+          onClose={() => setBulkReviewItems(null)}
         />
       )}
     </div>

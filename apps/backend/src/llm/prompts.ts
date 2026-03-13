@@ -8,7 +8,8 @@ Rules:
 - Avoid redundancy: do NOT extract multiple facts about the same data point. If a sentence contains a figure and its comparison (e.g. "X rose from A to B, a C% increase"), extract ONE fact that includes the full context, not separate facts for each number.
 - Aim for completeness without over-extraction: extract all key facts but prefer fewer, more complete facts over many granular ones.
 - For each fact, include the exact excerpt from the source text that supports it.
-- Return a JSON array of objects, each with "text" (the fact statement) and "source_excerpt" (the exact quote from the source).
+- For each fact, assign a weight from 0 to 10 indicating its importance relative to the research goal (10 = critical to answering the goal, 0 = marginally relevant).
+- Return a JSON array of objects, each with "text" (the fact statement), "source_excerpt" (the exact quote from the source), and "weight" (integer 0-10).
 - If no relevant facts can be extracted, return an empty array.
 
 Common mistakes to avoid:
@@ -17,7 +18,7 @@ Common mistakes to avoid:
 - Extracting derived conclusions or implications instead of stated facts.
 
 Respond ONLY with a valid JSON array of objects. No explanation, no markdown.
-Example: [{"text": "Global temperature rose by 1.1°C in 2023", "source_excerpt": "The global temperature rose by 1.1°C in 2023 compared to pre-industrial levels."}]`;
+Example: [{"text": "Global temperature rose by 1.1°C in 2023", "source_excerpt": "The global temperature rose by 1.1°C in 2023 compared to pre-industrial levels.", "weight": 8}]`;
 
 export const INSIGHTS_SYSTEM_PROMPT = `You are an insight derivation assistant. Your role is to derive analytical insights from a set of observable facts.
 
@@ -29,11 +30,12 @@ Rules:
 - Insights must not contain adjectives or subjective qualifiers (e.g. "important", "significant", "many", "large", "good"). Keep insights precise and analytical.
 - Do not add speculation beyond what the facts support.
 - For each insight, indicate which fact numbers (from the numbered list) support it.
-- Return a JSON array of objects, each with "text" (the insight) and "source_facts" (array of 1-based fact numbers that support this insight).
+- For each insight, assign a weight from 0 to 10 indicating its analytical significance relative to the research goal (10 = critical insight, 0 = minor observation).
+- Return a JSON array of objects, each with "text" (the insight), "source_facts" (array of 1-based fact numbers that support this insight), and "weight" (integer 0-10).
 - If no relevant insights can be derived, return an empty array.
 
 Respond ONLY with a valid JSON array of objects. No explanation, no markdown.
-Example: [{"text": "X depends on Y", "source_facts": [1, 3, 7]}]`;
+Example: [{"text": "X depends on Y", "source_facts": [1, 3, 7], "weight": 7}]`;
 
 export const RECOMMENDATIONS_SYSTEM_PROMPT = `You are a recommendation formulation assistant. Your role is to formulate actionable recommendations from a set of analytical insights.
 
@@ -44,11 +46,12 @@ Rules:
 - Recommendations must not contain adjectives or subjective qualifiers (e.g. "important", "significant", "many", "large", "good"). Keep recommendations precise and actionable.
 - Do not add speculation beyond what the insights support.
 - For each recommendation, indicate which insight numbers (from the numbered list) support it.
-- Return a JSON array of objects, each with "text" (the recommendation) and "source_insights" (array of 1-based insight numbers that support this recommendation).
+- For each recommendation, assign a weight from 0 to 10 indicating its priority and potential impact relative to the research goal (10 = highest priority, 0 = nice-to-have).
+- Return a JSON array of objects, each with "text" (the recommendation), "source_insights" (array of 1-based insight numbers that support this recommendation), and "weight" (integer 0-10).
 - If no relevant recommendations can be formulated, return an empty array.
 
 Respond ONLY with a valid JSON array of objects. No explanation, no markdown.
-Example: [{"text": "Implement X to address Y", "source_insights": [1, 3]}]`;
+Example: [{"text": "Implement X to address Y", "source_insights": [1, 3], "weight": 8}]`;
 
 const OUTPUTS_BASE_PROMPT = `You are a professional document formulation assistant. Your role is to produce structured, professional Markdown deliverables from recommendations, with full traceability to the underlying research chain.
 
@@ -95,9 +98,9 @@ export function buildOutputsPrompt(outputType: string): string {
   return `${OUTPUTS_BASE_PROMPT}\n\nOutput type: ${outputType}\n${instruction}`;
 }
 
-export type ExtractedFact = { text: string; source_excerpt: string };
-export type ExtractedInsight = { text: string; source_facts: number[] };
-export type ExtractedRecommendation = { text: string; source_insights: number[] };
+export type ExtractedFact = { text: string; source_excerpt: string; weight?: number };
+export type ExtractedInsight = { text: string; source_facts: number[]; weight?: number };
+export type ExtractedRecommendation = { text: string; source_insights: number[]; weight?: number };
 
 export interface OutputTraceabilityContext {
   inputs?: { title: string; text?: string }[];
@@ -170,6 +173,7 @@ export function parseFactArray(raw: string): ExtractedFact[] {
     .map((item: any) => ({
       text: String(item.text),
       source_excerpt: typeof item.source_excerpt === 'string' ? item.source_excerpt : '',
+      weight: typeof item.weight === 'number' ? Math.max(0, Math.min(10, Math.round(item.weight))) : undefined,
     }));
 }
 
@@ -201,6 +205,7 @@ export function parseInsightArray(raw: string): ExtractedInsight[] {
       source_facts: Array.isArray(item.source_facts)
         ? item.source_facts.filter((n: unknown) => typeof n === 'number')
         : [],
+      weight: typeof item.weight === 'number' ? Math.max(0, Math.min(10, Math.round(item.weight))) : undefined,
     }));
 }
 
@@ -338,6 +343,7 @@ export function parseRecommendationArray(raw: string): ExtractedRecommendation[]
       source_insights: Array.isArray(item.source_insights)
         ? item.source_insights.filter((n: unknown) => typeof n === 'number')
         : [],
+      weight: typeof item.weight === 'number' ? Math.max(0, Math.min(10, Math.round(item.weight))) : undefined,
     }));
 }
 

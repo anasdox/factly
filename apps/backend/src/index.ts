@@ -158,7 +158,7 @@ app.post('/extract/facts', async (req, res, next) => {
       return handleLLMError(err, res);
     }
 
-    const suggestions = facts.map((f) => ({ text: f.text, source_excerpt: f.source_excerpt }));
+    const suggestions = facts.map((f) => ({ text: f.text, source_excerpt: f.source_excerpt, weight: f.weight }));
     res.json({ suggestions, input_id });
   } catch (err) {
     next(err);
@@ -177,7 +177,7 @@ app.post('/extract/insights', async (req, res, next) => {
     }
 
     const { facts, goal } = req.body;
-    const factTexts = facts.map((f: any) => f.text);
+    const factTexts = facts.map((f: any) => f.weight != null ? `[weight: ${f.weight}/10] ${f.text}` : f.text);
     const factIds: string[] = facts.map((f: any) => f.fact_id);
     logger.info(`Extracting insights from ${facts.length} facts`);
 
@@ -197,6 +197,7 @@ app.post('/extract/insights', async (req, res, next) => {
       related_fact_ids: insight.source_facts
         .filter((n) => n >= 1 && n <= factIds.length)
         .map((n) => factIds[n - 1]),
+      weight: insight.weight,
     }));
     res.json({ suggestions, fact_ids: factIds });
   } catch (err) {
@@ -216,7 +217,7 @@ app.post('/extract/recommendations', async (req, res, next) => {
     }
 
     const { insights, goal } = req.body;
-    const insightTexts = insights.map((i: any) => i.text);
+    const insightTexts = insights.map((i: any) => i.weight != null ? `[weight: ${i.weight}/10] ${i.text}` : i.text);
     const insightIds: string[] = insights.map((i: any) => i.insight_id);
     logger.info(`Extracting recommendations from ${insights.length} insights`);
 
@@ -232,6 +233,7 @@ app.post('/extract/recommendations', async (req, res, next) => {
       related_insight_ids: rec.source_insights
         .filter((n) => n >= 1 && n <= insightIds.length)
         .map((n) => insightIds[n - 1]),
+      weight: rec.weight,
     }));
     res.json({ suggestions, insight_ids: insightIds });
   } catch (err) {

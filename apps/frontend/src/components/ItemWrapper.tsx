@@ -43,6 +43,7 @@ const ItemWrapper: React.FC<Props> = ({
 
   const status = item.status;
   const version = item.version;
+  const weight = 'weight' in item ? (item as any).weight as number | undefined : undefined;
   const actionable = isActionableStatus(status);
   const itemId = id.replace(/^[^-]+-/, '');
 
@@ -51,6 +52,12 @@ const ItemWrapper: React.FC<Props> = ({
     e.dataTransfer.setData('text/plain', itemId);
     e.dataTransfer.effectAllowed = 'copy';
   };
+
+  const weightStyle = weight != null ? {
+    borderLeftWidth: `${Math.max(2, weight * 0.4)}px`,
+    borderLeftStyle: 'solid' as const,
+    borderLeftColor: `color-mix(in srgb, var(--color-weight, #e8a735) ${Math.max(20, weight * 10)}%, transparent)`,
+  } : undefined;
 
   return (
     <div
@@ -62,9 +69,13 @@ const ItemWrapper: React.FC<Props> = ({
       onMouseLeave={handleMouseLeave}
       draggable
       onDragStart={handleDragStart}
+      style={weightStyle}
     >
       {actionable && status && (
         <span className={`status-chip ${formatStatus(status, '-')}`}>{formatStatus(status, ' ')}</span>
+      )}
+      {weight != null && (
+        <span className="weight-badge">{weight}</span>
       )}
       {version && version > 1 && (
         <span className="version-badge">v{version}</span>

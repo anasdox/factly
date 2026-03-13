@@ -20,6 +20,7 @@ type FactType = {
   related_inputs: string[];
   text: string;
   source_excerpt?: string;
+  weight?: number;
   version?: number;
   status?: EntityStatus;
   created_at?: string;
@@ -30,6 +31,7 @@ type InsightType = {
   insight_id: string;
   related_facts: string[];
   text: string;
+  weight?: number;
   version?: number;
   status?: EntityStatus;
   created_at?: string;
@@ -40,6 +42,7 @@ type RecommendationType = {
   recommendation_id: string;
   related_insights: string[];
   text: string;
+  weight?: number;
   version?: number;
   status?: EntityStatus;
   created_at?: string;

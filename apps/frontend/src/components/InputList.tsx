@@ -11,7 +11,7 @@ import BatchDedupReviewPanel from './BatchDedupReviewPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { useBatchDedupQueue } from '../hooks/useBatchDedupQueue';
 import { API_URL } from '../config';
-import { createNewVersion, propagateImpact, clearStatus, getDirectChildren } from '../lib';
+import { createNewVersion, propagateImpact, clearStatus, getDirectChildren, isActionableStatus } from '../lib';
 import { findDuplicates } from '../dedup';
 import { checkImpact } from '../impact';
 import { ChatToolAction } from './ChatWidget';
@@ -261,13 +261,14 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
     }
   }, [setData, data.insights, onWaiting, onInfo, backendAvailable]);
 
-  const handleAcceptSuggestion = async (suggestion: { text: string; source_excerpt?: string; inputId?: string }) => {
+  const handleAcceptSuggestion = async (suggestion: { text: string; source_excerpt?: string; inputId?: string; weight?: number }) => {
     const relatedInputs = suggestion.inputId ? [suggestion.inputId] : Array.from(selectedInputIds);
     const newFact: FactType = {
       fact_id: Math.random().toString(16).slice(2),
       text: suggestion.text,
       related_inputs: relatedInputs,
       source_excerpt: suggestion.source_excerpt,
+      weight: suggestion.weight,
     };
     dedupQueue.trackStart();
     onWaiting('Checking for duplicates…');
@@ -404,6 +405,16 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
       <div className="column-sticky-top">
         <div className="column-header">
           <h2>📥Inputs</h2>
+          {(() => {
+            const reviewable = data.inputs.filter(i => isActionableStatus(i.status));
+            return reviewable.length > 0 ? (
+              <button className="review-select-btn" onClick={() => {
+                selectAll(reviewable.map(i => i.input_id));
+                const el = document.getElementById(`input-${reviewable[0].input_id}`);
+                el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }}>{reviewable.length} to review</button>
+            ) : null;
+          })()}
           {data.inputs.length > 0 && selectedInputIds.size < data.inputs.length && (
             <button className="select-all-button" onClick={() => selectAll(data.inputs.map(i => i.input_id))} title="Select all inputs">
               <FontAwesomeIcon icon={faCheckDouble} /> Select All
