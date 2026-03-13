@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencil, faDiagramProject, faCheck, faRobot, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faPencil, faDiagramProject, faCheck, faRobot, faSpinner, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { isActionableStatus } from '../lib';
 
 
@@ -18,6 +18,7 @@ type Props = {
   onProposeUpdate?: () => void;
   proposingUpdate?: boolean;
   backendAvailable?: boolean;
+  onDelete?: () => void;
 };
 
 function formatStatus(status: EntityStatus, separator: string): string {
@@ -37,7 +38,8 @@ const ItemWrapper: React.FC<Props> = ({
   onClearStatus,
   onProposeUpdate,
   proposingUpdate,
-  backendAvailable}) => {
+  backendAvailable,
+  onDelete}) => {
 
   const status = item.status;
   const version = item.version;
@@ -91,6 +93,11 @@ const ItemWrapper: React.FC<Props> = ({
         <div onClick={() => openEditModal ? openEditModal(item): null} title="Edit">
           <FontAwesomeIcon size={'sm'} icon={faPencil} />
         </div>
+        {onDelete && (
+          <div onClick={(e) => { e.stopPropagation(); onDelete(); }} title="Delete">
+            <FontAwesomeIcon size={'sm'} icon={faTrashCan} />
+          </div>
+        )}
       </div>
     </div>
   );

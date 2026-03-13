@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { LLMProvider, ChatStreamCallbacks } from './provider';
 import { ChatToolDefinition } from './chat-prompts';
-import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, REFORMULATION_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, buildReformulationUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseImpactCheckResult, parseReformulationSuggestions, ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult, ReformulationSuggestion } from './prompts';
+import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, REFORMULATION_SYSTEM_PROMPT, RESEARCH_SYSTEM_PROMPT, SEARCH_QUERY_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, buildReformulationUserContent, buildResearchUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseImpactCheckResult, parseReformulationSuggestions, parseResearchSuggestions, ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult, ReformulationSuggestion, ResearchSuggestion } from './prompts';
 
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic;
@@ -171,6 +171,35 @@ export class AnthropicProvider implements LLMProvider {
     });
 
     return parseReformulationSuggestions(this.extractText(response));
+  }
+
+  async generateSearchQueries(goal: string): Promise<string[]> {
+    const response = await this.client.messages.create({
+      model: this.model,
+      max_tokens: 512,
+      temperature: 0.3,
+      system: SEARCH_QUERY_SYSTEM_PROMPT,
+      messages: [
+        { role: 'user', content: `Research goal: ${goal}` },
+      ],
+    });
+
+    return parseStringArray(this.extractText(response));
+  }
+
+  async research(goal: string, pages: { url: string; title: string; content: string }[]): Promise<ResearchSuggestion[]> {
+    const tempResearch = parseFloat(process.env.LLM_TEMP_RESEARCH || '0.3');
+    const response = await this.client.messages.create({
+      model: this.model,
+      max_tokens: 4096,
+      temperature: tempResearch,
+      system: RESEARCH_SYSTEM_PROMPT,
+      messages: [
+        { role: 'user', content: buildResearchUserContent(goal, pages) },
+      ],
+    });
+
+    return parseResearchSuggestions(this.extractText(response));
   }
 
   async chatStream(

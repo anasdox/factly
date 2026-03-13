@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import InputItem from './InputItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faWandMagicSparkles, faXmark, faSpinner, faCheckDouble, faClipboard, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faWandMagicSparkles, faXmark, faSpinner, faCheckDouble, faClipboard, faTrashCan, faGlobe, faCheck, faPen, faExternalLinkAlt } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import Modal from './Modal';
 import InputModal from './InputModal';
 import FactModal from './FactModal';
-import SuggestionsPanel from './SuggestionsPanel';
+import SuggestionsPanel, { Suggestion } from './SuggestionsPanel';
 import BatchDedupReviewPanel from './BatchDedupReviewPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { useBatchDedupQueue } from '../hooks/useBatchDedupQueue';
@@ -28,6 +28,7 @@ type Props = {
   onWaiting: (msg: string) => void;
   backendAvailable: boolean;
   onViewTraceability: (entityType: string, entityId: string) => void;
+  searchAvailable?: boolean;
   chatActions?: ChatToolAction[];
   clearChatActions?: (filter: (a: ChatToolAction) => boolean) => void;
   requestConfirm?: (message: string, onConfirm: () => void) => void;
@@ -37,7 +38,7 @@ type FactSuggestionData = {
   suggestions: { text: string; source_excerpt?: string; inputId: string }[];
 };
 
-const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability, chatActions, clearChatActions, requestConfirm }) => {
+const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability, searchAvailable, chatActions, clearChatActions, requestConfirm }) => {
 
   const [isInputDialogVisible, setIsInputDialogVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
@@ -54,6 +55,10 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
   const [suggestionData, setSuggestionData] = useState<FactSuggestionData | null>(null);
   const [isFactModalVisible, setIsFactModalVisible] = useState(false);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
+
+  // Research state
+  const [researching, setResearching] = useState(false);
+  const [researchData, setResearchData] = useState<{ suggestions: Suggestion[]; fetchFailures: number } | null>(null);
 
   // Batch dedup queue for accepted suggestions
   const dedupQueue = useBatchDedupQueue<FactType>();
@@ -336,40 +341,107 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
     onInfo(`Input archived. ${impactedCount} downstream item(s) affected.`);
   };
 
+  const handleResearch = async () => {
+    if (!data.goal || data.goal.trim().length === 0) return;
+    setResearching(true);
+    setResearchData(null);
+    onWaiting('Searching the Internet for relevant sources...');
+    try {
+      const response = await fetch(`${API_URL}/research`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal: data.goal }),
+      });
+      if (!response.ok) {
+        const body = await response.json();
+        throw new Error(body.error || 'Research failed');
+      }
+      const result = await response.json();
+      if (result.suggestions.length === 0) {
+        onInfo('No relevant sources found for this goal.');
+      } else {
+        onInfo(`Found ${result.suggestions.length} source(s).`);
+      }
+      const mapped: Suggestion[] = result.suggestions.map((s: any) => ({
+        text: s.summary,
+        title: s.title,
+        summary: s.summary,
+        url: s.url,
+        justification: s.justification,
+      }));
+      setResearchData({ suggestions: mapped, fetchFailures: result.fetch_failures });
+    } catch (err: any) {
+      onError(err.message || 'Research request failed');
+    } finally {
+      setResearching(false);
+    }
+  };
+
+  const handleAcceptResearch = (suggestion: Suggestion) => {
+    const newInput: InputType = {
+      input_id: Math.random().toString(16).slice(2),
+      title: suggestion.title || '',
+      type: 'web' as any,
+      url: suggestion.url,
+      text: suggestion.summary || suggestion.text,
+      version: 1,
+      status: 'draft',
+      created_at: new Date().toISOString(),
+    };
+    setData((prevState) => prevState ? ({
+      ...prevState,
+      inputs: [...prevState.inputs, newInput]
+    }) : prevState);
+    onInfo(`Input added: "${(suggestion.title || suggestion.text).substring(0, 50)}"`);
+  };
+
   const handleClearStatus = (inputId: string) => {
     setData((prevState) => prevState ? clearStatus(prevState, 'input', inputId) : prevState);
   };
 
   return (
     <div className="column inputs">
-      <div className="column-header">
-        <h2>📥Inputs</h2>
-        {data.inputs.length > 0 && selectedInputIds.size < data.inputs.length && (
-          <button className="select-all-button" onClick={() => selectAll(data.inputs.map(i => i.input_id))} title="Select all inputs">
-            <FontAwesomeIcon icon={faCheckDouble} /> Select All
-          </button>
-        )}
-        <button className="header-add-button" onClick={openAddModal} title="Add Input"><FontAwesomeIcon icon={faAdd} /></button>
-      </div>
-      <div className={`toolbar-wrapper${selectedInputIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
-        <div className="selection-toolbar">
-          <span>{selectedInputIds.size} input(s) selected</span>
-          <button onClick={handleExtractFacts} disabled={extractingFacts || !backendAvailable} title={!backendAvailable ? 'Backend unavailable' : ''}>
-            <FontAwesomeIcon icon={extractingFacts ? faSpinner : faWandMagicSparkles} spin={extractingFacts} />
-            {' '}Generate Facts
-          </button>
-          <button onClick={handleAddFactFromSelection}>
-            <FontAwesomeIcon icon={faClipboard} />
-            {' '}Add Fact
-          </button>
-          <button onClick={() => setConfirmBulkDelete(true)}>
-            <FontAwesomeIcon icon={faTrashCan} />
-            {' '}Delete
-          </button>
-          <button onClick={clearSelection}>
-            <FontAwesomeIcon icon={faXmark} />
-            {' '}Clear
-          </button>
+      <div className="column-sticky-top">
+        <div className="column-header">
+          <h2>📥Inputs</h2>
+          {data.inputs.length > 0 && selectedInputIds.size < data.inputs.length && (
+            <button className="select-all-button" onClick={() => selectAll(data.inputs.map(i => i.input_id))} title="Select all inputs">
+              <FontAwesomeIcon icon={faCheckDouble} /> Select All
+            </button>
+          )}
+          {backendAvailable && (
+            <button
+              className="header-research-button"
+              onClick={handleResearch}
+              disabled={researching || !searchAvailable || !data.goal || data.goal.trim().length === 0}
+              title={!searchAvailable ? 'Search service not configured' : (!data.goal || data.goal.trim().length === 0) ? 'Set a discovery goal first' : 'Search Internet for sources'}
+            >
+              <FontAwesomeIcon icon={researching ? faSpinner : faGlobe} spin={researching} />
+              {' '}Research
+            </button>
+          )}
+          <button className="header-add-button" onClick={openAddModal} title="Add Input"><FontAwesomeIcon icon={faAdd} /></button>
+        </div>
+        <div className={`toolbar-wrapper${selectedInputIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
+          <div className="selection-toolbar">
+            <span>{selectedInputIds.size} input(s) selected</span>
+            <button onClick={handleExtractFacts} disabled={extractingFacts || !backendAvailable} title={!backendAvailable ? 'Backend unavailable' : ''}>
+              <FontAwesomeIcon icon={extractingFacts ? faSpinner : faWandMagicSparkles} spin={extractingFacts} />
+              {' '}Generate Facts
+            </button>
+            <button onClick={handleAddFactFromSelection}>
+              <FontAwesomeIcon icon={faClipboard} />
+              {' '}Add Fact
+            </button>
+            <button onClick={() => setConfirmBulkDelete(true)}>
+              <FontAwesomeIcon icon={faTrashCan} />
+              {' '}Delete
+            </button>
+            <button onClick={clearSelection}>
+              <FontAwesomeIcon icon={faXmark} />
+              {' '}Clear
+            </button>
+          </div>
         </div>
       </div>
       {data.inputs.length === 0 && (
@@ -391,6 +463,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
             openEditModal={openEditModal}
             onViewTraceability={() => onViewTraceability("input", input.input_id)}
             onClearStatus={() => handleClearStatus(input.input_id)}
+            onDelete={() => requestConfirm?.('Delete this input?', () => deleteInput(input.input_id))}
             backendAvailable={backendAvailable}
           >
             <InputItem input={input} />
@@ -427,6 +500,34 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
           </div>
         </div>
       </Modal>
+      {researchData && researchData.suggestions.length > 0 && (
+        <SuggestionsPanel
+          suggestions={researchData.suggestions}
+          inputId="research"
+          title="Research Results"
+          onAccept={(suggestion) => handleAcceptResearch(suggestion)}
+          onClose={() => setResearchData(null)}
+          notice={researchData.fetchFailures > 0 ? `${researchData.fetchFailures} source(s) could not be accessed.` : undefined}
+          wide
+          renderCard={(suggestion, _index, actions) => (
+            <>
+              {suggestion.title && <div className="research-suggestion-title">{suggestion.title}</div>}
+              {suggestion.summary && <div className="research-suggestion-summary">{suggestion.summary}</div>}
+              {suggestion.url && (
+                <a className="research-suggestion-url" href={suggestion.url} target="_blank" rel="noopener noreferrer">
+                  <FontAwesomeIcon icon={faExternalLinkAlt} /> {suggestion.url}
+                </a>
+              )}
+              {suggestion.justification && <div className="research-suggestion-justification">{suggestion.justification}</div>}
+              <div className="suggestion-actions">
+                <button className="suggestion-accept" onClick={actions.onAccept}><FontAwesomeIcon icon={faCheck} /> Accept</button>
+                <button className="suggestion-edit-btn" onClick={actions.onEdit}><FontAwesomeIcon icon={faPen} /> Edit</button>
+                <button className="suggestion-reject" onClick={actions.onReject}><FontAwesomeIcon icon={faXmark} /> Reject</button>
+              </div>
+            </>
+          )}
+        />
+      )}
       {suggestionData && (
         <SuggestionsPanel
           suggestions={suggestionData.suggestions}

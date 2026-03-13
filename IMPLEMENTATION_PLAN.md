@@ -1,39 +1,47 @@
 # Implementation Plan
 
 ## Context
-- Planning scope (program/release): M20 — AI-Assisted Reformulation Suggestions
-- Roadmap links: M20 (AI-Assisted Reformulation Suggestions)
+- Planning scope (program/release): M21 — Internet Research for Input Discovery
+- Roadmap links: M21 (Internet Research for Input Discovery)
 - Planning horizon: Single release cycle
-- Scope summary: "Reformulate" button in create/edit modals for facts, insights, and recommendations. Backend endpoint calls LLM with item text + related items context + goal, returns 2-3 suggestions with justifications. Analyst picks, edits, or dismisses.
-- Assumptions: M1–M18 delivered; existing LLM provider infrastructure reused; no new npm packages required
+- Scope summary: "Research" button in Inputs column. Backend calls Web Search API (Brave), fetches page content, LLM filters and structures up to 10 suggestions with title/summary/URL/justification. Analyst accepts, edits, or rejects suggestions as new inputs of type "web".
+- Assumptions: M1–M20 delivered; cheerio already a dependency; new dependencies: none (Brave Search API via fetch); new env vars: SEARCH_PROVIDER, SEARCH_API_KEY, LLM_TEMP_RESEARCH
 
 ## Global feature sequencing
 | Order | Feature | Outcome | Depends on | FSIDs | TSIDs | Acceptance tests | Owner | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Backend: reformulation prompt + types | REFORMULATION_SYSTEM_PROMPT, buildReformulationUserContent, parseReformulationSuggestions, ReformulationSuggestion type | — | FS-ReformulationUsesRelatedItemsContext, FS-ReformulationUsesDiscoveryGoal | TS-AiReformulationSuggestions | ai-reformulation-suggestions.test.ts | — | Planned |
-| 2 | Backend: LLMProvider reformulate method | New reformulate() on provider interface + Anthropic/OpenAI/OpenAI-compatible implementations | 1 | FS-TriggerReformulationOnClick, FS-ReformulateButtonHiddenWhenNoLLM | TS-AiReformulationSuggestions | ai-reformulation-suggestions.test.ts | — | Planned |
-| 3 | Backend: POST /reformulate endpoint | Express route with validation, LLM call, error handling | 1, 2 | FS-TriggerReformulationOnClick, FS-DisplayReformulationSuggestions, FS-ReformulationErrorShowsMessage, FS-ReformulationTimeoutShowsMessage | TS-Reformulate | ai-reformulation-suggestions.test.ts | — | Planned |
-| 4 | Frontend: Reformulate button + suggestions UI in FactModal | "Reformulate" button, loading state, inline suggestions list, selection/dismiss behavior | 3 | FS-ReformulateButtonVisibleInFactModal, FS-ReformulateButtonDisabledWhenTextEmpty, FS-ReformulateButtonEnabledWhenTextPresent, FS-DisplayReformulationSuggestions, FS-SelectSuggestionReplacesText, FS-EditAfterSelectingSuggestion, FS-DismissSuggestionsKeepsOriginal, FS-ReformulateAgainAfterEdit | TS-AiReformulationSuggestions | ai-reformulation-suggestions.test.ts | — | Planned |
-| 5 | Frontend: Reformulate in InsightModal + RecommendationModal | Replicate reformulation UI from FactModal to InsightModal and RecommendationModal | 4 | FS-ReformulateButtonVisibleInInsightModal, FS-ReformulateButtonVisibleInRecommendationModal | TS-AiReformulationSuggestions | ai-reformulation-suggestions.test.ts | — | Planned |
+| 1 | Backend: Search provider abstraction + Brave implementation | SearchProvider interface, BraveProvider calling Brave Search API | — | FS-TriggerResearchSendsGoal | TS-InternetResearchInputDiscovery | internet-research-input-discovery.test.ts | — | Planned |
+| 2 | Backend: Page fetcher | fetchPageContent() using fetch + cheerio, parallel with timeout, truncation | — | FS-ResearchPageFetchPartialFailure | TS-InternetResearchInputDiscovery | internet-research-input-discovery.test.ts | — | Planned |
+| 3 | Backend: Research LLM prompt + types | RESEARCH_SYSTEM_PROMPT, ResearchSuggestion type, buildResearchUserContent(), parseResearchSuggestions() | — | FS-ResearchReturnsUpToTenSuggestions, FS-SuggestionDisplaysTitle, FS-SuggestionDisplaysSummary, FS-SuggestionDisplaysSourceUrl, FS-SuggestionDisplaysRelevanceJustification | TS-InternetResearchInputDiscovery | internet-research-input-discovery.test.ts | — | Planned |
+| 4 | Backend: LLM provider research() method | Add research() to LLMProvider interface + all 3 implementations | 3 | FS-TriggerResearchSendsGoal | TS-InternetResearchInputDiscovery | internet-research-input-discovery.test.ts | — | Planned |
+| 5 | Backend: POST /research endpoint | Express route: validate → search → fetch pages → LLM filter → respond | 1, 2, 3, 4 | FS-TriggerResearchSendsGoal, FS-ResearchReturnsUpToTenSuggestions, FS-ResearchErrorDisplaysMessage, FS-ResearchNoResultsDisplaysMessage, FS-ResearchPageFetchPartialFailure | TS-Research | internet-research-input-discovery.test.ts | — | Planned |
+| 6 | Backend: Search query generation via LLM | LLM generates 2-3 search queries from goal for broader coverage | 3, 4 | FS-TriggerResearchSendsGoal | TS-InternetResearchInputDiscovery | internet-research-input-discovery.test.ts | — | Planned |
+| 7 | Nginx: Add /research proxy route | proxy_pass with 120s timeout | 5 | — | — | — | — | Planned |
+| 8 | Frontend: ResearchSuggestions component | Suggestion cards with title, summary, URL, justification, accept/edit/reject/dismiss | 5 | FS-SuggestionDisplaysTitle, FS-SuggestionDisplaysSummary, FS-SuggestionDisplaysSourceUrl, FS-SuggestionDisplaysRelevanceJustification, FS-AcceptSuggestionAddsInput, FS-RejectSuggestionRemovesIt, FS-EditSuggestionBeforeAccepting, FS-AcceptMultipleSuggestions, FS-DismissAllSuggestions | TS-InternetResearchInputDiscovery | internet-research-input-discovery.test.ts | — | Planned |
+| 9 | Frontend: Research button in InputList + searchAvailable status | Button in Inputs column header, disabled without goal, hidden without backend/search | 5, 8 | FS-ResearchButtonVisibleInInputColumn, FS-ResearchButtonDisabledWithoutGoal, FS-ResearchButtonDisabledWithoutBackend, FS-ReResearchAllowed | TS-InternetResearchInputDiscovery | internet-research-input-discovery.test.ts | — | Planned |
+| 10 | Backend: searchAvailable in /status response | Return searchAvailable flag based on SEARCH_PROVIDER + SEARCH_API_KEY config | — | FS-ResearchButtonDisabledWithoutBackend | TS-InternetResearchInputDiscovery | internet-research-input-discovery.test.ts | — | Planned |
 
 ## Cross-feature dependencies and blockers
 | Dependency | Upstream | Downstream | Impact if late | Mitigation | Owner | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| Reformulation types + prompt | Slice 1 (prompts.ts) | Slices 2, 3 (provider, endpoint) | Blocks backend | Deliver first, zero risk | — | Open |
-| LLM provider method | Slice 2 (providers) | Slice 3 (endpoint) | Blocks the endpoint | Can mock for frontend development | — | Open |
-| Backend endpoint | Slice 3 | Slices 4, 5 (frontend modals) | Frontend can develop against mock data | Define response contract early (done in OpenAPI) | — | Open |
-| FactModal reformulation UI | Slice 4 | Slice 5 (other modals) | Identical pattern, low risk | Extract shared logic in slice 4 for reuse in slice 5 | — | Open |
+| Search provider | Slice 1 (search provider) | Slice 5 (endpoint) | Blocks endpoint | Can mock search results | — | Open |
+| Page fetcher | Slice 2 (page fetcher) | Slice 5 (endpoint) | Blocks endpoint | Can mock page content | — | Open |
+| LLM prompt + types | Slice 3 (prompts) | Slices 4, 5, 6 (provider, endpoint, query gen) | Blocks all LLM work | Deliver first | — | Open |
+| LLM provider method | Slice 4 (provider) | Slices 5, 6 (endpoint, query gen) | Blocks endpoint | Can mock LLM | — | Open |
+| Backend endpoint | Slice 5 (endpoint) | Slices 7, 8, 9 (nginx, frontend) | Frontend can dev against mock | Contract defined in OpenAPI | — | Open |
+| ResearchSuggestions component | Slice 8 | Slice 9 (button integration) | Blocks button wiring | Can develop in parallel | — | Open |
 
 ## Critical path and milestones
-- Critical path: S1-Prompt → S2-Provider → S3-Endpoint → S4-FactModal → S5-OtherModals
-- No parallel track needed (small feature, sequential delivery)
-- Milestone: M20 Complete
-  - Target date: —
-  - Exit criteria: All acceptance tests pass, "Reformulate" button works in all 3 modals, suggestions display with justifications, selection replaces text, dismiss preserves original
+- Critical path: S3-Prompt → S4-Provider → (S1-Search + S2-Fetcher parallel) → S5-Endpoint → S7-Nginx → S8-Component → S9-Button
+- S1 and S2 can be developed in parallel (no dependency between them)
+- S6 (query generation) can be done alongside S5
+- S10 (status flag) is independent
+- Milestone: M21 Complete
+  - Exit criteria: All acceptance tests pass, "Research" button works in Inputs column, up to 10 suggestions displayed with title/summary/URL/justification, accept adds web input, reject removes suggestion, edit inline works, dismiss clears all
 
 ## Validation checkpoints
-- [x] Functional specs validated (17 scenarios)
-- [x] Technical specs validated (TS-AiReformulationSuggestions + TS-Reformulate in OpenAPI)
+- [x] Functional specs validated (18 scenarios)
+- [x] Technical specs validated (TS-InternetResearchInputDiscovery + TS-Research in OpenAPI)
 - [ ] Acceptance tests validated
 - [ ] Implementation done
 - [ ] CI green (all acceptance tests pass, TypeScript clean)
@@ -41,20 +49,26 @@
 - [ ] Demo prepared and validated by UoR
 
 ## Risks and trade-offs
-- Risk: LLM returns fewer than 3 suggestions or inconsistent JSON
-  - Trigger: Some models may return 1-2 suggestions instead of 3
-  - Response: Accept 1-3 suggestions; parseReformulationSuggestions handles variable-length arrays
-- Risk: Reformulation latency perceived as slow in modal context
-  - Trigger: LLM call takes 2-5 seconds while analyst waits in modal
-  - Response: Clear loading spinner on button; text field remains editable during loading
-- Risk: Suggestions for recommendations may not be actionable enough
-  - Trigger: LLM reformulates recommendation as insight-like statement
-  - Response: Prompt explicitly instructs per entity_type; analyst can dismiss and reformulate again
+- Risk: Brave Search API rate limits (2000 free requests/month)
+  - Trigger: Heavy usage exceeds free tier
+  - Response: Monitor usage; consider caching search results for identical goals
+- Risk: Page fetch failures (sites blocking bots, timeouts, paywalls)
+  - Trigger: Many pages return empty or blocked content
+  - Response: Partial failure handling (show what worked); set reasonable timeout (10s)
+- Risk: LLM context window limits with 20 pages of content
+  - Trigger: 20 pages × 5000 chars = 100K chars may exceed model limits
+  - Response: Truncate total content to fit context; prioritize pages with best snippets
+- Risk: Total endpoint latency (search + fetch + LLM) may be too slow
+  - Trigger: 15s search + 10s fetch + 60s LLM = up to 85s
+  - Response: Parallel page fetching; clear progress indicator in UI; 120s nginx timeout
+- Risk: Extracted content quality varies (boilerplate, ads, cookie notices)
+  - Trigger: cheerio extraction picks up non-content text
+  - Response: Strip common boilerplate elements (nav, footer, aside, script, style); LLM filters noise
 
 ## Open questions
 - None currently
 
 ## Change log
-- 2026-03-12:
-  - Change: New plan created for M20 (replacing M18 plan)
-  - Reason: M18 delivered and validated; starting M20 AI-Assisted Reformulation Suggestions
+- 2026-03-13:
+  - Change: New plan created for M21 (replacing M20 plan)
+  - Reason: M20 delivered and validated; starting M21 Internet Research for Input Discovery

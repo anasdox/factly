@@ -31,12 +31,24 @@
   padding-right: 2em;
   flex: 1;
   min-width: 0;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
+
 .column > h2,
 .column-header h2 {
   font-size: 1.2em;
   overflow: hidden;
   white-space: nowrap;
+}
+
+.column-sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg-page);
+  width: 100%;
 }
 
 .column-header {
@@ -45,6 +57,8 @@
   gap: 0.5em;
   width: 100%;
   justify-content: center;
+  padding-top: 0.5em;
+  padding-bottom: 0.5em;
 }
 
 .select-all-button {
@@ -85,12 +99,6 @@
   box-shadow: 0 0 0 2px var(--border-btn-hover);
 }
 
-.line {
-  position: absolute;
-  height: 1px;
-  background: var(--line-color);
-  z-index: 1;
-}
 
 .item {
   padding: 0.5em;
@@ -305,6 +313,60 @@ input[type=text], select, textarea {
   opacity: 0.65;
   margin-top: 0.2em;
   font-style: italic;
+}
+
+/* Research button */
+.header-research-button {
+  border-radius: 8px;
+  padding: 4px 10px;
+  background: var(--bg-btn);
+  color: var(--text-primary);
+  cursor: pointer;
+  border: 1px solid var(--border-btn);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82em;
+}
+
+.header-research-button:hover:not(:disabled) {
+  border-color: var(--border-btn-hover);
+  transition: 0.2s;
+}
+
+.header-research-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Research card content (used inside SuggestionsPanel renderCard) */
+.research-suggestion-title {
+  font-size: 0.92em;
+  font-weight: 600;
+  margin-bottom: 0.3em;
+}
+
+.research-suggestion-summary {
+  font-size: 0.85em;
+  line-height: 1.4;
+  margin-bottom: 0.3em;
+}
+
+.research-suggestion-url {
+  font-size: 0.78em;
+  color: var(--link-color, #4a90d9);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 0.3em;
+  word-break: break-all;
+}
+
+.research-suggestion-justification {
+  font-size: 0.78em;
+  opacity: 0.65;
+  font-style: italic;
+  margin-bottom: 0.4em;
 }
 
 .modal-overlay {
@@ -554,9 +616,6 @@ input[type=text], select, textarea {
   position: relative;
 }
 
-.tour-active .link-highlighted {
-  z-index: 10002 !important;
-}
 
 .tour-active .wrapper-item-toolbar {
   z-index: 10001 !important;

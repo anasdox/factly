@@ -225,26 +225,28 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
 
   return (
     <div className="column outputs">
-      <div className="column-header">
-        <h2>📤Outputs</h2>
-        {data.outputs.length > 0 && selectedOutputIds.size < data.outputs.length && (
-          <button className="select-all-button" onClick={() => selectAll(data.outputs.map(o => o.output_id))} title="Select all outputs">
-            <FontAwesomeIcon icon={faCheckDouble} /> Select All
-          </button>
-        )}
-        <button className="header-add-button" onClick={openAddModal} title="Add Output"><FontAwesomeIcon icon={faAdd} /></button>
-      </div>
-      <div className={`toolbar-wrapper${selectedOutputIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
-        <div className="selection-toolbar">
-          <span>{selectedOutputIds.size} output(s) selected</span>
-          <button onClick={() => setConfirmBulkDelete(true)}>
-            <FontAwesomeIcon icon={faTrashCan} />
-            {' '}Delete
-          </button>
-          <button onClick={clearSelection}>
-            <FontAwesomeIcon icon={faXmark} />
-            {' '}Clear
-          </button>
+      <div className="column-sticky-top">
+        <div className="column-header">
+          <h2>📤Outputs</h2>
+          {data.outputs.length > 0 && selectedOutputIds.size < data.outputs.length && (
+            <button className="select-all-button" onClick={() => selectAll(data.outputs.map(o => o.output_id))} title="Select all outputs">
+              <FontAwesomeIcon icon={faCheckDouble} /> Select All
+            </button>
+          )}
+          <button className="header-add-button" onClick={openAddModal} title="Add Output"><FontAwesomeIcon icon={faAdd} /></button>
+        </div>
+        <div className={`toolbar-wrapper${selectedOutputIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
+          <div className="selection-toolbar">
+            <span>{selectedOutputIds.size} output(s) selected</span>
+            <button onClick={() => setConfirmBulkDelete(true)}>
+              <FontAwesomeIcon icon={faTrashCan} />
+              {' '}Delete
+            </button>
+            <button onClick={clearSelection}>
+              <FontAwesomeIcon icon={faXmark} />
+              {' '}Clear
+            </button>
+          </div>
         </div>
       </div>
       {data.outputs.length === 0 && (
@@ -268,6 +270,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
             onClearStatus={() => handleClearStatus(output.output_id)}
             onProposeUpdate={() => handleProposeUpdate(output)}
             proposingUpdate={proposingUpdateId === output.output_id}
+            onDelete={() => requestConfirm?.('Delete this output?', () => deleteOutput(output.output_id))}
             backendAvailable={backendAvailable}
           >
             <OutputItem

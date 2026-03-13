@@ -1,31 +1,3 @@
-.suggestions-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 100;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.suggestions-panel {
-  background: var(--bg-modal);
-  border-radius: 10px;
-  border: var(--border-dialog) solid 2px;
-  padding: 1.5em;
-  width: 500px;
-  max-height: 80vh;
-  overflow-y: auto;
-  color: var(--text-primary);
-}
-
-.suggestions-panel-wide {
-  width: 700px;
-}
-
 .suggestions-header {
   display: flex;
   justify-content: space-between;
@@ -48,6 +20,13 @@
 
 .suggestions-close:hover {
   color: var(--color-close-btn-hover);
+}
+
+.suggestions-notice {
+  font-size: 0.8em;
+  opacity: 0.6;
+  margin: 0 0 0.5em;
+  font-style: italic;
 }
 
 .suggestions-bulk-actions {

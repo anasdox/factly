@@ -452,34 +452,36 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
 
   return (
     <div className="column insights">
-      <div className="column-header">
-        <h2>💡Insights</h2>
-        {data.insights.length > 0 && selectedInsightIds.size < data.insights.length && (
-          <button className="select-all-button" onClick={() => selectAll(data.insights.map(i => i.insight_id))} title="Select all insights">
-            <FontAwesomeIcon icon={faCheckDouble} /> Select All
-          </button>
-        )}
-        <button className="header-add-button" onClick={openAddModal} title="Add Insight"><FontAwesomeIcon icon={faAdd} /></button>
-      </div>
-      <div className={`toolbar-wrapper${selectedInsightIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
-        <div className="selection-toolbar">
-          <span>{selectedInsightIds.size} insight(s) selected</span>
-          <button onClick={handleExtractRecommendations} disabled={extractingRecommendations || !backendAvailable} title={!backendAvailable ? 'Backend unavailable' : ''}>
-            <FontAwesomeIcon icon={extractingRecommendations ? faSpinner : faWandMagicSparkles} spin={extractingRecommendations} />
-            {' '}Generate Recommendations
-          </button>
-          <button onClick={handleAddRecommendationFromSelection}>
-            <FontAwesomeIcon icon={faClipboardList} />
-            {' '}Add Recommendation
-          </button>
-          <button onClick={() => setConfirmBulkDelete(true)}>
-            <FontAwesomeIcon icon={faTrashCan} />
-            {' '}Delete
-          </button>
-          <button onClick={clearSelection}>
-            <FontAwesomeIcon icon={faXmark} />
-            {' '}Clear
-          </button>
+      <div className="column-sticky-top">
+        <div className="column-header">
+          <h2>💡Insights</h2>
+          {data.insights.length > 0 && selectedInsightIds.size < data.insights.length && (
+            <button className="select-all-button" onClick={() => selectAll(data.insights.map(i => i.insight_id))} title="Select all insights">
+              <FontAwesomeIcon icon={faCheckDouble} /> Select All
+            </button>
+          )}
+          <button className="header-add-button" onClick={openAddModal} title="Add Insight"><FontAwesomeIcon icon={faAdd} /></button>
+        </div>
+        <div className={`toolbar-wrapper${selectedInsightIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
+          <div className="selection-toolbar">
+            <span>{selectedInsightIds.size} insight(s) selected</span>
+            <button onClick={handleExtractRecommendations} disabled={extractingRecommendations || !backendAvailable} title={!backendAvailable ? 'Backend unavailable' : ''}>
+              <FontAwesomeIcon icon={extractingRecommendations ? faSpinner : faWandMagicSparkles} spin={extractingRecommendations} />
+              {' '}Generate Recommendations
+            </button>
+            <button onClick={handleAddRecommendationFromSelection}>
+              <FontAwesomeIcon icon={faClipboardList} />
+              {' '}Add Recommendation
+            </button>
+            <button onClick={() => setConfirmBulkDelete(true)}>
+              <FontAwesomeIcon icon={faTrashCan} />
+              {' '}Delete
+            </button>
+            <button onClick={clearSelection}>
+              <FontAwesomeIcon icon={faXmark} />
+              {' '}Clear
+            </button>
+          </div>
         </div>
       </div>
       {data.insights.length === 0 && (
@@ -503,6 +505,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
             onClearStatus={() => handleClearStatus(insight.insight_id)}
             onProposeUpdate={() => handleProposeUpdate(insight)}
             proposingUpdate={proposal?.loading && proposal.insightId === insight.insight_id}
+            onDelete={() => requestConfirm?.('Delete this insight?', () => deleteInsight(insight.insight_id))}
             backendAvailable={backendAvailable}
           >
             <InsightItem insight={insight} />

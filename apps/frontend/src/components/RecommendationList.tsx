@@ -365,38 +365,40 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
 
   return (
     <div className="column recommendations">
-      <div className="column-header">
-        <h2>Recommendations</h2>
-        {data.recommendations.length > 0 && selectedRecommendationIds.size < data.recommendations.length && (
-          <button className="select-all-button" onClick={() => selectAll(data.recommendations.map(r => r.recommendation_id))} title="Select all recommendations">
-            <FontAwesomeIcon icon={faCheckDouble} /> Select All
-          </button>
-        )}
-        <button className="header-add-button" onClick={openAddModal} title="Add Recommendation"><FontAwesomeIcon icon={faAdd} /></button>
-      </div>
-      <div className={`toolbar-wrapper${selectedRecommendationIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
-        <div className="selection-toolbar">
-          <span>{selectedRecommendationIds.size} recommendation(s) selected</span>
-          <select
-            value={selectedOutputType}
-            onChange={(e) => setSelectedOutputType(e.target.value as OutputType['type'])}
-          >
-            {OUTPUT_TYPES.map(ot => (
-              <option key={ot.value} value={ot.value}>{ot.label}</option>
-            ))}
-          </select>
-          <button onClick={handleFormulateOutputs} disabled={extractingOutputs || !backendAvailable} title={!backendAvailable ? 'Backend unavailable' : ''}>
-            <FontAwesomeIcon icon={extractingOutputs ? faSpinner : faWandMagicSparkles} spin={extractingOutputs} />
-            {' '}Formulate Outputs
-          </button>
-          <button onClick={() => setConfirmBulkDelete(true)}>
-            <FontAwesomeIcon icon={faTrashCan} />
-            {' '}Delete
-          </button>
-          <button onClick={clearSelection}>
-            <FontAwesomeIcon icon={faXmark} />
-            {' '}Clear
-          </button>
+      <div className="column-sticky-top">
+        <div className="column-header">
+          <h2>Recommendations</h2>
+          {data.recommendations.length > 0 && selectedRecommendationIds.size < data.recommendations.length && (
+            <button className="select-all-button" onClick={() => selectAll(data.recommendations.map(r => r.recommendation_id))} title="Select all recommendations">
+              <FontAwesomeIcon icon={faCheckDouble} /> Select All
+            </button>
+          )}
+          <button className="header-add-button" onClick={openAddModal} title="Add Recommendation"><FontAwesomeIcon icon={faAdd} /></button>
+        </div>
+        <div className={`toolbar-wrapper${selectedRecommendationIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
+          <div className="selection-toolbar">
+            <span>{selectedRecommendationIds.size} recommendation(s) selected</span>
+            <select
+              value={selectedOutputType}
+              onChange={(e) => setSelectedOutputType(e.target.value as OutputType['type'])}
+            >
+              {OUTPUT_TYPES.map(ot => (
+                <option key={ot.value} value={ot.value}>{ot.label}</option>
+              ))}
+            </select>
+            <button onClick={handleFormulateOutputs} disabled={extractingOutputs || !backendAvailable} title={!backendAvailable ? 'Backend unavailable' : ''}>
+              <FontAwesomeIcon icon={extractingOutputs ? faSpinner : faWandMagicSparkles} spin={extractingOutputs} />
+              {' '}Formulate Outputs
+            </button>
+            <button onClick={() => setConfirmBulkDelete(true)}>
+              <FontAwesomeIcon icon={faTrashCan} />
+              {' '}Delete
+            </button>
+            <button onClick={clearSelection}>
+              <FontAwesomeIcon icon={faXmark} />
+              {' '}Clear
+            </button>
+          </div>
         </div>
       </div>
       {data.recommendations.length === 0 && (
@@ -420,6 +422,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
               onClearStatus={() => handleClearStatus(recommendation.recommendation_id)}
               onProposeUpdate={() => handleProposeUpdate(recommendation)}
               proposingUpdate={proposingUpdateId === recommendation.recommendation_id}
+              onDelete={() => requestConfirm?.('Delete this recommendation?', () => deleteRecommendation(recommendation.recommendation_id))}
               backendAvailable={backendAvailable}
             >
               <RecommendationItem

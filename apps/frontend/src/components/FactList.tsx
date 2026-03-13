@@ -474,34 +474,36 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
 
   return (
     <div className="column facts">
-      <div className="column-header">
-        <h2>📊Facts</h2>
-        {data.facts.length > 0 && selectedFactIds.size < data.facts.length && (
-          <button className="select-all-button" onClick={() => selectAll(data.facts.map(f => f.fact_id))} title="Select all facts">
-            <FontAwesomeIcon icon={faCheckDouble} /> Select All
-          </button>
-        )}
-        <button className="header-add-button" onClick={openAddModal} title="Add Fact"><FontAwesomeIcon icon={faAdd} /></button>
-      </div>
-      <div className={`toolbar-wrapper${selectedFactIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
-        <div className="selection-toolbar">
-          <span>{selectedFactIds.size} fact(s) selected</span>
-          <button onClick={handleExtractInsights} disabled={extractingInsights || !backendAvailable} title={!backendAvailable ? 'Backend unavailable' : ''}>
-            <FontAwesomeIcon icon={extractingInsights ? faSpinner : faWandMagicSparkles} spin={extractingInsights} />
-            {' '}Generate Insights
-          </button>
-          <button onClick={handleAddInsightFromSelection}>
-            <FontAwesomeIcon icon={faLightbulb} />
-            {' '}Add Insight
-          </button>
-          <button onClick={() => setConfirmBulkDelete(true)}>
-            <FontAwesomeIcon icon={faTrashCan} />
-            {' '}Delete
-          </button>
-          <button onClick={clearSelection}>
-            <FontAwesomeIcon icon={faXmark} />
-            {' '}Clear
-          </button>
+      <div className="column-sticky-top">
+        <div className="column-header">
+          <h2>📊Facts</h2>
+          {data.facts.length > 0 && selectedFactIds.size < data.facts.length && (
+            <button className="select-all-button" onClick={() => selectAll(data.facts.map(f => f.fact_id))} title="Select all facts">
+              <FontAwesomeIcon icon={faCheckDouble} /> Select All
+            </button>
+          )}
+          <button className="header-add-button" onClick={openAddModal} title="Add Fact"><FontAwesomeIcon icon={faAdd} /></button>
+        </div>
+        <div className={`toolbar-wrapper${selectedFactIds.size > 0 ? ' toolbar-wrapper-open' : ''}`}>
+          <div className="selection-toolbar">
+            <span>{selectedFactIds.size} fact(s) selected</span>
+            <button onClick={handleExtractInsights} disabled={extractingInsights || !backendAvailable} title={!backendAvailable ? 'Backend unavailable' : ''}>
+              <FontAwesomeIcon icon={extractingInsights ? faSpinner : faWandMagicSparkles} spin={extractingInsights} />
+              {' '}Generate Insights
+            </button>
+            <button onClick={handleAddInsightFromSelection}>
+              <FontAwesomeIcon icon={faLightbulb} />
+              {' '}Add Insight
+            </button>
+            <button onClick={() => setConfirmBulkDelete(true)}>
+              <FontAwesomeIcon icon={faTrashCan} />
+              {' '}Delete
+            </button>
+            <button onClick={clearSelection}>
+              <FontAwesomeIcon icon={faXmark} />
+              {' '}Clear
+            </button>
+          </div>
         </div>
       </div>
       {data.facts.length === 0 && (
@@ -525,6 +527,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
             onClearStatus={() => handleClearStatus(fact.fact_id)}
             onProposeUpdate={() => handleProposeUpdate(fact)}
             proposingUpdate={proposal?.loading && proposal.factId === fact.fact_id}
+            onDelete={() => requestConfirm?.('Delete this fact?', () => deleteFact(fact.fact_id))}
             backendAvailable={backendAvailable}
           >
             <FactItem fact={fact} />

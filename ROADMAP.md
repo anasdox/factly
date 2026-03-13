@@ -203,6 +203,18 @@
 - Human-in-the-loop: no reformulation is applied without analyst choice
 - Works for all three item types: facts, insights, and recommendations
 
+### M21: Internet Research for Input Discovery
+**Status:** Planned
+**Outcome:** An analyst can trigger an Internet search based on the discovery goal to find relevant sources and information. Proposed results appear as input suggestions that the analyst validates before they enter the pipeline.
+- A "Research" button is available in the Inputs column
+- The system searches the Internet using the discovery goal as search context
+- Search results are processed by the LLM to extract relevant information and assess relevance to the goal
+- Results are presented as input suggestions with: title, summary, source URL, and relevance justification
+- The analyst can: accept a suggestion (adds it as a new input of type "web"), edit before accepting, or reject
+- Accepted inputs are added to the pipeline with source URL preserved
+- Human-in-the-loop: no input is added without analyst validation
+- Works even with an empty pipeline (no existing inputs required)
+
 ## Risks and Dependencies
 
 | Risk | Mitigation |
@@ -225,6 +237,10 @@
 | Chat cost per interaction (M18) | Each chat message sends full discovery context to LLM | Cache discovery context; use incremental context updates where possible |
 | Reformulation latency (M20) | LLM call adds delay to the create/edit flow | Make reformulation optional and async (non-blocking); analyst can save without waiting |
 | Reformulation cost (M20) | Each create/edit could trigger an LLM call | Only trigger on explicit analyst action ("Suggest reformulations"), not automatically |
+| Internet search reliability (M21) | Search results may be irrelevant, outdated, or low quality | LLM filters and ranks results by relevance to goal; analyst validates before adding |
+| Internet search latency (M21) | Web search + LLM processing adds significant delay | Make research async and non-blocking; show progress indicator |
+| Source credibility (M21) | No guarantee that found sources are trustworthy | Display source URL and let analyst judge; do not auto-assess credibility |
+| Search API dependency (M21) | Requires a web search API (cost, rate limits, availability) | Abstract behind a provider interface; support multiple search backends |
 
 ## Non-Goals (Project-Wide)
 

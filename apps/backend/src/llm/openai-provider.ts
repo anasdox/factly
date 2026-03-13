@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { LLMProvider, OutputTraceabilityContext, ChatStreamCallbacks } from './provider';
 import { ChatToolDefinition } from './chat-prompts';
-import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, REFORMULATION_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, buildReformulationUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseImpactCheckResult, parseReformulationSuggestions, ExtractedFact, ExtractedInsight, ExtractedRecommendation, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult, ReformulationSuggestion } from './prompts';
+import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, REFORMULATION_SYSTEM_PROMPT, RESEARCH_SYSTEM_PROMPT, SEARCH_QUERY_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, buildReformulationUserContent, buildResearchUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseImpactCheckResult, parseReformulationSuggestions, parseResearchSuggestions, ExtractedFact, ExtractedInsight, ExtractedRecommendation, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult, ReformulationSuggestion, ResearchSuggestion } from './prompts';
 
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;
@@ -238,6 +238,33 @@ export class OpenAIProvider implements LLMProvider {
     }, 2048);
 
     return parseReformulationSuggestions(this.extractText(response));
+  }
+
+  async generateSearchQueries(goal: string): Promise<string[]> {
+    const response = await this.createChatCompletion({
+      model: this.model,
+      temperature: 0.3,
+      messages: [
+        { role: 'system', content: SEARCH_QUERY_SYSTEM_PROMPT },
+        { role: 'user', content: `Research goal: ${goal}` },
+      ],
+    }, 512);
+
+    return parseStringArray(this.extractText(response));
+  }
+
+  async research(goal: string, pages: { url: string; title: string; content: string }[]): Promise<ResearchSuggestion[]> {
+    const tempResearch = parseFloat(process.env.LLM_TEMP_RESEARCH || '0.3');
+    const response = await this.createChatCompletion({
+      model: this.model,
+      temperature: tempResearch,
+      messages: [
+        { role: 'system', content: RESEARCH_SYSTEM_PROMPT },
+        { role: 'user', content: buildResearchUserContent(goal, pages) },
+      ],
+    }, 4096);
+
+    return parseResearchSuggestions(this.extractText(response));
   }
 
   async getEmbeddings(texts: string[]): Promise<number[][]> {

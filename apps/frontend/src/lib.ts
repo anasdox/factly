@@ -87,58 +87,42 @@ export function getParentRelatedEntities(entityType: string, entityId: string, d
 }
 
 
-function highlightLinks(entityType: string, entityId: string, relatedEntityType: string, relatedEntityId: string) {
-  const linkElementId = `link-${entityType}-${entityId}-to-${relatedEntityType}-${relatedEntityId}`;
-  const linkElement = document.getElementById(linkElementId);
-  linkElement?.classList.add('link-highlighted');
-}
-
-function removeLinkHighlight(entityType: string, entityId: string, relatedEntityType: string, relatedEntityId: string) {
-  const linkElementId = `link-${entityType}-${entityId}-to-${relatedEntityType}-${relatedEntityId}`;
-  const linkElement = document.getElementById(linkElementId);
-  linkElement?.classList.remove('link-highlighted');
-}
-
 export function handleMouseEnter(entityType: string, entityId: string, data: DiscoveryData) {
-  // Highlight the current entity
   const entityElement = document.getElementById(`${entityType}-${entityId}`);
   entityElement?.classList.add('highlighted');
 
   const entityToolbarElement = document.getElementById(`${entityType}-${entityId}-toolbar`);
   if (entityToolbarElement) {
-   entityToolbarElement.style.display = "flex";
+    entityToolbarElement.style.display = "flex";
   }
 
-  // Highlight all related entities and their links
   const relatedEntities = getRelatedEntities(entityType, entityId, data);
   const parentRelatedEntities = getParentRelatedEntities(entityType, entityId, data);
 
   [...relatedEntities, ...parentRelatedEntities].forEach((relatedEntity) => {
     const relatedElement = document.getElementById(`${relatedEntity.type}-${relatedEntity.id}`);
-    relatedElement?.classList.add('highlighted');
-    highlightLinks(entityType, entityId, relatedEntity.type, relatedEntity.id);
+    if (relatedElement) {
+      relatedElement.classList.add('highlighted');
+      relatedElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   });
 }
 
 export function handleMouseLeave(entityType: string, entityId: string, data: DiscoveryData) {
-  // Remove highlighting from the current entity
   const entityElement = document.getElementById(`${entityType}-${entityId}`);
   entityElement?.classList.remove('highlighted');
 
   const entityToolbarElement = document.getElementById(`${entityType}-${entityId}-toolbar`);
   if (entityToolbarElement) {
-   entityToolbarElement.style.display = "none";
+    entityToolbarElement.style.display = "none";
   }
 
-
-  // Remove highlighting from all related entities and their links
   const relatedEntities = getRelatedEntities(entityType, entityId, data);
   const parentRelatedEntities = getParentRelatedEntities(entityType, entityId, data);
 
   [...relatedEntities, ...parentRelatedEntities].forEach((relatedEntity) => {
     const relatedElement = document.getElementById(`${relatedEntity.type}-${relatedEntity.id}`);
     relatedElement?.classList.remove('highlighted');
-    removeLinkHighlight(entityType, entityId, relatedEntity.type, relatedEntity.id);
   });
 }
 

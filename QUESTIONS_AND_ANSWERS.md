@@ -66,3 +66,23 @@
 - **Context:** Le bouton pourrait servir à générer un brouillon ou être désactivé.
 - **Options:** 1) Désactivé si vide, 2) Actif même si vide (suggérer un brouillon), 3) Autre
 - **Answer:** Option 1 — Désactivé si vide. Le bouton sert uniquement à reformuler un texte existant.
+
+## M21: Internet Research for Input Discovery
+
+### Q1: Quel mécanisme de recherche Internet utiliser ?
+- **Date:** 2026-03-13
+- **Context:** Le système doit rechercher sur Internet des sources pertinentes par rapport à l'objectif de la discovery.
+- **Options:** 1) Web Search API (Brave Search, Google Custom Search), 2) LLM avec accès web intégré (tool use), 3) Scraping direct
+- **Answer:** Option 1 — API de recherche dédiée. Plus fiable et découplé du LLM. Le LLM se concentre sur le filtrage et la structuration des résultats.
+
+### Q2: Combien de résultats proposer à l'analyste par recherche ?
+- **Date:** 2026-03-13
+- **Context:** Nombre de suggestions d'inputs à présenter après une recherche.
+- **Options:** 1) 5 max, 2) 10 max, 3) Configurable
+- **Answer:** Option 2 — 10 suggestions maximum. Plus de couverture pour l'analyste, qui peut relancer s'il en veut davantage.
+
+### Q3: Que contient chaque suggestion d'input proposée ?
+- **Date:** 2026-03-13
+- **Context:** Niveau de détail des résultats de recherche présentés à l'analyste.
+- **Options:** 1) Snippet + URL (léger, rapide), 2) Contenu extrait + URL (le backend récupère la page, le LLM en extrait un résumé structuré)
+- **Answer:** Option 2 — Contenu extrait. Le backend récupère le contenu de chaque page, le LLM en extrait les points clés pertinents par rapport à l'objectif. Plus riche et exploitable que les simples snippets.

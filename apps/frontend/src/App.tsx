@@ -5,7 +5,7 @@ import FactList from './components/FactList';
 import InsightList from './components/InsightList';
 import RecommendationList from './components/RecommendationList';
 import OutputList from './components/OutputList';
-import { useCalculateAndDrawLines } from './components/Lines';
+
 import { handleMouseEnter, handleMouseLeave } from './lib';
 import ToolBar from './components/Toolbar';
 import Toast from './components/Toast';
@@ -67,6 +67,7 @@ const App: React.FC = () => {
   const handleWaiting = useCallback((msg: string) => { setToastType('waiting'); setErrorMessage(msg); }, []);
   const clearError = useCallback(() => setErrorMessage(null), []);
   const [backendAvailable, setBackendAvailable] = useState(false);
+  const [searchAvailable, setSearchAvailable] = useState(false);
   const [traceabilityTarget, setTraceabilityTarget] = useState<{ type: string; id: string } | null>(null);
   const openTraceability = useCallback((type: string, id: string) => setTraceabilityTarget({ type, id }), []);
   const [tourActive, setTourActive] = useState(false);
@@ -84,8 +85,19 @@ const App: React.FC = () => {
     let cancelled = false;
     const check = () => {
       fetch(`${API_URL}/status`)
-        .then((res) => { if (!cancelled) setBackendAvailable(res.ok); })
-        .catch(() => { if (!cancelled) setBackendAvailable(false); });
+        .then(async (res) => {
+          if (cancelled) return;
+          setBackendAvailable(res.ok);
+          if (res.ok) {
+            try {
+              const body = await res.json();
+              setSearchAvailable(body.searchAvailable === true);
+            } catch { setSearchAvailable(false); }
+          } else {
+            setSearchAvailable(false);
+          }
+        })
+        .catch(() => { if (!cancelled) { setBackendAvailable(false); setSearchAvailable(false); } });
     };
     check();
     const interval = setInterval(check, 30000);
@@ -139,7 +151,6 @@ const App: React.FC = () => {
   const insightRefs = useRef<(HTMLDivElement | null)[]>([]);
   const recommendationRefs = useRef<(HTMLDivElement | null)[]>([]);
   const outputRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const calculateAndDrawLines = useCalculateAndDrawLines();
 
   useEffect(() => {
     if (data) {
@@ -147,58 +158,6 @@ const App: React.FC = () => {
     }
   }, [data]);
 
-  useEffect(() => {
-    if (data) {
-      const allRefs = [
-        ...inputRefs.current,
-        ...factRefs.current,
-        ...insightRefs.current,
-        ...recommendationRefs.current,
-        ...outputRefs.current
-      ];
-
-      if (allRefs.every(ref => ref !== null)) {
-        calculateAndDrawLines(
-          data,
-          inputRefs.current,
-          factRefs.current,
-          insightRefs.current,
-          recommendationRefs.current,
-          outputRefs.current
-        );
-        const handleResize = () => {
-          calculateAndDrawLines(
-            data,
-            inputRefs.current,
-            factRefs.current,
-            insightRefs.current,
-            recommendationRefs.current,
-            outputRefs.current
-          );
-        };
-
-        window.addEventListener('resize', handleResize);
-        window.addEventListener('scroll', handleResize);
-
-        // Recalculate lines when column contents change size (e.g. toolbar/suggestions panel)
-        const grid = document.querySelector('.discovery-grid');
-        let resizeObserver: ResizeObserver | null = null;
-        if (grid) {
-          resizeObserver = new ResizeObserver(handleResize);
-          grid.querySelectorAll('.column').forEach(col => resizeObserver!.observe(col));
-          grid.querySelectorAll('.toolbar-wrapper').forEach(el => resizeObserver!.observe(el));
-        }
-
-        return () => {
-          window.removeEventListener('resize', handleResize);
-          window.removeEventListener('scroll', handleResize);
-          resizeObserver?.disconnect();
-          const existingLines = document.querySelectorAll('.line');
-          existingLines.forEach(line => line.remove());
-        }
-      }
-    }
-  }, [data, calculateAndDrawLines]);
 
   const handleNewDiscoveryFromWelcome = () => {
     setShowNewDiscoveryModal(true);
@@ -319,6 +278,7 @@ const App: React.FC = () => {
             onInfo={handleInfo}
             onWaiting={handleWaiting}
             backendAvailable={backendAvailable}
+            searchAvailable={searchAvailable}
             onViewTraceability={openTraceability}
             chatActions={chatActions}
             clearChatActions={clearChatActions}

@@ -395,6 +395,69 @@ export function parseReformulationSuggestions(raw: string): ReformulationSuggest
   }
 }
 
+// ── Research prompts ──
+
+export const RESEARCH_SYSTEM_PROMPT = `You are a research assistant. Your role is to evaluate web page content and extract information relevant to a research goal.
+
+Rules:
+- You will receive a research goal and content from multiple web pages.
+- For each page, assess its relevance to the research goal.
+- Discard pages that are not relevant to the goal.
+- For relevant pages, extract the key points that relate to the goal into a concise summary.
+- Return up to 10 suggestions, ordered by relevance (most relevant first).
+- Each suggestion must have "title" (page title), "summary" (extracted key points), "url" (page URL), and "justification" (1-2 sentences explaining why this source is relevant).
+- Summaries should be informative enough to stand alone as a useful input for analysis.
+- Do not fabricate information — only extract what is present in the page content.
+- Return a JSON array of objects.
+- If no pages are relevant, return an empty array.
+
+Respond ONLY with a valid JSON array. No explanation, no markdown.
+Example: [{"title": "Page Title", "summary": "Key points from the page...", "url": "https://example.com", "justification": "This source provides data on..."}]`;
+
+export const SEARCH_QUERY_SYSTEM_PROMPT = `You are a search query generator. Your role is to produce effective web search queries from a research goal.
+
+Rules:
+- Generate 2-3 diverse search queries that will find relevant sources for the goal.
+- Queries should cover different angles or aspects of the goal.
+- Keep queries concise (3-8 words each).
+- Return a JSON array of strings.
+
+Respond ONLY with a valid JSON array of strings. No explanation, no markdown.
+Example: ["climate change agriculture impact", "food security global warming effects"]`;
+
+export type ResearchSuggestion = { title: string; summary: string; url: string; justification: string };
+
+export function buildResearchUserContent(
+  goal: string,
+  pages: { url: string; title: string; content: string }[],
+): string {
+  let content = `Research goal: ${goal}\n\nWeb pages to evaluate:\n`;
+  for (let i = 0; i < pages.length; i++) {
+    content += `\n--- Page ${i + 1} ---\nTitle: ${pages[i].title}\nURL: ${pages[i].url}\nContent: ${pages[i].content}\n`;
+  }
+  content += '\nExtract relevant information and return up to 10 suggestions ordered by relevance.';
+  return content;
+}
+
+export function parseResearchSuggestions(raw: string): ResearchSuggestion[] {
+  const cleaned = stripCodeFences(raw);
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((item: any) => typeof item === 'object' && item !== null && typeof item.title === 'string' && typeof item.url === 'string')
+      .map((item: any) => ({
+        title: String(item.title),
+        summary: typeof item.summary === 'string' ? item.summary : '',
+        url: String(item.url),
+        justification: typeof item.justification === 'string' ? item.justification : '',
+      }))
+      .slice(0, 10);
+  } catch {
+    return [];
+  }
+}
+
 // ── Impact check prompts ──
 
 export const IMPACT_CHECK_SYSTEM_PROMPT = `You are a semantic impact analysis assistant. Your role is to determine which downstream entities are semantically impacted by an upstream change.

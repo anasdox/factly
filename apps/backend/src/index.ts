@@ -12,6 +12,8 @@ import winston from 'winston';
 import * as fs from 'fs';
 import * as path from 'path';
 import { createProvider, LLMProvider, OutputTraceabilityContext } from './llm/provider';
+import { createSearchProvider, SearchProvider } from './search/provider';
+import { fetchAllPages } from './search/page-fetcher';
 import { VALID_OUTPUT_TYPES, ExtractedFact } from './llm/prompts';
 import { embeddingCheckDuplicates, embeddingScanDuplicates } from './llm/embeddings';
 import { buildChatSystemPrompt, CHAT_TOOLS, DiscoveryContext, ReferencedItem } from './llm/chat-prompts';
@@ -45,6 +47,13 @@ if (llmProvider) {
   logger.info(`LLM provider configured: ${process.env.LLM_PROVIDER}`);
 } else {
   logger.warn('LLM provider not configured. Extraction endpoint will return 503.');
+}
+
+const searchProvider: SearchProvider | null = createSearchProvider();
+if (searchProvider) {
+  logger.info(`Search provider configured: ${process.env.SEARCH_PROVIDER}`);
+} else {
+  logger.warn('Search provider not configured. Research endpoint will return 503.');
 }
 
 const embeddingsModel = process.env.LLM_EMBEDDINGS_MODEL;
@@ -440,11 +449,91 @@ app.post('/reformulate', async (req, res, next) => {
   }
 });
 
+// ── Research endpoint ──
+
+app.post('/research', async (req, res, next) => {
+  try {
+    const validation = validateResearchRequest(req.body);
+    if (!validation.valid) {
+      return res.status(400).json({ error: validation.error });
+    }
+
+    if (!searchProvider) {
+      return res.status(503).json({ error: 'Search service not configured (missing SEARCH_PROVIDER or SEARCH_API_KEY)' });
+    }
+
+    if (!llmProvider) {
+      return res.status(503).json({ error: 'LLM service not configured (missing LLM_PROVIDER or LLM_API_KEY)' });
+    }
+
+    const { goal } = req.body;
+    logger.info(`[research] Starting research for goal: "${goal.substring(0, 100)}"`);
+
+    // Step 1: Generate search queries from goal
+    let queries: string[];
+    try {
+      queries = await llmProvider.generateSearchQueries(goal);
+      if (queries.length === 0) {
+        queries = [goal];
+      }
+    } catch (err: any) {
+      logger.warn(`[research] Query generation failed, using goal as query: ${err.message}`);
+      queries = [goal];
+    }
+    logger.info(`[research] Generated ${queries.length} search queries: ${JSON.stringify(queries)}`);
+
+    // Step 2: Search the web
+    const allUrls = new Set<string>();
+    const searchResults: { title: string; url: string }[] = [];
+    for (const query of queries) {
+      try {
+        const results = await searchProvider.search(query, 10);
+        for (const result of results) {
+          if (!allUrls.has(result.url)) {
+            allUrls.add(result.url);
+            searchResults.push({ title: result.title, url: result.url });
+          }
+        }
+      } catch (err: any) {
+        logger.error(`[research] Search failed for query "${query}": ${err.message}`);
+      }
+    }
+
+    if (searchResults.length === 0) {
+      return res.json({ suggestions: [], fetch_failures: 0 });
+    }
+    logger.info(`[research] Found ${searchResults.length} unique URLs`);
+
+    // Step 3: Fetch page content
+    const urls = searchResults.map(r => r.url);
+    const { pages, failures } = await fetchAllPages(urls);
+    logger.info(`[research] Fetched ${pages.length} pages, ${failures} failures`);
+
+    if (pages.length === 0) {
+      return res.json({ suggestions: [], fetch_failures: failures });
+    }
+
+    // Step 4: LLM filters and structures results
+    let suggestions;
+    try {
+      suggestions = await llmProvider.research(goal, pages);
+    } catch (err: any) {
+      return handleLLMError(err, res);
+    }
+
+    logger.info(`[research] LLM returned ${suggestions.length} suggestions`);
+    res.json({ suggestions, fetch_failures: failures });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.get('/status', (req, res) => {
-  const status = Array.from(subscribers.entries()).reduce((prev: any, [roomId, sockets]) => {
+  const status: any = Array.from(subscribers.entries()).reduce((prev: any, [roomId, sockets]) => {
     prev[roomId] = sockets.size;
     return prev;
   }, {});
+  status.searchAvailable = searchProvider !== null && llmProvider !== null;
   logger.debug(`Requested server status: ${JSON.stringify(status)}`);
   res.send(status);
 });
@@ -883,6 +972,17 @@ function validateReformulateRequest(body: any): ValidationResult {
   if (goalErr) return goalErr;
   if (!Array.isArray(body.related_items)) {
     return { valid: false, error: 'Field "related_items" is required and must be an array' };
+  }
+  return VALID_RESULT;
+}
+
+function validateResearchRequest(body: any): ValidationResult {
+  const bodyErr = requireBody(body);
+  if (bodyErr) return bodyErr;
+  const goalErr = requireNonEmptyString(body, 'goal');
+  if (goalErr) return goalErr;
+  if (typeof body.goal === 'string' && body.goal.trim().length === 0) {
+    return { valid: false, error: 'Field "goal" must not be empty or whitespace-only' };
   }
   return VALID_RESULT;
 }

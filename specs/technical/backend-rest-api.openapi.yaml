@@ -28,6 +28,11 @@ info:
     - FS-TriggerReformulationOnClick
     - FS-DisplayReformulationSuggestions
     - FS-ReformulationErrorShowsMessage
+    - FS-TriggerResearchSendsGoal
+    - FS-ResearchReturnsUpToTenSuggestions
+    - FS-ResearchErrorDisplaysMessage
+    - FS-ResearchNoResultsDisplaysMessage
+    - FS-ResearchPageFetchPartialFailure
 
 servers:
   - url: http://localhost:3002
@@ -433,6 +438,60 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /research:
+    post:
+      operationId: research
+      summary: Search the Internet for sources relevant to a discovery goal
+      description: |
+        Takes a discovery goal, generates search queries, calls a Web Search API,
+        fetches and extracts content from result pages, then uses the LLM to filter
+        and structure up to 10 relevant suggestions with summaries and justifications.
+      x-tsid: TS-Research
+      x-fsid-links:
+        - FS-TriggerResearchSendsGoal
+        - FS-ResearchReturnsUpToTenSuggestions
+        - FS-ResearchErrorDisplaysMessage
+        - FS-ResearchNoResultsDisplaysMessage
+        - FS-ResearchPageFetchPartialFailure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - goal
+              properties:
+                goal:
+                  type: string
+                  minLength: 1
+                  description: The Discovery goal used as research context
+      responses:
+        '200':
+          description: Research successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchResponse'
+        '400':
+          description: Validation error (missing or empty goal)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Search API or LLM provider error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Search or LLM service not configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /status:
     get:
       operationId: getStatus
@@ -730,6 +789,42 @@ components:
                 type: string
                 description: Short explanation of why this reformulation improves the original
           description: List of 2-3 reformulation suggestions for analyst selection
+
+    ResearchResponse:
+      type: object
+      required:
+        - suggestions
+        - fetch_failures
+      properties:
+        suggestions:
+          type: array
+          maxItems: 10
+          items:
+            type: object
+            required:
+              - title
+              - summary
+              - url
+              - justification
+            properties:
+              title:
+                type: string
+                description: Title of the web page
+              summary:
+                type: string
+                description: Key points extracted from the page relevant to the discovery goal
+              url:
+                type: string
+                format: uri
+                description: Source URL of the web page
+              justification:
+                type: string
+                description: Short explanation of why this source is relevant to the goal
+          description: Up to 10 research suggestions ordered by relevance
+        fetch_failures:
+          type: integer
+          minimum: 0
+          description: Number of pages that could not be fetched during content extraction
 
     ExtractionResponse:
       type: object
