@@ -71,16 +71,22 @@ const ItemWrapper: React.FC<Props> = ({
       onDragStart={handleDragStart}
       style={weightStyle}
     >
-      {actionable && status && (
-        <span className={`status-chip ${formatStatus(status, '-')}`}>{formatStatus(status, ' ')}</span>
-      )}
-      {weight != null && (
-        <span className="weight-badge">{weight}</span>
-      )}
-      {version && version > 1 && (
-        <span className="version-badge">v{version}</span>
-      )}
-      {React.cloneElement(children, { item })}
+      <div className="item-content">
+        {((version && version > 1) || (actionable && status) || weight != null) && (
+          <div className="item-badges">
+            <div className="item-badges-left">
+              {version && version > 1 && <span className="version-badge">v{version}</span>}
+              {weight != null && <span className="weight-badge">{weight}</span>}
+            </div>
+            <div className="item-badges-right">
+              {actionable && status && (
+                <span className={`status-chip ${formatStatus(status, '-')}`}>{formatStatus(status, ' ')}</span>
+              )}
+            </div>
+          </div>
+        )}
+        {React.cloneElement(children, { item })}
+      </div>
       <div id={`${id}-toolbar`} className='wrapper-item-toolbar' onClick={(e) => e.stopPropagation()}>
         {onViewTraceability && (
           <div onClick={(e) => { e.stopPropagation(); onViewTraceability(); }} title="View traceability">

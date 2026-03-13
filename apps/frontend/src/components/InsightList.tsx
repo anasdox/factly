@@ -404,6 +404,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
     const children = getDirectChildren('insight', id, updatedData);
     const { ids: impactedIds, usedFallback } = await checkImpact(insight.text, newText, children, backendAvailable);
     const { data: propagated, impactedCount } = propagateImpact(updatedData, 'insight', id, 'edited', impactedIds);
+    dataRef.current = propagated;
     setData(propagated);
     const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
     onInfo(`Insight updated to v${versioned.version}. ${impactedCount} downstream item(s) marked.${fallbackHint}`);

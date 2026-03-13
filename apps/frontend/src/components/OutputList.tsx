@@ -274,6 +274,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
     const updated = { ...versioned, type: existing.type };
     let updatedData = { ...latest, outputs: latest.outputs.map(o => o.output_id === id ? updated : o) };
     updatedData = clearStatus(updatedData, 'output', id);
+    dataRef.current = updatedData;
     setData(updatedData);
     onInfo(`Output updated to v${updated.version}.`);
   };

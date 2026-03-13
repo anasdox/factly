@@ -398,7 +398,9 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
     const { ids: impactedIds, usedFallback } = await checkImpact(fact.text, newText, children, backendAvailable);
     const { data: propagated, impactedCount } = propagateImpact(updatedData, 'fact', id, 'edited', impactedIds);
     const updatedFacts = propagated.facts.map(f => f.fact_id === id ? versioned : f);
-    setData({ ...propagated, facts: updatedFacts });
+    const finalData = { ...propagated, facts: updatedFacts };
+    dataRef.current = finalData;
+    setData(finalData);
     const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
     onInfo(`Fact updated to v${versioned.version}. ${impactedCount} downstream item(s) marked.${fallbackHint}`);
   };

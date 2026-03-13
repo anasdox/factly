@@ -348,6 +348,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
     const children = getDirectChildren('recommendation', id, updatedData);
     const { ids: impactedIds, usedFallback } = await checkImpact(existing.text, newText, children, backendAvailable);
     const { data: propagated, impactedCount } = propagateImpact(updatedData, 'recommendation', id, 'edited', impactedIds);
+    dataRef.current = propagated;
     setData(propagated);
     const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
     onInfo(`Recommendation updated to v${versioned.version}. ${impactedCount} downstream item(s) marked.${fallbackHint}`);
