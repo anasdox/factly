@@ -37,7 +37,7 @@
 }
 
 .column.inputs {
-  flex: 0.7;
+  flex: 0.8;
 }
 
 .column > h2,
@@ -45,6 +45,8 @@
   font-size: 1.2em;
   overflow: hidden;
   white-space: nowrap;
+  margin: 0;
+  line-height: 1;
 }
 
 .review-select-btn {
@@ -85,11 +87,12 @@
 .column-header {
   display: flex;
   align-items: center;
-  gap: 0.5em;
+  gap: 0.3em;
   width: 100%;
   justify-content: center;
   padding-top: 0.5em;
   padding-bottom: 0.5em;
+  flex-wrap: wrap;
 }
 
 .select-all-button {
@@ -197,6 +200,7 @@ input[type=text], select, textarea {
   position: relative;
   border-radius: 10px;
   margin: 5px;
+  min-width: 0;
   min-height: 36px;
   width: calc(100% - 10px);
 }

@@ -437,7 +437,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
     <div className="column recommendations">
       <div className="column-sticky-top">
         <div className="column-header">
-          <h2>Recommendations</h2>
+          <h2>✅Recommendations</h2>
           {reviewableCount > 0 && <button className="review-select-btn" onClick={handleSelectReviewable}>{reviewableCount} to review</button>}
           {data.recommendations.length > 0 && selectedRecommendationIds.size < data.recommendations.length && (
             <button className="select-all-button" onClick={() => selectAll(data.recommendations.map(r => r.recommendation_id))} title="Select all recommendations">

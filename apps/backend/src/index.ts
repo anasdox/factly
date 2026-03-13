@@ -117,6 +117,9 @@ function handleLLMError(err: any, res: express.Response) {
   if (err.message?.includes('timeout') || err.code === 'ETIMEDOUT') {
     return res.status(502).json({ error: 'Extraction timed out' });
   }
+  if (err.message?.includes('truncated')) {
+    return res.status(502).json({ error: 'Response truncated — output too long. Try shortening the source content.' });
+  }
   if (err instanceof SyntaxError) {
     return res.status(502).json({ error: 'Extraction returned invalid response' });
   }

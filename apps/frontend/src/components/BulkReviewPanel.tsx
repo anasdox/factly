@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner, faCheck, faXmark, faPen } from '@fortawesome/free-solid-svg-icons';
 import Modal from './Modal';
+import { markdownRenderer } from '../renderers/MarkdownRenderer';
 import { API_URL } from '../config';
 
 export type ReviewItem = {
@@ -12,6 +13,7 @@ export type ReviewItem = {
   upstreamNewText: string;
   upstreamEntityType: string;
   goal: string;
+  outputType?: string;
 };
 
 type ProposalState = {
@@ -65,6 +67,7 @@ const BulkReviewPanel: React.FC<Props> = ({ items, onAccept, onReject, onClose }
               entity_type: item.upstreamEntityType,
             },
             goal: item.goal,
+            ...(item.outputType ? { output_type: item.outputType } : {}),
           }),
         });
 
@@ -161,7 +164,7 @@ const BulkReviewPanel: React.FC<Props> = ({ items, onAccept, onReject, onClose }
             <div className="bulk-review-type">{proposal.entityType}</div>
             <div className="bulk-review-current">
               <span className="bulk-review-label">Current</span>
-              <p>{proposal.currentText}</p>
+              <div className="suggestion-markdown">{markdownRenderer.render(proposal.currentText)}</div>
             </div>
             {proposal.loading ? (
               <div className="bulk-review-loading">
@@ -177,10 +180,10 @@ const BulkReviewPanel: React.FC<Props> = ({ items, onAccept, onReject, onClose }
                     <textarea
                       value={editText}
                       onChange={e => setEditText(e.target.value)}
-                      rows={3}
+                      rows={6}
                     />
                   ) : (
-                    <p>{proposal.proposedText}</p>
+                    <div className="suggestion-markdown">{markdownRenderer.render(proposal.proposedText)}</div>
                   )}
                 </div>
                 <div className="suggestion-actions">

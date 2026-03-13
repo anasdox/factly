@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import OutputItem from './OutputItem';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faAdd, faXmark, faCheckDouble, faTrashCan, faClipboardCheck, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faAdd, faXmark, faCheckDouble, faTrashCan, faClipboardCheck } from '@fortawesome/free-solid-svg-icons';
 import ItemWrapper from './ItemWrapper';
 import Modal from './Modal';
 import OutputModal from './OutputModal';
@@ -244,7 +244,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
     const reviewable = data.outputs.filter(
       o => selectedOutputIds.has(o.output_id) && isActionableStatus(o.status)
     );
-    const items: ReviewItem[] = reviewable
+    const items = reviewable
       .map(output => {
         const parentRec = data.recommendations.find(r => output.related_recommendations.includes(r.recommendation_id));
         if (!parentRec) return null;
@@ -259,7 +259,8 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
           upstreamNewText: parentRec.text || '',
           upstreamEntityType: 'recommendation',
           goal: data.goal || '',
-        };
+          outputType: output.type as string,
+        } as ReviewItem;
       })
       .filter((x): x is ReviewItem => x !== null);
     if (items.length === 0) { onError('No reviewable outputs with valid upstream found.'); return; }

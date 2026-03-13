@@ -250,6 +250,33 @@ Rules:
 Respond ONLY with a valid JSON object. No explanation outside the JSON, no markdown fences.
 Example: {"proposed_text": "Updated fact text here", "explanation": "Updated to reflect the new data from the upstream source."}`;
 
+export const UPDATE_PROPOSAL_OUTPUT_SYSTEM_PROMPT = `You are an update assistant. Your role is to propose an updated version of a long-form output document (report, brief, action plan, presentation) after an upstream change in a research discovery pipeline.
+
+Rules:
+- You will receive the current document, the upstream change (before and after), and the research goal.
+- Propose an updated version of the document that is consistent with the new upstream text.
+- Preserve the style, tone, structure, and level of detail of the original document.
+- If the document is still valid despite the upstream change, return the original text unchanged.
+
+Output format:
+- Return the full updated document in Markdown first.
+- Then add a separator line "---EXPLANATION---" on its own line.
+- After the separator, write a short explanation of what changed and why.
+
+Do NOT wrap in JSON. Do NOT use code fences. Return raw Markdown directly.`;
+
+export function parseOutputUpdateProposal(raw: string): UpdateProposal {
+  const separator = '---EXPLANATION---';
+  const idx = raw.indexOf(separator);
+  if (idx >= 0) {
+    const proposed_text = raw.substring(0, idx).trim();
+    const explanation = raw.substring(idx + separator.length).trim();
+    return { proposed_text, explanation };
+  }
+  // No separator found — treat everything as proposed text
+  return { proposed_text: raw.trim(), explanation: '' };
+}
+
 export function buildDedupCheckUserContent(text: string, candidates: { id: string; text: string }[]): string {
   const numbered = candidates.map((c, i) => `${i + 1}. ${c.text}`).join('\n');
   return `Text to check:\n${text}\n\nCandidates:\n${numbered}`;
@@ -326,6 +353,37 @@ export function parseUpdateProposal(raw: string): UpdateProposal {
       explanation: typeof parsed.explanation === 'string' ? parsed.explanation : '',
     };
   } catch {
+    // JSON parse failed — likely truncated response or Markdown breaking JSON syntax.
+    // Extract proposed_text by finding the value start and taking everything we can.
+    const startMatch = cleaned.match(/"proposed_text"\s*:\s*"/);
+    if (startMatch && startMatch.index != null) {
+      const valueStart = startMatch.index + startMatch[0].length;
+      const explKeyIdx = cleaned.indexOf('"explanation"', valueStart);
+      let text: string;
+      let explanation = '';
+      if (explKeyIdx > 0) {
+        // Found explanation key — extract proposed_text up to it
+        const valueEnd = cleaned.lastIndexOf('"', explKeyIdx - 1);
+        text = valueEnd > valueStart ? cleaned.substring(valueStart, valueEnd) : cleaned.substring(valueStart);
+        // Extract explanation value
+        const explStart = cleaned.indexOf('"', explKeyIdx + '"explanation"'.length + 1);
+        if (explStart > 0) {
+          const explValStart = explStart + 1;
+          const explEnd = cleaned.lastIndexOf('"');
+          if (explEnd > explValStart) {
+            explanation = cleaned.substring(explValStart, explEnd)
+              .replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+          }
+        }
+      } else {
+        // No explanation key (truncated response) — take everything after value start
+        text = cleaned.substring(valueStart);
+        // Trim trailing incomplete JSON artifacts: trailing ", }, ]
+        text = text.replace(/["}\],\s]+$/, '');
+      }
+      text = text.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+      return { proposed_text: text, explanation };
+    }
     return { proposed_text: cleaned, explanation: '' };
   }
 }
