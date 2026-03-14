@@ -86,3 +86,29 @@
 - **Context:** Niveau de détail des résultats de recherche présentés à l'analyste.
 - **Options:** 1) Snippet + URL (léger, rapide), 2) Contenu extrait + URL (le backend récupère la page, le LLM en extrait un résumé structuré)
 - **Answer:** Option 2 — Contenu extrait. Le backend récupère le contenu de chaque page, le LLM en extrait les points clés pertinents par rapport à l'objectif. Plus riche et exploitable que les simples snippets.
+
+## M22: User Management and Authentication
+
+### Q1: Comment l'authentification s'intègre-t-elle avec les discoveries existantes ?
+- **Date:** 2026-03-14
+- **Context:** Les discoveries sont actuellement publiques et accessibles par lien.
+- **Options:** 1) Discoveries privées par utilisateur, 2) Discoveries restent partagées mais nécessitent une auth, 3) Propriétaire auto + sauvegarde de discoveries visitées
+- **Answer:** Option 1 (simplifié) — Propriétaire automatique à la création uniquement. L'utilisateur retrouve les discoveries qu'il a créées dans son espace personnel. Pas de bookmark/sauvegarde de discoveries d'autres utilisateurs. Les discoveries restent publiques, accessibles et modifiables par tout le monde (authentifié ou anonyme) via le lien.
+
+### Q2: Quel mécanisme d'authentification et de session ?
+- **Date:** 2026-03-14
+- **Context:** Choix entre JWT, cookies, ou combinaison.
+- **Options:** 1) JWT stateless (header Authorization), 2) Cookie HTTP-only, 3) JWT en cookie HTTP-only
+- **Answer:** Option 1 — JWT stateless. Simple, s'intègre avec l'architecture REST + SSE existante. Les routes restent accessibles sans token (anonyme).
+
+### Q3: Format de la commande Make pour ajouter un utilisateur ?
+- **Date:** 2026-03-14
+- **Context:** Besoin d'un moyen CLI de créer des utilisateurs.
+- **Options:** 1) Interactif (prompt), 2) Paramètres en ligne (`USER=login PASS=password`), 3) Les deux
+- **Answer:** Option 2 — `make add-user USER=login PASS=password`. Simple et scriptable.
+
+### Q4: Où stocker les utilisateurs ?
+- **Date:** 2026-03-14
+- **Context:** Choix entre fichier JSON et SQLite.
+- **Options:** 1) Fichier JSON (`data/users.json`), 2) SQLite
+- **Answer:** Option 1 — Fichier JSON, cohérent avec l'architecture de stockage existante.

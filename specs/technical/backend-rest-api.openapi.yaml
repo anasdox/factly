@@ -33,6 +33,24 @@ info:
     - FS-ResearchErrorDisplaysMessage
     - FS-ResearchNoResultsDisplaysMessage
     - FS-ResearchPageFetchPartialFailure
+    - FS-LoginWithValidCredentials
+    - FS-LoginWithInvalidPassword
+    - FS-LoginWithNonexistentUser
+    - FS-LoginMissingFields
+    - FS-AnonymousAccessPreserved
+    - FS-AuthenticatedCreateDiscoverySetsOwner
+    - FS-PersonalSpaceListsOwnedDiscoveries
+    - FS-PersonalSpaceRequiresAuth
+    - FS-OwnerCanDeleteDiscovery
+    - FS-NonOwnerCannotDeleteDiscovery
+    - FS-AnonymousCannotDeleteOwnedDiscovery
+    - FS-AnonymousCanDeleteUnownedDiscovery
+    - FS-VisitedDiscoveryTracked
+    - FS-VisitedDiscoveryTrackingIdempotent
+    - FS-PersonalSpaceListsVisitedDiscoveries
+    - FS-OwnDiscoveryNotInVisited
+    - FS-ExpiredTokenRejected
+    - FS-InvalidTokenRejected
 
 servers:
   - url: http://localhost:3002
@@ -80,11 +98,13 @@ paths:
   /rooms/{id}:
     get:
       operationId: getRoom
-      summary: Retrieve room data by ID
+      summary: Retrieve room data by ID (tracks visit for authenticated users)
       x-tsid: TS-GetRoom
       x-fsid-links:
         - FS-RetrieveRoom
         - FS-RejectInvalidRoomIdFormat
+        - FS-VisitedDiscoveryTracked
+        - FS-VisitedDiscoveryTrackingIdempotent
       parameters:
         - name: id
           in: path
@@ -114,6 +134,10 @@ paths:
       x-fsid-links:
         - FS-DeleteRoom
         - FS-RejectInvalidRoomIdFormat
+        - FS-OwnerCanDeleteDiscovery
+        - FS-NonOwnerCannotDeleteDiscovery
+        - FS-AnonymousCannotDeleteOwnedDiscovery
+        - FS-AnonymousCannotDeleteAnyDiscovery
       parameters:
         - name: id
           in: path
@@ -126,6 +150,12 @@ paths:
           description: Room stopped and deleted
         '400':
           description: Invalid room ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Only the owner can delete this discovery
           content:
             application/json:
               schema:
@@ -492,6 +522,84 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /auth/login:
+    post:
+      operationId: login
+      summary: Authenticate a user and return a JWT token
+      x-tsid: TS-AuthLogin
+      x-fsid-links:
+        - FS-LoginWithValidCredentials
+        - FS-LoginWithInvalidPassword
+        - FS-LoginWithNonexistentUser
+        - FS-LoginMissingFields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  minLength: 1
+                password:
+                  type: string
+                  minLength: 1
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - token
+                properties:
+                  token:
+                    type: string
+                    description: JWT token for authenticated requests
+        '400':
+          description: Missing username or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /me/discoveries:
+    get:
+      operationId: getMyDiscoveries
+      summary: List discoveries created or visited by the authenticated user
+      x-tsid: TS-GetMyDiscoveries
+      x-fsid-links:
+        - FS-PersonalSpaceListsOwnedDiscoveries
+        - FS-PersonalSpaceListsVisitedDiscoveries
+        - FS-OwnDiscoveryNotInVisited
+        - FS-PersonalSpaceRequiresAuth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of discoveries owned by the user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyDiscoveriesResponse'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /status:
     get:
       operationId: getStatus
@@ -514,6 +622,13 @@ paths:
                   "660e8400-e29b-41d4-a716-446655440001": 1
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from POST /auth/login
+
   schemas:
     DiscoveryData:
       type: object
@@ -846,3 +961,34 @@ components:
         input_id:
           type: string
           description: The input_id of the source Input
+
+    MyDiscoveriesResponse:
+      type: object
+      required:
+        - discoveries
+      properties:
+        discoveries:
+          type: array
+          items:
+            type: object
+            required:
+              - discovery_id
+              - title
+              - goal
+              - date
+              - role
+            properties:
+              discovery_id:
+                type: string
+                format: uuid
+              title:
+                type: string
+              goal:
+                type: string
+              date:
+                type: string
+                format: date
+              role:
+                type: string
+                enum: [owned, visited]
+                description: Whether the user created this discovery or visited it

@@ -20,6 +20,15 @@ This document defines shared terms used throughout the repository. All specs and
 - **Forward Traversal**: Following the pipeline from an entity to its dependents (e.g., from an Input to the Facts that reference it, then to their Insights, etc.).
 - **Backward Traversal**: Following the pipeline from an entity back to its sources (e.g., from an Output to its Recommendations, then to their Insights, etc.).
 
+### Users and Authentication
+- **User**: A registered account identified by a unique `username` and a bcrypt-hashed `password`. Stored in `data/users.json`.
+- **Anonymous User**: A visitor who interacts with the system without authentication. Can access, create, and modify any public discovery via its link.
+- **Authenticated User**: A User who has logged in and holds a valid JWT token. Can access their Personal Space.
+- **Personal Space**: The authenticated user's dashboard listing their created discoveries ("My discoveries") and discoveries they have visited ("Shared with me").
+- **Visited Discovery**: A discovery opened by an authenticated user who is not its owner. Automatically tracked on `GET /rooms/:id`.
+- **Owner**: The authenticated user who created a discovery. Automatically assigned at creation time. A discovery created by an anonymous user has no owner.
+- **JWT Token**: A signed JSON Web Token issued at login, sent as `Authorization: Bearer <token>` header. Stateless — no server-side session.
+
 ### Collaboration
 - **Room**: A server-side session identified by a UUID. Holds a copy of the Discovery data and manages SSE connections for real-time collaboration.
 - **Event Room**: The user-facing name for starting a collaborative session. Creating an Event Room sends the current Discovery data to the backend and opens an SSE channel.

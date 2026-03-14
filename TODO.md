@@ -1,41 +1,38 @@
 # TODO
 
 ## Intent
-Deliver M21: Internet Research for Input Discovery — a "Research" button in the Inputs column that searches the Internet based on the discovery goal, fetches and extracts page content, and proposes up to 10 input suggestions for analyst validation.
+Deliver M22: User Management and Authentication — optional login/password auth with JWT, personal discovery space (owned + saved), and `make add-user` CLI command. All discoveries remain public.
 
 ## Preconditions
-- M1–M20: Delivered
-- ROADMAP.md updated with M21
-- Brave Search API key required (SEARCH_PROVIDER=brave, SEARCH_API_KEY)
+- M1–M21: Delivered
+- ROADMAP.md updated with M22
+- Q&A recorded (4 questions: auth integration, session mechanism, CLI format, storage)
 
 ## Tasks
-- [x] Problem understanding and blocking questions (3 Q&A: search mechanism, result count, suggestion content)
-- [x] Write functional specs for M21 (18 scenarios in internet-research-input-discovery.feature)
+- [x] Problem understanding and blocking questions (4 Q&A)
+- [x] Write functional specs for M22 (23 scenarios in user-management-authentication.feature)
 - [x] UoR validation of functional specs
-- [x] Write technical specs for M21 (TS-InternetResearchInputDiscovery + TS-Research in OpenAPI)
+- [x] Write technical specs for M22 (TS-UserManagementAuthentication + OpenAPI updates)
 - [x] UoR validation of technical specs
-- [x] Create/update IMPLEMENTATION_PLAN.md (10 slices: search provider → page fetcher → prompts → provider → endpoint → query gen → nginx → component → button → status)
-- [x] Write acceptance tests for M21 (15 tests in internet-research-input-discovery.test.ts)
+- [x] Create/update IMPLEMENTATION_PLAN.md (8 slices)
+- [x] Write acceptance tests for M22 (23 tests in user-management-authentication.test.ts)
 - [x] UoR validation of implementation plan + acceptance tests
-- [x] Implement M21 (10 slices: search provider, page fetcher, prompts, provider, endpoint, query gen, nginx, component, button, status)
-- [x] All acceptance tests pass (193/193, 14 suites)
-- [x] TypeScript compiles cleanly (frontend + backend)
-- [x] Refactoring phase (static import in search provider, code review pass)
+- [ ] Implement M22
+- [ ] All acceptance tests pass
+- [ ] TypeScript compiles cleanly (frontend + backend)
+- [ ] Refactoring phase
 - [ ] Demo and user validation
 
 ## Validation
 - All acceptance tests pass
 - TypeScript compiles cleanly (frontend + backend)
+- Traceability check passes
 
 ## Done when
-- "Research" button visible in Inputs column header when backend + search configured
-- Button disabled when goal is empty
-- Clicking triggers Internet search based on discovery goal
-- Up to 10 suggestions displayed with title, summary, source URL, justification
-- Accept adds new input of type "web" with URL preserved
-- Edit inline before accepting works
-- Reject removes suggestion, dismiss clears all
-- Partial fetch failures show notice but display successful results
-- Re-research replaces previous suggestions
+- `make add-user USER=login PASS=password` creates a user with hashed password in `data/users.json`
+- `POST /auth/login` returns a JWT token for valid credentials
+- Anonymous access to all existing routes is preserved (no auth required)
+- Authenticated user is set as owner when creating a discovery
+- Personal space lists "My discoveries" (created) and "Shared with me" (visited)
 - All CI gates green
 - User validation complete

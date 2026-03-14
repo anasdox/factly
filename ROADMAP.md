@@ -211,7 +211,7 @@
 - Works for all three item types: facts, insights, and recommendations
 
 ### M21: Internet Research for Input Discovery
-**Status:** Planned
+**Status:** Delivered (Demo validated 2026-03-14)
 **Outcome:** An analyst can trigger an Internet search based on the discovery goal to find relevant sources and information. Proposed results appear as input suggestions that the analyst validates before they enter the pipeline.
 - A "Research" button is available in the Inputs column
 - The system searches the Internet using the discovery goal as search context
@@ -221,6 +221,19 @@
 - Accepted inputs are added to the pipeline with source URL preserved
 - Human-in-the-loop: no input is added without analyst validation
 - Works even with an empty pipeline (no existing inputs required)
+
+### M22: User Management and Authentication
+**Status:** Planned
+**Outcome:** An analyst can optionally authenticate with login/password to access a personal space listing the discoveries they created. Anonymous access remains fully supported — all discoveries are public and accessible via link.
+- Optional authentication: login/password with JWT stateless tokens
+- Anonymous users can access, create, and modify any discovery via its link (current behavior preserved)
+- Authenticated users are automatically set as owner of discoveries they create
+- Personal space: "My discoveries" (created) + "Shared with me" (visited)
+- Visiting a discovery while authenticated automatically tracks it as "shared with me"
+- User storage: `data/users.json` (file-based, consistent with existing architecture)
+- `make add-user USER=login PASS=password` CLI command to create users
+- No private discoveries — everything remains public
+- No self-registration, no password recovery
 
 ## Risks and Dependencies
 
@@ -248,11 +261,14 @@
 | Internet search latency (M21) | Web search + LLM processing adds significant delay | Make research async and non-blocking; show progress indicator |
 | Source credibility (M21) | No guarantee that found sources are trustworthy | Display source URL and let analyst judge; do not auto-assess credibility |
 | Search API dependency (M21) | Requires a web search API (cost, rate limits, availability) | Abstract behind a provider interface; support multiple search backends |
+| JWT secret management (M22) | JWT signing key must be kept secure | Store in env var `JWT_SECRET`; never commit to repo |
+| Password storage (M22) | Plaintext passwords are a security risk | Hash with bcrypt via `make add-user`; never store plaintext |
+| No self-registration (M22) | Users can only be created via CLI | Intentional for this milestone; admin UI deferred to future work |
 
 ## Non-Goals (Project-Wide)
 
 - ~~AI-powered analysis or entity extraction~~ → Moved to Future Milestones (Decision: 20260207-EnableAIPoweredEntityExtraction)
-- User authentication and authorization
+- ~~User authentication and authorization~~ → Moved to M22 (basic auth with login/password)
 - Mobile or desktop native clients
 - Offline-first or PWA capabilities
 - Multi-language / internationalization
