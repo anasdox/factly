@@ -71,8 +71,8 @@
 .traceability-columns {
   display: flex;
   flex: 1;
-  overflow-x: auto;
-  overflow-y: hidden;
+  min-height: 0;
+  overflow: hidden;
   padding: 1em;
   gap: 1em;
 }
@@ -80,11 +80,14 @@
 .traceability-column {
   flex: 1;
   min-width: 180px;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5em;
+  max-height: 100%;
   overflow-y: auto;
+  scrollbar-width: thin;
   padding: 0 3px;
+}
+
+.traceability-column .traceability-item {
+  margin-bottom: 0.5em;
 }
 
 .traceability-column h3 {
@@ -100,6 +103,10 @@
 
 .traceability-item {
   font-size: 0.9em;
+  background-color: var(--bg-item);
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 0.4em 0.5em;
 }
 
 .traceability-item-origin .item {
