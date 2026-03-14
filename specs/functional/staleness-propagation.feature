@@ -10,6 +10,7 @@ Feature: Staleness Propagation on Edit
   - Text edits trigger lazy status propagation to direct children only (depth-1, level-by-level)
   - Deeper levels are only flagged when the Analyst resolves the stale item at the current level (edit or accept proposal)
   - Non-text changes (relations, metadata) update the entity in place without versioning or propagation
+  - Exception: weight changes trigger downstream propagation (see item-weighting.feature)
   - A waiting toast informs the Analyst while versioning and impact analysis are in progress
   - Output edits are local terminal updates (no impact analysis request)
 

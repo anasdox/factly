@@ -12,9 +12,11 @@ Feature: AI-Assisted Update Proposals
 
   Non-goals:
   - Fully automatic updates without Analyst validation
-  - Batch AI updates of all stale items at once (Analyst triggers per item)
   - AI proposing structural changes (adding/removing relationships)
   - AI updating entities across Discovery sessions
+
+  Related features:
+  - Bulk Review Workflow (bulk-review-workflow.feature) extends this feature with batch AI proposals
 
   # ── Trigger AI update ──
 
