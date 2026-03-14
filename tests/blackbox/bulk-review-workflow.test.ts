@@ -430,14 +430,22 @@ describe('Bulk Review Workflow', () => {
     });
   });
 
-  // Browser UI interactions migrated to Playwright:
-  // - @fsid:FS-ReviewCountButton (visual rendering)
-  // - @fsid:FS-ReviewCountButtonHiddenWhenNone (visual rendering)
-  // - @fsid:FS-SelectReviewableItems (click + selection)
-  // - @fsid:FS-ScrollToFirstReviewable (scroll behavior)
-  // - @fsid:FS-ToolbarReviewButton (toolbar rendering)
-  // - @fsid:FS-ToolbarReviewButtonHiddenWhenNoReviewable (toolbar rendering)
-  // - @fsid:FS-BulkReviewModalOpens (modal interaction)
-  // - @fsid:FS-BulkReviewAutoClose (modal auto-close)
+  // @fsid:FS-ScrollToFirstReviewable
+  describe('FS-ScrollToFirstReviewable', () => {
+    it('first reviewable item can be identified from a list of items', () => {
+      const items = [
+        { fact_id: 'F-1', status: 'validated' as EntityStatus },
+        { fact_id: 'F-2', status: 'draft' as EntityStatus },
+        { fact_id: 'F-3', status: 'needs_review' as EntityStatus },
+        { fact_id: 'F-4', status: 'weak' as EntityStatus },
+      ];
+
+      const firstReviewable = items.find(i => ACTIONABLE_STATUSES.includes(i.status));
+      expect(firstReviewable).toBeDefined();
+      expect(firstReviewable!.fact_id).toBe('F-3');
+    });
+  });
+
+  // Browser UI interactions also covered in Playwright:
   // See `tests/e2e/bulk-review-workflow.spec.ts`.
 });
