@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { faEdit, faFileDownload, faPlus, faUpload, faPlayCircle, faMoon, faSun, faRoute, faRocket, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faFileDownload, faPlus, faUpload, faPlayCircle, faMoon, faSun, faRoute, faRocket, faSpinner, faUser, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./Toolbar.css";
 
@@ -14,6 +14,8 @@ import { useLocalStorage } from 'usehooks-ts'
 import { isObjectEmpty } from "../lib";
 import { API_URL } from "../config";
 import { findDuplicatesLocal } from "../dedup";
+import { useAuth } from "../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 
 type Props = {
@@ -27,6 +29,8 @@ type Props = {
 };
 
 const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, onStartTour }: Props) => {
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [isStartEventRoomModalVisible, setIsStartEventRoomModalVisible] = useState(false);
@@ -544,6 +548,20 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
           onStartTour();
         }}>
           <FontAwesomeIcon icon={faRoute} size='lg' />
+        </div>
+      )}
+      {isAuthenticated ? (
+        <>
+          <div title="My Space" onClick={() => navigate('/me')}>
+            <FontAwesomeIcon icon={faUser} size='lg' />
+          </div>
+          <div title="Logout" onClick={() => { logout(); }}>
+            <FontAwesomeIcon icon={faSignOutAlt} size='lg' />
+          </div>
+        </>
+      ) : (
+        <div title="Login" onClick={() => navigate('/login')}>
+          <FontAwesomeIcon icon={faUser} size='lg' />
         </div>
       )}
       <div title={theme === 'light' ? 'Dark mode' : 'Light mode'} onClick={toggleTheme}>

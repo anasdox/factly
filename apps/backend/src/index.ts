@@ -18,6 +18,10 @@ import { VALID_OUTPUT_TYPES, ExtractedFact } from './llm/prompts';
 import { embeddingCheckDuplicates, embeddingScanDuplicates } from './llm/embeddings';
 import { buildChatSystemPrompt, CHAT_TOOLS, DiscoveryContext, ReferencedItem } from './llm/chat-prompts';
 import benchmarkRoutes from './benchmark-routes';
+import bcrypt from 'bcrypt';
+import { findUser } from './auth/user-store';
+import { signToken } from './auth/jwt';
+import { optionalAuth, requireAuth } from './auth/middleware';
 
 const VALID_UPDATE_ENTITY_TYPES = ['fact', 'insight', 'recommendation', 'output'];
 import { extractTextFromUrl, WebScraperError } from './web-scraper';
@@ -71,41 +75,151 @@ app.use(bodyParser.json({ limit: '5mb' }));
 app.use(cors());
 app.use('/benchmark', benchmarkRoutes);
 
+// --- Authentication endpoints ---
+
+app.post('/auth/login', async (req, res, next) => {
+  try {
+    const { username, password } = req.body || {};
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Fields "username" and "password" are required' });
+    }
+    const user = findUser(username);
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    const token = signToken(username);
+    res.json({ token });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.get('/me/discoveries', requireAuth, async (req, res, next) => {
+  try {
+    const username = req.user!.username;
+    const discoveries: any[] = [];
+
+    // Iterate all keys in the store — Keyv with SQLite doesn't expose iteration,
+    // so we use the internal SQLite store to query all keys.
+    const sqliteStore = (store as any).opts.store;
+    let rows: { key: string; value: string }[] = [];
+    if (sqliteStore && typeof sqliteStore.query === 'function') {
+      rows = await sqliteStore.query('SELECT key, value FROM keyv');
+    } else if (sqliteStore && sqliteStore.db) {
+      // Alternative: direct db access
+      const db = sqliteStore.db;
+      rows = await new Promise((resolve, reject) => {
+        if (db.all) {
+          db.all('SELECT key, value FROM keyv', (err: any, r: any) => err ? reject(err) : resolve(r || []));
+        } else {
+          resolve([]);
+        }
+      });
+    }
+
+    for (const row of rows) {
+      try {
+        const parsed = JSON.parse(row.value);
+        const data = parsed.value; // Keyv wraps in { value, expires }
+        if (!data || !data.discovery_id) continue;
+
+        const meta = await store.get(`meta:${row.key.replace('keyv:', '')}`);
+        const owner = meta?.owner || null;
+        const visitedBy: string[] = meta?.visited_by || [];
+
+        if (owner === username) {
+          discoveries.push({
+            discovery_id: data.discovery_id,
+            title: data.title || '',
+            goal: data.goal || '',
+            date: data.date || '',
+            role: 'owned',
+          });
+        } else if (visitedBy.includes(username)) {
+          discoveries.push({
+            discovery_id: data.discovery_id,
+            title: data.title || '',
+            goal: data.goal || '',
+            date: data.date || '',
+            role: 'visited',
+          });
+        }
+      } catch {
+        // Skip malformed entries
+      }
+    }
+
+    res.json({ discoveries });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Define API endpoints
-app.post('/rooms', async (req, res, next) => {
+app.post('/rooms', optionalAuth, async (req, res, next) => {
   try {
     const validation = validateDiscoveryData(req.body);
     if (!validation.valid) {
       return res.status(400).json({ error: validation.error });
     }
     const roomId = await createRoom(req.body);
-    logger.info(`Created room with ID: ${roomId}`);
+    // Store ownership metadata
+    const owner = req.user?.username || null;
+    await store.set(`meta:${roomId}`, { owner, visited_by: [] });
+    logger.info(`Created room with ID: ${roomId}, owner: ${owner || 'anonymous'}`);
     res.send({ roomId });
   } catch (err) {
     next(err);
   }
 });
 
-app.get('/rooms/:id', async (req, res, next) => {
+app.get('/rooms/:id', optionalAuth, async (req, res, next) => {
   try {
     if (!isRoomValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid room ID format. Must be UUID v4.' });
     }
-    logger.debug(`Fetched room data for ID: ${req.params.id}`);
-    const room = await getRoom(req.params.id);
+    const roomId = req.params.id;
+    const room = await getRoom(roomId);
+
+    // Track visit for authenticated non-owners
+    if (req.user?.username) {
+      const meta = await store.get(`meta:${roomId}`) || { owner: null, visited_by: [] };
+      if (meta.owner !== req.user.username && !meta.visited_by.includes(req.user.username)) {
+        meta.visited_by.push(req.user.username);
+        await store.set(`meta:${roomId}`, meta);
+      }
+    }
+
+    logger.debug(`Fetched room data for ID: ${roomId}`);
     res.send(room);
   } catch (err) {
     next(err);
   }
 });
 
-app.delete('/rooms/:id', async (req, res, next) => {
+app.delete('/rooms/:id', optionalAuth, async (req, res, next) => {
   try {
     if (!isRoomValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid room ID format. Must be UUID v4.' });
     }
-    await stopRoom(req.params.id);
-    logger.info(`Stopped room with ID: ${req.params.id}`);
+    const roomId = req.params.id;
+
+    // Enforce deletion authorization
+    if (!req.user) {
+      return res.status(403).json({ error: 'Authentication required to delete a discovery' });
+    }
+    const meta = await store.get(`meta:${roomId}`);
+    if (!meta || meta.owner !== req.user.username) {
+      return res.status(403).json({ error: 'Only the owner can delete this discovery' });
+    }
+
+    await stopRoom(roomId);
+    await store.delete(`meta:${roomId}`);
+    logger.info(`Stopped room with ID: ${roomId}`);
     res.sendStatus(204);
   } catch (err) {
     next(err);

@@ -17,11 +17,13 @@
     "@types/express": "^4.17.21",
     "@types/keyv": "^4.2.0",
     "@types/winston": "^2.4.4",
+    "bcrypt": "^6.0.0",
     "cheerio": "^1.1.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.4",
     "express": "^4.19.2",
     "friendly-username-generator": "^2.0.4",
+    "jsonwebtoken": "^9.0.3",
     "keyv": "^4.5.4",
     "openai": "^6.18.0",
     "ts-node": "^10.9.2",
@@ -30,6 +32,8 @@
     "winston": "^3.13.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/uuid": "^9.0.8"
   }
 }

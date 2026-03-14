@@ -15,7 +15,7 @@ BACKEND_PID    := /tmp/factly-backend.pid
         typecheck typecheck-backend typecheck-frontend typecheck-benchmark \
         test test-backend test-acceptance test-e2e \
         demo demo-m8 demo-m9 demo-m16 demo-m17 \
-        clean lint
+        clean lint add-user
 
 ## Install
 
@@ -151,6 +151,13 @@ clean:
 	rm -rf $(E2E_TESTS_DIR)/node_modules
 	rm -rf $(E2E_TESTS_DIR)/playwright-report $(E2E_TESTS_DIR)/test-results
 	rm -rf $(BENCHMARK_DIR)/node_modules
+
+## User management
+
+add-user:
+	@test -n "$(USER)" || (echo "Error: USER is required. Usage: make add-user USER=login PASS=password" && exit 1)
+	@test -n "$(PASS)" || (echo "Error: PASS is required. Usage: make add-user USER=login PASS=password" && exit 1)
+	cd $(BACKEND_DIR) && USER="$(USER)" PASS="$(PASS)" npx tsx scripts/add-user.ts
 
 ## Logs
 

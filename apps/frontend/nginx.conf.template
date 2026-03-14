@@ -9,6 +9,18 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
+    location /auth/ {
+        proxy_pass ${BACKEND_URL}/auth/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    location /me/ {
+        proxy_pass ${BACKEND_URL}/me/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
     location /status {
         proxy_pass ${BACKEND_URL}/status;
         proxy_set_header Host $host;

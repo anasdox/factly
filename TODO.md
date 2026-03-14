@@ -17,9 +17,9 @@ Deliver M22: User Management and Authentication — optional login/password auth
 - [x] Create/update IMPLEMENTATION_PLAN.md (8 slices)
 - [x] Write acceptance tests for M22 (23 tests in user-management-authentication.test.ts)
 - [x] UoR validation of implementation plan + acceptance tests
-- [ ] Implement M22
+- [x] Implement M22 (8 slices: user-store, JWT, middleware, login, ownership, visit tracking, nginx, frontend)
 - [ ] All acceptance tests pass
-- [ ] TypeScript compiles cleanly (frontend + backend)
+- [x] TypeScript compiles cleanly (frontend + backend)
 - [ ] Refactoring phase
 - [ ] Demo and user validation
 
