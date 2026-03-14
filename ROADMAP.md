@@ -192,6 +192,13 @@
 - Human-in-the-loop: no modification is applied without explicit analyst confirmation
 - Chat history persisted per discovery session
 
+### M19: Staleness Management — Weighting, AI Updates & Bulk Review
+**Status:** Delivered
+**Outcome:** The analyst can assign importance weights to facts, insights, and recommendations; trigger AI-proposed updates for stale items; and batch-review multiple stale items at once with parallel AI proposals.
+- **Item Weighting:** numeric weight (0–10) on facts, insights, recommendations; LLM proposes initial weight during extraction; weight badge and proportional border opacity; weight changes trigger downstream propagation without creating a new version
+- **AI-Assisted Update Proposals:** "Propose update" action on stale items sends current text, upstream change, and discovery goal to LLM; proposal panel shows current vs. proposed text with Accept/Edit/Reject actions; accepted proposals create a new version and trigger downstream propagation; output proposals use raw Markdown prompt (no JSON wrapping) to avoid truncation
+- **Bulk Review Workflow:** review count button in column headers; click selects all reviewable items and scrolls to first; "Review" button in selection toolbar opens a modal with parallel AI proposals; each proposal card supports Accept/Edit/Dismiss; "Accept All" and "Dismiss All" bulk actions; modal auto-closes when all proposals are handled; truncation detection with error reporting for long outputs; Markdown preview for output proposals
+
 ### M20: AI-Assisted Reformulation Suggestions
 **Status:** Delivered (Demo validated 2026-03-12)
 **Outcome:** When an analyst creates or edits an item (fact, insight, or recommendation), a "Reformulate" button in the modal proposes alternative wordings to improve clarity, precision, or actionability.
