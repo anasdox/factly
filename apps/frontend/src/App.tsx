@@ -243,8 +243,8 @@ const App: React.FC = () => {
       )}
       <header className='discovery-header'>
         <div className='discovery-details'>
-          <div><h1>🔍{data.title}</h1></div>
-          <div><h5>🎯{data.goal}</h5></div>
+          <h1>🔍{data.title}</h1>
+          <h5>🎯{data.goal}</h5>
         </div>
         <ToolBar
           data={data}
