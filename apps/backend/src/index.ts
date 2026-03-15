@@ -79,6 +79,9 @@ app.use('/benchmark', benchmarkRoutes);
 
 app.post('/auth/login', async (req, res, next) => {
   try {
+    if (!process.env.JWT_SECRET) {
+      return res.status(503).json({ error: 'Authentication not configured (JWT_SECRET missing)' });
+    }
     const { username, password } = req.body || {};
     if (!username || !password) {
       return res.status(400).json({ error: 'Fields "username" and "password" are required' });
@@ -208,13 +211,15 @@ app.delete('/rooms/:id', optionalAuth, async (req, res, next) => {
     }
     const roomId = req.params.id;
 
-    // Enforce deletion authorization
-    if (!req.user) {
-      return res.status(403).json({ error: 'Authentication required to delete a discovery' });
-    }
-    const meta = await store.get(`meta:${roomId}`);
-    if (!meta || meta.owner !== req.user.username) {
-      return res.status(403).json({ error: 'Only the owner can delete this discovery' });
+    // Enforce deletion authorization when auth system is active
+    if (process.env.JWT_SECRET) {
+      if (!req.user) {
+        return res.status(403).json({ error: 'Authentication required to delete a discovery' });
+      }
+      const meta = await store.get(`meta:${roomId}`);
+      if (meta && meta.owner && meta.owner !== req.user.username) {
+        return res.status(403).json({ error: 'Only the owner can delete this discovery' });
+      }
     }
 
     await stopRoom(roomId);

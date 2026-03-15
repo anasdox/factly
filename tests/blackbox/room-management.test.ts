@@ -12,6 +12,7 @@
 
 import { BASE_URL } from './helpers/backend-server';
 import { connectSse } from './helpers/sse-client';
+import { getTestToken, authHeaders } from './helpers/auth';
 
 const VALID_DISCOVERY_DATA = {
   discovery_id: 'test-disc-001',
@@ -70,37 +71,40 @@ describe('Room Management', () => {
   // @fsid:FS-DeleteRoom
   describe('FS-DeleteRoom', () => {
     it('DELETE /rooms/:id returns 204', async () => {
+      const token = await getTestToken();
       const createResponse = await fetch(`${BASE_URL}/rooms`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(token),
         body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
       const { roomId } = await createResponse.json();
 
       const deleteResponse = await fetch(`${BASE_URL}/rooms/${roomId}`, {
         method: 'DELETE',
+        headers: authHeaders(token),
       });
       expect(deleteResponse.status).toBe(204);
     });
 
     it('deleting one room does not affect other rooms', async () => {
+      const token = await getTestToken();
       // Create two rooms
       const create1 = await fetch(`${BASE_URL}/rooms`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(token),
         body: JSON.stringify({ ...VALID_DISCOVERY_DATA, title: 'Room 1' }),
       });
       const { roomId: roomId1 } = await create1.json();
 
       const create2 = await fetch(`${BASE_URL}/rooms`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(token),
         body: JSON.stringify({ ...VALID_DISCOVERY_DATA, title: 'Room 2' }),
       });
       const { roomId: roomId2 } = await create2.json();
 
       // Delete room 1
-      await fetch(`${BASE_URL}/rooms/${roomId1}`, { method: 'DELETE' });
+      await fetch(`${BASE_URL}/rooms/${roomId1}`, { method: 'DELETE', headers: authHeaders(token) });
 
       // Room 2 should still exist
       const getRoom2 = await fetch(`${BASE_URL}/rooms/${roomId2}`);

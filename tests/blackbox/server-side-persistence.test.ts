@@ -9,6 +9,7 @@
  */
 
 import { startServer, stopServer, BASE_URL } from './helpers/backend-server';
+import { getTestToken, authHeaders } from './helpers/auth';
 import { resolve } from 'path';
 import { existsSync, unlinkSync } from 'fs';
 
@@ -27,9 +28,10 @@ const DISCOVERY_DATA = {
 };
 
 async function createRoom(data: object): Promise<string> {
+  const token = await getTestToken();
   const res = await fetch(`${BASE_URL}/rooms`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(token),
     body: JSON.stringify(data),
   });
   const body = await res.json();
@@ -44,7 +46,8 @@ async function getRoom(roomId: string): Promise<any> {
 }
 
 async function deleteRoom(roomId: string): Promise<void> {
-  await fetch(`${BASE_URL}/rooms/${roomId}`, { method: 'DELETE' });
+  const token = await getTestToken();
+  await fetch(`${BASE_URL}/rooms/${roomId}`, { method: 'DELETE', headers: authHeaders(token) });
 }
 
 describe('Server-Side Persistence', () => {

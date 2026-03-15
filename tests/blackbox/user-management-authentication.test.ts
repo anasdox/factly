@@ -150,8 +150,8 @@ describe('User Management and Authentication', () => {
         expect(typeof result.token).toBe('string');
         expect(result.token.split('.')).toHaveLength(3); // JWT has 3 parts
       } else {
-        // Auth not implemented yet or user not created
-        expect([401, 404]).toContain(response.status);
+        // Auth not configured (503) or user not created (401)
+        expect([401, 503]).toContain(response.status);
       }
     });
   });
