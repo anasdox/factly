@@ -157,7 +157,7 @@ clean:
 add-user:
 	@test -n "$(USER)" || (echo "Error: USER is required. Usage: make add-user USER=login PASS=password" && exit 1)
 	@test -n "$(PASS)" || (echo "Error: PASS is required. Usage: make add-user USER=login PASS=password" && exit 1)
-	cd $(BACKEND_DIR) && USER="$(USER)" PASS="$(PASS)" npx tsx scripts/add-user.ts
+	cd $(BACKEND_DIR) && npx tsx scripts/add-user.ts "$(USER)" "$(PASS)"
 
 ## Logs
 

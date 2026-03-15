@@ -164,17 +164,16 @@ LLM_MODEL=your-model-name
 
 ### 2. Create users
 
-Users are stored in a JSON file. Use the CLI tool to add them:
+Users are stored in the SQLite database alongside documents. Use the Makefile:
 
 ```bash
-cd apps/backend
-npx ts-node scripts/add-user.ts <username> <password>
+make add-user USER=admin PASS=your-secure-password
 ```
 
-This creates `data/users.json`. In Docker, mount or copy this file into the container, or run the command inside the running container:
+In Docker, run inside the container:
 
 ```bash
-docker compose exec backend node dist/scripts/add-user.js <username> <password>
+docker compose exec backend node dist/scripts/add-user.js admin your-secure-password
 ```
 
 ### 3. Build and run
@@ -222,8 +221,7 @@ sudo certbot --nginx -d your-domain.com
 
 All data is stored in the Docker volume `backend-data`:
 
-- `factly.db` — SQLite database (documents, metadata)
-- `users.json` — User credentials
+- `factly.db` — SQLite database (documents, users, metadata)
 
 **Backup:**
 
@@ -298,7 +296,6 @@ docker compose up --build -d
 | `SEARCH_API_KEY` | No | — | API key for web research |
 | `JWT_SECRET` | Yes | — | Secret for signing JWT tokens |
 | `JWT_EXPIRATION` | No | `24h` | Token expiration duration |
-| `USERS_FILE` | No | `data/users.json` | Path to user credentials file |
 | `PORT` | No | `3002` | Backend listening port |
 | `CHAT_CONTEXT_THRESHOLD` | No | `50` | Max items in chat context |
 | `CHAT_MAX_HISTORY` | No | `10` | Max chat messages sent to LLM |

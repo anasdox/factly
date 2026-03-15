@@ -1,5 +1,4 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import { store } from '../store';
 
 export interface User {
   username: string;
@@ -7,27 +6,15 @@ export interface User {
   created_at: string;
 }
 
-const defaultPath = path.join(__dirname, '..', '..', 'data', 'users.json');
-
-function getUsersFilePath(): string {
-  return process.env.USERS_FILE || defaultPath;
+function userKey(username: string): string {
+  return `user:${username}`;
 }
 
-export function loadUsers(): User[] {
-  const filePath = getUsersFilePath();
-  if (!fs.existsSync(filePath)) {
-    return [];
-  }
-  return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+export async function findUser(username: string): Promise<User | undefined> {
+  const data = await store.get(userKey(username));
+  return data ?? undefined;
 }
 
-export function saveUsers(users: User[]): void {
-  const filePath = getUsersFilePath();
-  const dir = path.dirname(filePath);
-  fs.mkdirSync(dir, { recursive: true });
-  fs.writeFileSync(filePath, JSON.stringify(users, null, 2));
-}
-
-export function findUser(username: string): User | undefined {
-  return loadUsers().find((u) => u.username === username);
+export async function createUser(user: User): Promise<void> {
+  await store.set(userKey(user.username), user);
 }

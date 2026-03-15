@@ -5,12 +5,8 @@ import cors from 'cors';
 import { Server, ServerResponse } from 'http';
 import { Socket } from 'net';
 import { v4 as uuid } from 'uuid';
-import Keyv from 'keyv';
-import KeyvSqlite from '@keyv/sqlite';
 import { generateUsername } from 'friendly-username-generator';
 import winston from 'winston';
-import * as fs from 'fs';
-import * as path from 'path';
 import { createProvider, LLMProvider, OutputTraceabilityContext } from './llm/provider';
 import { createSearchProvider, SearchProvider } from './search/provider';
 import { fetchAllPages } from './search/page-fetcher';
@@ -22,20 +18,10 @@ import bcrypt from 'bcrypt';
 import { findUser } from './auth/user-store';
 import { signToken } from './auth/jwt';
 import { optionalAuth, requireAuth } from './auth/middleware';
+import { store, dbPath } from './store';
 
 const VALID_UPDATE_ENTITY_TYPES = ['fact', 'insight', 'recommendation', 'output'];
 import { extractTextFromUrl, WebScraperError } from './web-scraper';
-
-const dataDir = path.join(__dirname, '..', 'data');
-fs.mkdirSync(dataDir, { recursive: true });
-
-const dbPath = path.join(dataDir, 'factly.db');
-
-const store = new Keyv({
-  store: new KeyvSqlite('sqlite://' + dbPath)
-});
-
-store.on('error', (err) => console.error('Keyv connection error:', err));
 
 // Set up Winston logger
 const logger = winston.createLogger({
@@ -86,7 +72,7 @@ app.post('/auth/login', async (req, res, next) => {
     if (!username || !password) {
       return res.status(400).json({ error: 'Fields "username" and "password" are required' });
     }
-    const user = findUser(username);
+    const user = await findUser(username);
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
