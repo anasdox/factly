@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./Toolbar.css";
 
 import DiscoveryModal from "./DiscoveryModal";
-import StartEventRoomModal from './StartEventRoomModal';
 import FullAutoConfigModal from './FullAutoConfigModal';
 import FullAutoSummaryModal, { FullAutoStats } from './FullAutoSummaryModal';
 import Modal from './Modal';
@@ -29,11 +28,10 @@ type Props = {
 };
 
 const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, onStartTour }: Props) => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, token, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
-  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
   const [documentId, setDocumentId] = useQueryParam('doc', StringParam);
   const [uuid, setUuid] = useLocalStorage('uuid', null);
   const [username, setUsername] = useLocalStorage('username', null);
@@ -354,11 +352,11 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
       if (data && data.discovery_id) {
         setIsSaving(true);
         onWaiting('Saving document...');
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
         const response = await fetch(`${API_URL}/documents`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers,
           body: JSON.stringify(data)
         });
         if (!response.ok) {
@@ -368,7 +366,6 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         }
         const docData = await response.json();
         setDocumentId(docData.documentId);
-        setIsShareModalVisible(true);
         onInfo('Document saved.');
       }
     } catch (error) {
@@ -567,11 +564,6 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
       <div title={theme === 'light' ? 'Dark mode' : 'Light mode'} onClick={toggleTheme}>
         <FontAwesomeIcon icon={theme === 'light' ? faMoon : faSun} size='lg' />
       </div>
-      <StartEventRoomModal
-        isDialogVisible={isShareModalVisible}
-        closeDialog={() => setIsShareModalVisible(false)}
-        documentId={documentId ?? ""}
-      />
       <DiscoveryModal
         mode={modalMode}
         isDialogVisible={isModalVisible}
