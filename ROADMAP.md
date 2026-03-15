@@ -251,6 +251,21 @@
 - Removed per-item "Propose AI update" button (redundant with bulk review)
 - Removed `discovery_id` (redundant with `document_id`)
 
+### M24: OAuth Authentication (GitHub & Google)
+**Status:** Planned
+**Outcome:** An analyst can sign in with their GitHub or Google account instead of a local password. Existing login/password authentication remains supported alongside OAuth.
+- OAuth 2.0 / OpenID Connect flow for GitHub and Google
+- Backend handles the OAuth callback, exchanges code for tokens, and extracts user identity (email/username)
+- First OAuth login auto-creates the user in SQLite (no `make add-user` needed)
+- Returning OAuth users are matched by provider + provider ID
+- JWT issued after successful OAuth login (same token format as password login)
+- Frontend login page shows "Sign in with GitHub" and "Sign in with Google" buttons alongside the existing username/password form
+- Personal space works identically for OAuth and password users
+- OAuth provider configurable via environment variables (`OAUTH_GITHUB_CLIENT_ID`, `OAUTH_GITHUB_CLIENT_SECRET`, `OAUTH_GOOGLE_CLIENT_ID`, `OAUTH_GOOGLE_CLIENT_SECRET`)
+- OAuth is optional: if no client IDs are configured, only password login is available
+- No account linking: a GitHub user and a password user with the same email are separate accounts
+- No self-registration via password (unchanged)
+
 ## Risks and Dependencies
 
 | Risk | Mitigation |
