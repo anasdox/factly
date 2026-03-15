@@ -1,0 +1,95 @@
+.personal-space {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  color: var(--text-primary);
+}
+
+.personal-space-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px dashed var(--border-color);
+  padding-bottom: 1rem;
+}
+
+.personal-space-header h1 {
+  margin: 0;
+  font-size: 1.2em;
+}
+
+.personal-space-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.personal-space-username {
+  color: var(--text-secondary);
+  font-size: small;
+}
+
+.personal-space-logout {
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-btn);
+  background: var(--bg-btn);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.personal-space-logout:hover {
+  border-color: var(--border-btn-hover);
+}
+
+.personal-space-section {
+  margin-bottom: 2rem;
+}
+
+.personal-space-section h2 {
+  font-size: 1em;
+  margin: 0 0 0.75rem;
+}
+
+.personal-space-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.personal-space-card {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-item);
+  margin-bottom: 0.5rem;
+}
+
+.personal-space-card:hover {
+  border-color: var(--border-btn-hover);
+}
+
+.personal-space-card-goal {
+  font-size: small;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.personal-space-card-date {
+  font-size: x-small;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+}
+
+.personal-space-status {
+  color: var(--text-secondary);
+}
+
+.personal-space-error {
+  color: var(--color-status-unsupported);
+}
+
+.personal-space-empty {
+  color: var(--text-secondary);
+  font-size: small;
+}

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { API_URL } from '../config';
+import './PersonalSpace.css';
 
 interface DiscoverySummary {
   discovery_id: string;
@@ -51,54 +52,46 @@ export default function PersonalSpace() {
   const owned = discoveries.filter((d) => d.role === 'owned');
   const visited = discoveries.filter((d) => d.role === 'visited');
 
-  const cardStyle: React.CSSProperties = {
-    padding: '1rem',
-    borderRadius: '6px',
-    border: '1px solid var(--border-color, #ddd)',
-    background: 'var(--bg-secondary, #fff)',
-    marginBottom: '0.75rem',
-  };
-
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem', color: 'var(--text-primary, #333)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ margin: 0 }}>My Space</h1>
-        <div>
-          <span style={{ marginRight: '1rem', fontSize: '0.875rem', color: 'var(--text-secondary, #666)' }}>{user}</span>
-          <button onClick={() => { logout(); navigate('/login'); }} style={{ padding: '0.4rem 0.8rem', borderRadius: '4px', border: '1px solid var(--border-color, #ccc)', background: 'transparent', cursor: 'pointer', color: 'var(--text-primary, #333)' }}>
+    <div className="personal-space">
+      <div className="personal-space-header">
+        <h1>My Space</h1>
+        <div className="personal-space-user">
+          <span className="personal-space-username">{user}</span>
+          <button className="personal-space-logout" onClick={() => { logout(); navigate('/login'); }}>
             Logout
           </button>
         </div>
       </div>
 
-      {loading && <p>Loading...</p>}
-      {error && <p style={{ color: '#d32f2f' }}>{error}</p>}
+      {loading && <p className="personal-space-status">Loading...</p>}
+      {error && <p className="personal-space-error">{error}</p>}
 
       {!loading && (
         <>
-          <section style={{ marginBottom: '2rem' }}>
+          <section className="personal-space-section">
             <h2>My discoveries ({owned.length})</h2>
-            {owned.length === 0 && <p style={{ color: 'var(--text-secondary, #666)' }}>No discoveries created yet.</p>}
+            {owned.length === 0 && <p className="personal-space-empty">No discoveries created yet.</p>}
             {owned.map((d) => (
-              <Link key={d.discovery_id} to={`/?invite=${d.discovery_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div style={cardStyle}>
+              <Link key={d.discovery_id} to={`/?invite=${d.discovery_id}`} className="personal-space-card-link">
+                <div className="personal-space-card">
                   <strong>{d.title || 'Untitled'}</strong>
-                  <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #666)', marginTop: '0.25rem' }}>{d.goal}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #888)', marginTop: '0.25rem' }}>{d.date}</div>
+                  <div className="personal-space-card-goal">{d.goal}</div>
+                  <div className="personal-space-card-date">{d.date}</div>
                 </div>
               </Link>
             ))}
           </section>
 
           {visited.length > 0 && (
-            <section>
+            <section className="personal-space-section">
               <h2>Shared with me ({visited.length})</h2>
               {visited.map((d) => (
-                <Link key={d.discovery_id} to={`/?invite=${d.discovery_id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <div style={cardStyle}>
+                <Link key={d.discovery_id} to={`/?invite=${d.discovery_id}`} className="personal-space-card-link">
+                  <div className="personal-space-card">
                     <strong>{d.title || 'Untitled'}</strong>
-                    <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary, #666)', marginTop: '0.25rem' }}>{d.goal}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary, #888)', marginTop: '0.25rem' }}>{d.date}</div>
+                    <div className="personal-space-card-goal">{d.goal}</div>
+                    <div className="personal-space-card-date">{d.date}</div>
                   </div>
                 </Link>
               ))}
