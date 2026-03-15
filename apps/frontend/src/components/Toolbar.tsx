@@ -349,25 +349,40 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
 
   const handleSave = async () => {
     try {
-      if (data && data.discovery_id) {
-        setIsSaving(true);
-        onWaiting('Saving document...');
-        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        const response = await fetch(`${API_URL}/documents`, {
+      if (!data || !data.discovery_id) return;
+      setIsSaving(true);
+      onWaiting('Saving document...');
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      let response: Response;
+      if (documentId) {
+        // Update existing document
+        response = await fetch(`${API_URL}/documents/${documentId}/update`, {
           method: 'POST',
           headers,
-          body: JSON.stringify(data)
+          body: JSON.stringify({ payload: data, senderUuid: uuidRef.current || '', username: usernameRef.current || '' }),
         });
-        if (!response.ok) {
-          const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
-          onError(errorBody.error || 'Failed to save document');
-          return;
-        }
+      } else {
+        // Create new document
+        response = await fetch(`${API_URL}/documents`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(data),
+        });
+      }
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
+        onError(errorBody.error || 'Failed to save document');
+        return;
+      }
+
+      if (!documentId) {
         const docData = await response.json();
         setDocumentId(docData.documentId);
-        onInfo('Document saved.');
       }
+      onInfo('Document saved.');
     } catch (error) {
       onError('Network error: could not reach the server');
     } finally {
