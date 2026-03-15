@@ -223,17 +223,33 @@
 - Works even with an empty pipeline (no existing inputs required)
 
 ### M22: User Management and Authentication
-**Status:** Planned
+**Status:** Delivered
 **Outcome:** An analyst can optionally authenticate with login/password to access a personal space listing the discoveries they created. Anonymous access remains fully supported — all discoveries are public and accessible via link.
 - Optional authentication: login/password with JWT stateless tokens
-- Anonymous users can access, create, and modify any discovery via its link (current behavior preserved)
+- Anonymous users can access and modify any discovery via its link (current behavior preserved)
+- Save restricted to authenticated users
 - Authenticated users are automatically set as owner of discoveries they create
+- Authenticated users redirected to their last document on `/`
 - Personal space: "My discoveries" (created) + "Shared with me" (visited)
 - Visiting a discovery while authenticated automatically tracks it as "shared with me"
-- User storage: `data/users.json` (file-based, consistent with existing architecture)
+- User storage: SQLite (same database as documents)
 - `make add-user USER=login PASS=password` CLI command to create users
+- Clean URLs: `/documents/:id` instead of `?doc=`
 - No private discoveries — everything remains public
 - No self-registration, no password recovery
+
+### M23: Production Deployment Readiness
+**Status:** Delivered
+**Outcome:** The application is ready for production deployment with Docker, with proper health checks, rate limiting, graceful shutdown, and deployment documentation.
+- Health check endpoint `GET /health` (verifies DB connectivity)
+- Docker HEALTHCHECK in both backend and frontend containers
+- Rate limiting on LLM endpoints (20 req/min/IP, configurable)
+- Rate limiting on general endpoints (120 req/min/IP, configurable)
+- Graceful shutdown on SIGTERM/SIGINT (drains SSE connections, 10s timeout)
+- Complete nginx reverse proxy configuration (all backend routes)
+- Comprehensive deployment guide in README
+- Removed per-item "Propose AI update" button (redundant with bulk review)
+- Removed `discovery_id` (redundant with `document_id`)
 
 ## Risks and Dependencies
 

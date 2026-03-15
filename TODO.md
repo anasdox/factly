@@ -1,38 +1,26 @@
 # TODO
 
-## Intent
-Deliver M22: User Management and Authentication — optional login/password auth with JWT, personal discovery space (owned + saved), and `make add-user` CLI command. All discoveries remain public.
+## Current Status
+M1–M23 delivered. Application ready for production deployment.
 
-## Preconditions
-- M1–M21: Delivered
-- ROADMAP.md updated with M22
-- Q&A recorded (4 questions: auth integration, session mechanism, CLI format, storage)
+## Completed Today (Post-M22)
+- [x] Remove `discovery_id` from data model (redundant with `document_id`)
+- [x] Replace `?doc=uuid` URLs with `/documents/:id` routes
+- [x] Remove `use-query-params` dependency
+- [x] Restrict save to authenticated users
+- [x] Redirect authenticated users to last document on `/`
+- [x] Remove per-item "Propose AI update" button (redundant with bulk review)
+- [x] Add `GET /health` endpoint with DB connectivity check
+- [x] Add Docker HEALTHCHECK to both containers
+- [x] Add missing nginx proxy routes (`/dedup`, `/check`, `/propose`, `/health`)
+- [x] Migrate user store from JSON file to SQLite
+- [x] Extract shared store module (`src/store.ts`)
+- [x] Add rate limiting (LLM: 20/min, general: 120/min)
+- [x] Add graceful shutdown (SIGTERM/SIGINT)
+- [x] Update `.env.example` with all config options
+- [x] Update `.gitignore` to exclude secret files
+- [x] Write deployment guide in README
+- [x] Update ROADMAP.md (M22 delivered, M23 delivered)
 
-## Tasks
-- [x] Problem understanding and blocking questions (4 Q&A)
-- [x] Write functional specs for M22 (23 scenarios in user-management-authentication.feature)
-- [x] UoR validation of functional specs
-- [x] Write technical specs for M22 (TS-UserManagementAuthentication + OpenAPI updates)
-- [x] UoR validation of technical specs
-- [x] Create/update IMPLEMENTATION_PLAN.md (8 slices)
-- [x] Write acceptance tests for M22 (23 tests in user-management-authentication.test.ts)
-- [x] UoR validation of implementation plan + acceptance tests
-- [x] Implement M22 (8 slices: user-store, JWT, middleware, login, ownership, visit tracking, nginx, frontend)
-- [x] All acceptance tests pass (257/257, 17 suites)
-- [x] TypeScript compiles cleanly (frontend + backend)
-- [x] Refactoring phase (extracted getAllStoreRows helper, unique test IDs)
-- [ ] Demo and user validation
-
-## Validation
-- All acceptance tests pass
-- TypeScript compiles cleanly (frontend + backend)
-- Traceability check passes
-
-## Done when
-- `make add-user USER=login PASS=password` creates a user with hashed password in `data/users.json`
-- `POST /auth/login` returns a JWT token for valid credentials
-- Anonymous access to all existing routes is preserved (no auth required)
-- Authenticated user is set as owner when creating a discovery
-- Personal space lists "My discoveries" (created) and "Shared with me" (visited)
-- All CI gates green
-- User validation complete
+## No Active Feature
+Next milestone to be decided by UoR.
