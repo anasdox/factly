@@ -20,7 +20,7 @@ export default function LoginPage() {
     const user = searchParams.get('user');
     if (token && user) {
       loginWithToken(token, user);
-      navigate('/me', { replace: true });
+      navigate('/', { replace: true });
     }
   }, [searchParams, loginWithToken, navigate]);
 
@@ -38,7 +38,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(username, password);
-      navigate('/me');
+      navigate('/');
     } catch (err: any) {
       setError(err.message || 'Login failed');
     } finally {

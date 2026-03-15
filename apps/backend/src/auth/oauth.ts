@@ -138,8 +138,9 @@ function oauthRoutes(provider: string, getConfig: () => OAuthProviderConfig | nu
       const jwt = signToken(user.username);
 
       // Redirect to frontend with token
-      const frontendUrl = process.env.OAUTH_FRONTEND_URL || '/';
-      res.redirect(`${frontendUrl}login?token=${encodeURIComponent(jwt)}&user=${encodeURIComponent(user.username)}`);
+      const frontendUrl = process.env.OAUTH_FRONTEND_URL || `${req.protocol}://${req.get('host')}/`;
+      const separator = frontendUrl.endsWith('/') ? '' : '/';
+      res.redirect(`${frontendUrl}${separator}login?token=${encodeURIComponent(jwt)}&user=${encodeURIComponent(user.username)}`);
     } catch (err: any) {
       res.status(502).json({ error: err.message || 'OAuth flow failed' });
     }
