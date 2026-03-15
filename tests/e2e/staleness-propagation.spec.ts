@@ -46,16 +46,6 @@ async function stubImpactCheck(
   });
 }
 
-async function stubProposeUpdate(page: Page, proposedText = 'AI proposed update'): Promise<void> {
-  await page.route('**/propose/update', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ proposed_text: proposedText, explanation: 'E2E proposal' }),
-    });
-  });
-}
-
 function rootWrapper(page: Page, kind: EntityKind, id: string) {
   return page.locator(`#${EDIT_CONFIG[kind].wrapperIdPrefix}-${id}`);
 }
@@ -242,8 +232,7 @@ test.describe('Staleness Propagation (E2E)', () => {
 
   // @fsid:FS-ToolbarClickDoesNotSelectItem
   test.describe('FS-ToolbarClickDoesNotSelectItem', () => {
-    test('clicking edit, traceability, confirm valid, and propose update toolbar actions does not toggle selection', async ({ page }) => {
-      await stubProposeUpdate(page);
+    test('clicking edit, traceability, and confirm valid toolbar actions does not toggle selection', async ({ page }) => {
       const discovery = baseChainDiscovery('Staleness Toolbar Selection E2E');
       (discovery.facts.find((f) => f.fact_id === 'F-1') as any)!.status = 'needs_review';
       (discovery.facts.find((f) => f.fact_id === 'F-2') as any)!.status = 'needs_review';
@@ -268,13 +257,6 @@ test.describe('Staleness Propagation (E2E)', () => {
       await expect(fact1Selectable).not.toHaveClass(/selected/);
       await page.locator('.traceability-close').click();
       await expect(page.locator('.traceability-panel')).toHaveCount(0);
-
-      await fact1.hover();
-      await fact1.locator('[title="Propose AI update"]').click();
-      await expect(page.locator('.proposal-panel h3')).toHaveText('AI Update Proposal');
-      await expect(fact1Selectable).not.toHaveClass(/selected/);
-      await page.getByRole('button', { name: /^Reject$/ }).click();
-      await expect(page.locator('.proposal-panel')).toHaveCount(0);
 
       const fact2 = rootWrapper(page, 'fact', 'F-2');
       await fact2.hover();

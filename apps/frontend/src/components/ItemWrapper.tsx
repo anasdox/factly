@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPencil, faDiagramProject, faCheck, faRobot, faSpinner, faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faPencil, faDiagramProject, faCheck, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { isActionableStatus } from '../lib';
 
 
@@ -15,9 +15,6 @@ type Props = {
   openEditModal: OpenEditModalFunction | null;
   onViewTraceability?: () => void;
   onClearStatus?: () => void;
-  onProposeUpdate?: () => void;
-  proposingUpdate?: boolean;
-  backendAvailable?: boolean;
   onDelete?: () => void;
 };
 
@@ -36,9 +33,6 @@ const ItemWrapper: React.FC<Props> = ({
   openEditModal,
   onViewTraceability,
   onClearStatus,
-  onProposeUpdate,
-  proposingUpdate,
-  backendAvailable,
   onDelete}) => {
 
   const status = item.status;
@@ -96,15 +90,6 @@ const ItemWrapper: React.FC<Props> = ({
         {actionable && onClearStatus && (
           <div onClick={(e) => { e.stopPropagation(); onClearStatus(); }} title="Confirm valid">
             <FontAwesomeIcon size={'sm'} icon={faCheck} />
-          </div>
-        )}
-        {actionable && onProposeUpdate && (
-          <div
-            onClick={(e) => { e.stopPropagation(); if (backendAvailable && !proposingUpdate) onProposeUpdate(); }}
-            title={proposingUpdate ? 'Generating proposal...' : backendAvailable ? 'Propose AI update' : 'Backend unavailable'}
-            style={!backendAvailable || proposingUpdate ? { opacity: 0.3, cursor: 'not-allowed' } : undefined}
-          >
-            <FontAwesomeIcon size={'sm'} icon={proposingUpdate ? faSpinner : faRobot} spin={proposingUpdate} />
           </div>
         )}
         <div onClick={() => openEditModal ? openEditModal(item): null} title="Edit">

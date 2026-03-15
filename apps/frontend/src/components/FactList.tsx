@@ -8,7 +8,6 @@ import FactModal from './FactModal';
 import InsightModal from './InsightModal';
 import MergeDialog from './MergeDialog';
 import BatchDedupReviewPanel from './BatchDedupReviewPanel';
-import ProposalPanel from './ProposalPanel';
 import BulkReviewPanel, { ReviewItem } from './BulkReviewPanel';
 import SuggestionsPanel from './SuggestionsPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
@@ -41,12 +40,6 @@ type InsightSuggestionData = {
   factIds: string[];
 };
 
-type ProposalState = {
-  factId: string;
-  proposedText: string;
-  loading: boolean;
-};
-
 const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability, chatActions, clearChatActions, requestConfirm }) => {
 
   const dataRef = useRef(data);
@@ -73,8 +66,6 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
   // Batch dedup queue for accepted insight suggestions
   const insightDedupQueue = useBatchDedupQueue<InsightType>();
 
-  // AI proposal state
-  const [proposal, setProposal] = useState<ProposalState | null>(null);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [bulkReviewItems, setBulkReviewItems] = useState<ReviewItem[] | null>(null);
 
@@ -267,82 +258,6 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
   // Clear status (confirm-valid)
   const handleClearStatus = (factId: string) => {
     setData(prev => prev ? clearStatus(prev, 'fact', factId) : prev);
-  };
-
-  // AI propose update
-  const handleProposeUpdate = async (fact: FactType) => {
-    const parentInputId = fact.related_inputs[0];
-    if (!parentInputId) {
-      onError('No related input found for this fact.');
-      return;
-    }
-
-    const parentInput = data.inputs.find(i => i.input_id === parentInputId);
-    if (!parentInput) {
-      onError('Related input not found in data.');
-      return;
-    }
-
-    setProposal({ factId: fact.fact_id, proposedText: '', loading: true });
-    onWaiting('Generating update proposal...');
-
-    try {
-      const oldText = parentInput.versions && parentInput.versions.length > 0
-        ? parentInput.versions[parentInput.versions.length - 1].text
-        : '';
-
-      const response = await fetch(`${API_URL}/propose/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          entity_type: 'fact',
-          current_text: fact.text,
-          upstream_change: {
-            old_text: oldText,
-            new_text: parentInput.text || '',
-            entity_type: 'input',
-          },
-          goal: data.goal,
-        }),
-      });
-
-      if (!response.ok) {
-        const body = await response.json();
-        onError(body.error || 'Proposal request failed');
-        setProposal(null);
-        return;
-      }
-
-      const result = await response.json();
-      onInfo('Update proposal ready.');
-      setProposal({ factId: fact.fact_id, proposedText: result.proposed_text || result.text || '', loading: false });
-    } catch (err: any) {
-      onError(err.message || 'Proposal request failed');
-      setProposal(null);
-    }
-  };
-
-  const handleAcceptProposal = async (text: string) => {
-    if (!proposal) return;
-    const fact = data.facts.find(f => f.fact_id === proposal.factId);
-    if (!fact) return;
-
-    const versioned = createNewVersion(fact, text) as FactType;
-    const cleared = clearStatus(data, 'fact', proposal.factId);
-    const children = getDirectChildren('fact', proposal.factId, cleared);
-    const { ids: impactedIds, usedFallback } = await checkImpact(fact.text, text, children, backendAvailable);
-    const { data: propagated, impactedCount } = propagateImpact(cleared, 'fact', proposal.factId, 'edited', impactedIds);
-    const updatedFacts = propagated.facts.map(f =>
-      f.fact_id === proposal.factId ? versioned : f
-    );
-    setData({ ...propagated, facts: updatedFacts });
-    const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
-    onInfo(`Updated to v${versioned.version}. ${impactedCount} downstream item(s) marked for review.${fallbackHint}`);
-    setProposal(null);
-  };
-
-  const handleRejectProposal = () => {
-    setProposal(null);
   };
 
   // Bulk review: select reviewable items
@@ -612,10 +527,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
             openEditModal={openEditModal}
             onViewTraceability={() => onViewTraceability("fact", fact.fact_id)}
             onClearStatus={() => handleClearStatus(fact.fact_id)}
-            onProposeUpdate={() => handleProposeUpdate(fact)}
-            proposingUpdate={proposal?.loading && proposal.factId === fact.fact_id}
             onDelete={() => requestConfirm?.('Delete this fact?', () => deleteFact(fact.fact_id))}
-            backendAvailable={backendAvailable}
           >
             <FactItem fact={fact} />
           </ItemWrapper>
@@ -698,16 +610,6 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
             addInsightFromMerge,
           )}
           onClose={insightDedupQueue.reset}
-        />
-      )}
-      {proposal && (
-        <ProposalPanel
-          currentText={data.facts.find(f => f.fact_id === proposal.factId)?.text || ''}
-          proposedText={proposal.proposedText}
-          loading={proposal.loading}
-          overlay
-          onAccept={handleAcceptProposal}
-          onReject={handleRejectProposal}
         />
       )}
       {bulkReviewItems && (

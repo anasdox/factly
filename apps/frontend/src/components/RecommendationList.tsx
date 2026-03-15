@@ -6,7 +6,6 @@ import ItemWrapper from './ItemWrapper';
 import Modal from './Modal';
 import RecommendationModal from './RecommendationModal';
 import MergeDialog from './MergeDialog';
-import ProposalPanel from './ProposalPanel';
 import BulkReviewPanel, { ReviewItem } from './BulkReviewPanel';
 import SuggestionsPanel from './SuggestionsPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
@@ -67,10 +66,6 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
   // MergeDialog state
   const mergeDialog = useMergeDialog<RecommendationType>();
 
-  // Proposal state
-  const [proposalTarget, setProposalTarget] = useState<string | null>(null);
-  const [proposalData, setProposalData] = useState<{ proposed_text: string; explanation: string } | null>(null);
-  const [proposingUpdateId, setProposingUpdateId] = useState<string | null>(null);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [bulkReviewItems, setBulkReviewItems] = useState<ReviewItem[] | null>(null);
 
@@ -233,71 +228,6 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
   // Confirm-valid: clear actionable status
   const handleClearStatus = (recommendationId: string) => {
     setData((prevState) => prevState ? clearStatus(prevState, 'recommendation', recommendationId) : prevState);
-  };
-
-  // AI propose update
-  const handleProposeUpdate = async (recommendation: RecommendationType) => {
-    const parentInsightId = recommendation.related_insights[0];
-    if (!parentInsightId) {
-      onError('No related insight found for this recommendation.');
-      return;
-    }
-
-    const parentInsight = data.insights.find(i => i.insight_id === parentInsightId);
-    if (!parentInsight) {
-      onError('Related insight not found in data.');
-      return;
-    }
-
-    setProposingUpdateId(recommendation.recommendation_id);
-    onWaiting('Generating update proposal...');
-
-    const oldText = parentInsight.versions && parentInsight.versions.length > 0
-      ? parentInsight.versions[parentInsight.versions.length - 1].text
-      : '';
-
-    try {
-      const response = await fetch(`${API_URL}/propose/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          entity_type: 'recommendation',
-          current_text: recommendation.text,
-          upstream_change: { old_text: oldText, new_text: parentInsight.text, entity_type: 'insight' },
-          goal: data.goal,
-        }),
-      });
-      if (!response.ok) {
-        const body = await response.json();
-        onError(body.error || 'Proposal request failed');
-        return;
-      }
-      const result = await response.json();
-      onInfo('Update proposal ready.');
-      setProposalTarget(recommendation.recommendation_id);
-      setProposalData(result);
-    } catch (err: any) {
-      onError(err.message || 'Proposal request failed');
-    } finally {
-      setProposingUpdateId(null);
-    }
-  };
-
-  const acceptProposal = async (recommendationId: string, text: string) => {
-    const existing = data.recommendations.find(r => r.recommendation_id === recommendationId);
-    if (!existing) return;
-    const versioned = createNewVersion(existing, text) as RecommendationType;
-    const updatedRecommendations = data.recommendations.map(r => r.recommendation_id === recommendationId ? versioned : r);
-    let updatedData = { ...data, recommendations: updatedRecommendations };
-    updatedData = clearStatus(updatedData, 'recommendation', recommendationId);
-    const children = getDirectChildren('recommendation', recommendationId, updatedData);
-    const { ids: impactedIds, usedFallback } = await checkImpact(existing.text, text, children, backendAvailable);
-    const { data: propagatedData, impactedCount } = propagateImpact(updatedData, 'recommendation', recommendationId, 'edited', impactedIds);
-    setData(propagatedData);
-    setProposalTarget(null);
-    setProposalData(null);
-    const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
-    onInfo(`Recommendation updated to v${versioned.version}. ${impactedCount} downstream item(s) marked for review.${fallbackHint}`);
   };
 
   // MergeDialog callbacks use the hook
@@ -497,10 +427,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
               openEditModal={openEditModal}
               onViewTraceability={() => onViewTraceability("recommendation", recommendation.recommendation_id)}
               onClearStatus={() => handleClearStatus(recommendation.recommendation_id)}
-              onProposeUpdate={() => handleProposeUpdate(recommendation)}
-              proposingUpdate={proposingUpdateId === recommendation.recommendation_id}
               onDelete={() => requestConfirm?.('Delete this recommendation?', () => deleteRecommendation(recommendation.recommendation_id))}
-              backendAvailable={backendAvailable}
             >
               <RecommendationItem
                 recommendation={recommendation}
@@ -557,16 +484,6 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
           onKeepAsVariant={() => mergeDialog.handleKeepAsVariant(addRecommendationToData)}
           onForceAdd={() => mergeDialog.handleForceAdd(addRecommendationToData)}
           onClose={mergeDialog.reset}
-        />
-      )}
-      {proposalTarget && proposalData && (
-        <ProposalPanel
-          currentText={data.recommendations.find(r => r.recommendation_id === proposalTarget)?.text || ''}
-          proposedText={proposalData.proposed_text}
-          explanation={proposalData.explanation}
-          overlay
-          onAccept={(text) => acceptProposal(proposalTarget, text)}
-          onReject={() => { setProposalTarget(null); setProposalData(null); }}
         />
       )}
       {bulkReviewItems && (

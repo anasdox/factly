@@ -9,7 +9,6 @@ import RecommendationModal from './RecommendationModal';
 import SuggestionsPanel from './SuggestionsPanel';
 import MergeDialog from './MergeDialog';
 import BatchDedupReviewPanel from './BatchDedupReviewPanel';
-import ProposalPanel from './ProposalPanel';
 import BulkReviewPanel, { ReviewItem } from './BulkReviewPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { API_URL } from '../config';
@@ -41,12 +40,6 @@ type RecommendationSuggestionData = {
   insightIds: string[];
 };
 
-type ProposalState = {
-  insightId: string;
-  proposedText: string;
-  loading: boolean;
-};
-
 const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseEnter, handleMouseLeave, onError, onInfo, onWaiting, backendAvailable, onViewTraceability, chatActions, clearChatActions, requestConfirm }) => {
 
   const dataRef = useRef(data);
@@ -73,8 +66,6 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
   // Batch dedup queue for accepted recommendation suggestions
   const recommendationDedupQueue = useBatchDedupQueue<RecommendationType>();
 
-  // AI proposal state
-  const [proposal, setProposal] = useState<ProposalState | null>(null);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [bulkReviewItems, setBulkReviewItems] = useState<ReviewItem[] | null>(null);
 
@@ -271,91 +262,6 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
   // Confirm valid: clear actionable status
   const handleClearStatus = (insightId: string) => {
     setData(prev => prev ? clearStatus(prev, 'insight', insightId) : prev);
-  };
-
-  // AI propose update
-  const handleProposeUpdate = async (insight: InsightType) => {
-    const parentFactId = insight.related_facts[0];
-    if (!parentFactId) {
-      onError('No related fact found to base the update proposal on.');
-      return;
-    }
-    const parentFact = data.facts.find(f => f.fact_id === parentFactId);
-    if (!parentFact) {
-      onError('Related fact not found in current data.');
-      return;
-    }
-
-    setProposal({ insightId: insight.insight_id, proposedText: '', loading: true });
-    onWaiting('Generating update proposal...');
-
-    try {
-      const oldText = parentFact.versions && parentFact.versions.length > 0
-        ? parentFact.versions[parentFact.versions.length - 1].text
-        : '';
-
-      const response = await fetch(`${API_URL}/propose/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          entity_type: 'insight',
-          current_text: insight.text,
-          upstream_change: {
-            old_text: oldText,
-            new_text: parentFact.text,
-            entity_type: 'fact',
-          },
-          goal: data.goal,
-        }),
-      });
-
-      if (!response.ok) {
-        const body = await response.json();
-        onError(body.error || 'Update proposal failed');
-        setProposal(null);
-        return;
-      }
-
-      const result = await response.json();
-      onInfo('Update proposal ready.');
-      setProposal({ insightId: insight.insight_id, proposedText: result.proposed_text || '', loading: false });
-    } catch (err: any) {
-      onError(err.message || 'Update proposal request failed');
-      setProposal(null);
-    }
-  };
-
-  const handleAcceptProposal = async (text: string) => {
-    if (!proposal) return;
-    const insight = data.insights.find(i => i.insight_id === proposal.insightId);
-    if (!insight) return;
-
-    const versioned = createNewVersion(insight, text) as InsightType;
-    let updatedData: DiscoveryData = {
-      ...data,
-      insights: data.insights.map(i =>
-        i.insight_id === proposal.insightId ? versioned : i
-      ),
-    };
-    updatedData = clearStatus(updatedData, 'insight', proposal.insightId);
-
-    const children = getDirectChildren('insight', proposal.insightId, updatedData);
-    const { ids: impactedIds, usedFallback } = await checkImpact(insight.text, text, children, backendAvailable);
-    const { data: propagatedData, impactedCount } = propagateImpact(
-      updatedData,
-      'insight',
-      proposal.insightId,
-      'edited',
-      impactedIds,
-    );
-    setData(propagatedData);
-    const fallbackHint = usedFallback ? ' (AI unavailable — all children marked)' : '';
-    onInfo(`Accepted proposal as v${versioned.version}. ${impactedCount} downstream item(s) marked for review.${fallbackHint}`);
-    setProposal(null);
-  };
-
-  const handleRejectProposal = () => {
-    setProposal(null);
   };
 
   // Bulk review
@@ -581,10 +487,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
             openEditModal={openEditModal}
             onViewTraceability={() => onViewTraceability("insight", insight.insight_id)}
             onClearStatus={() => handleClearStatus(insight.insight_id)}
-            onProposeUpdate={() => handleProposeUpdate(insight)}
-            proposingUpdate={proposal?.loading && proposal.insightId === insight.insight_id}
             onDelete={() => requestConfirm?.('Delete this insight?', () => deleteInsight(insight.insight_id))}
-            backendAvailable={backendAvailable}
           >
             <InsightItem insight={insight} />
           </ItemWrapper>
@@ -669,16 +572,6 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
             addRecommendationFromMerge,
           )}
           onClose={recommendationDedupQueue.reset}
-        />
-      )}
-      {proposal && (
-        <ProposalPanel
-          currentText={data.insights.find(i => i.insight_id === proposal.insightId)?.text || ''}
-          proposedText={proposal.proposedText}
-          loading={proposal.loading}
-          overlay
-          onAccept={handleAcceptProposal}
-          onReject={handleRejectProposal}
         />
       )}
       {bulkReviewItems && (

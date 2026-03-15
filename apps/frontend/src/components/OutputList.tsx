@@ -5,7 +5,6 @@ import { faAdd, faXmark, faCheckDouble, faTrashCan, faClipboardCheck } from '@fo
 import ItemWrapper from './ItemWrapper';
 import Modal from './Modal';
 import OutputModal from './OutputModal';
-import ProposalPanel from './ProposalPanel';
 import BulkReviewPanel, { ReviewItem } from './BulkReviewPanel';
 import { useItemSelection } from '../hooks/useItemSelection';
 import { createNewVersion, clearStatus, isActionableStatus } from '../lib';
@@ -38,10 +37,6 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
   const [editingOutput, setEditingOutput] = useState<ItemType | null>(null);
   const setOutputRef = useCallback((element: HTMLDivElement, index: number) => { outputRefs.current[index] = element; }, [outputRefs]);
 
-  // Proposal state
-  const [proposalTarget, setProposalTarget] = useState<string | null>(null);
-  const [proposalData, setProposalData] = useState<{ proposed_text: string; explanation: string } | null>(null);
-  const [proposingUpdateId, setProposingUpdateId] = useState<string | null>(null);
   const { selectedIds: selectedOutputIds, toggleSelection: toggleOutputSelection, clearSelection, selectAll } = useItemSelection(data.outputs.map(o => o.output_id));
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
   const [bulkReviewItems, setBulkReviewItems] = useState<ReviewItem[] | null>(null);
@@ -174,62 +169,6 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
     setData((prevState) => prevState ? clearStatus(prevState, 'output', outputId) : prevState);
   };
 
-  const handleProposeUpdate = async (output: OutputType) => {
-    const parentRec = data.recommendations.find(r => output.related_recommendations.includes(r.recommendation_id));
-    if (!parentRec) {
-      onError('No related recommendation found for this output.');
-      return;
-    }
-
-    setProposingUpdateId(output.output_id);
-    onWaiting('Generating update proposal...');
-
-    const oldText = parentRec.versions && parentRec.versions.length > 0
-      ? parentRec.versions[parentRec.versions.length - 1].text
-      : '';
-
-    try {
-      const response = await fetch(`${API_URL}/propose/update`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          entity_type: 'output',
-          current_text: output.text,
-          upstream_change: { old_text: oldText, new_text: parentRec.text, entity_type: 'recommendation' },
-          goal: data.goal,
-          output_type: output.type,
-        }),
-      });
-      if (!response.ok) {
-        const body = await response.json();
-        onError(body.error || 'Proposal request failed');
-        return;
-      }
-      const result = await response.json();
-      onInfo('Update proposal ready.');
-      setProposalTarget(output.output_id);
-      setProposalData(result);
-    } catch (err: any) {
-      onError(err.message || 'Proposal request failed');
-    } finally {
-      setProposingUpdateId(null);
-    }
-  };
-
-  const acceptProposal = (outputId: string, text: string) => {
-    const existing = data.outputs.find(o => o.output_id === outputId);
-    if (!existing) return;
-    const versioned = createNewVersion(existing, text) as OutputType;
-    const updated = { ...versioned, type: existing.type };
-    const updatedOutputs = data.outputs.map(o => o.output_id === outputId ? updated : o);
-    let updatedData = { ...data, outputs: updatedOutputs };
-    updatedData = clearStatus(updatedData, 'output', outputId);
-    setData(updatedData);
-    setProposalTarget(null);
-    setProposalData(null);
-    onInfo(`Output updated to v${updated.version}.`);
-  };
-
   // Bulk review
   const handleSelectReviewable = () => {
     const reviewable = data.outputs.filter(o => isActionableStatus(o.status));
@@ -336,10 +275,7 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
             openEditModal={openEditModal}
             onViewTraceability={() => onViewTraceability("output", output.output_id)}
             onClearStatus={() => handleClearStatus(output.output_id)}
-            onProposeUpdate={() => handleProposeUpdate(output)}
-            proposingUpdate={proposingUpdateId === output.output_id}
             onDelete={() => requestConfirm?.('Delete this output?', () => deleteOutput(output.output_id))}
-            backendAvailable={backendAvailable}
           >
             <OutputItem
               output={output}
@@ -367,17 +303,6 @@ const OutputList: React.FC<Props> = ({ outputRefs, data, setData, handleMouseEnt
           </div>
         </div>
       </Modal>
-      {proposalTarget && proposalData && (
-        <ProposalPanel
-          currentText={data.outputs.find(o => o.output_id === proposalTarget)?.text || ''}
-          proposedText={proposalData.proposed_text}
-          explanation={proposalData.explanation}
-          overlay
-          renderMarkdown
-          onAccept={(text) => acceptProposal(proposalTarget, text)}
-          onReject={() => { setProposalTarget(null); setProposalData(null); }}
-        />
-      )}
       {bulkReviewItems && (
         <BulkReviewPanel
           items={bulkReviewItems}

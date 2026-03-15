@@ -475,7 +475,6 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
             onViewTraceability={() => onViewTraceability("input", input.input_id)}
             onClearStatus={() => handleClearStatus(input.input_id)}
             onDelete={() => requestConfirm?.('Delete this input?', () => deleteInput(input.input_id))}
-            backendAvailable={backendAvailable}
           >
             <InputItem input={input} />
           </ItemWrapper>
