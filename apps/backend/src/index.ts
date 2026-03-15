@@ -635,6 +635,17 @@ app.post('/research', async (req, res, next) => {
   }
 });
 
+app.get('/health', async (_req, res) => {
+  try {
+    const testKey = `health-check-${Date.now()}`;
+    await store.set(testKey, 'ok');
+    await store.delete(testKey);
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  } catch {
+    res.status(503).json({ status: 'error', error: 'Database unreachable' });
+  }
+});
+
 app.get('/status', (req, res) => {
   const status: any = Array.from(subscribers.entries()).reduce((prev: any, [documentId, sockets]) => {
     prev[documentId] = sockets.size;
