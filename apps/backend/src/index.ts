@@ -5,6 +5,7 @@ import cors from 'cors';
 import { Server, ServerResponse } from 'http';
 import { Socket } from 'net';
 import { v4 as uuid } from 'uuid';
+import rateLimit from 'express-rate-limit';
 import { generateUsername } from 'friendly-username-generator';
 import winston from 'winston';
 import { createProvider, LLMProvider, OutputTraceabilityContext } from './llm/provider';
@@ -59,6 +60,33 @@ const port = parseInt(process.env.PORT || '3002', 10);
 // Add middleware
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(cors());
+
+// Rate limiting for LLM endpoints (expensive API calls)
+const llmLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: parseInt(process.env.RATE_LIMIT_LLM || '20', 10),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many requests — please wait before retrying' },
+});
+app.use('/extract', llmLimiter);
+app.use('/research', llmLimiter);
+app.use('/chat', llmLimiter);
+app.use('/reformulate', llmLimiter);
+app.use('/propose', llmLimiter);
+app.use('/dedup', llmLimiter);
+app.use('/check', llmLimiter);
+
+// General rate limiting
+const generalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: parseInt(process.env.RATE_LIMIT_GENERAL || '120', 10),
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many requests' },
+});
+app.use(generalLimiter);
+
 app.use('/benchmark', benchmarkRoutes);
 
 // --- Authentication endpoints ---
@@ -1134,6 +1162,35 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 });
 
 // Start the server
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
+
+// Graceful shutdown
+function shutdown(signal: string) {
+  logger.info(`Received ${signal}, shutting down gracefully...`);
+
+  // Stop accepting new connections
+  server.close(() => {
+    logger.info('HTTP server closed');
+    process.exit(0);
+  });
+
+  // Close all SSE connections
+  for (const [, sockets] of subscribers) {
+    for (const socket of sockets) {
+      socket.end();
+    }
+  }
+  subscribers.clear();
+  users.clear();
+
+  // Force exit after 10s if connections don't close
+  setTimeout(() => {
+    logger.warn('Forced shutdown after timeout');
+    process.exit(1);
+  }, 10000).unref();
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

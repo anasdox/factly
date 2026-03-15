@@ -297,6 +297,8 @@ docker compose up --build -d
 | `JWT_SECRET` | Yes | — | Secret for signing JWT tokens |
 | `JWT_EXPIRATION` | No | `24h` | Token expiration duration |
 | `PORT` | No | `3002` | Backend listening port |
+| `RATE_LIMIT_LLM` | No | `20` | Max LLM requests per minute per IP |
+| `RATE_LIMIT_GENERAL` | No | `120` | Max general requests per minute per IP |
 | `CHAT_CONTEXT_THRESHOLD` | No | `50` | Max items in chat context |
 | `CHAT_MAX_HISTORY` | No | `10` | Max chat messages sent to LLM |
 
