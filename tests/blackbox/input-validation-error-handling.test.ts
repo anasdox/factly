@@ -15,7 +15,6 @@
 import { BASE_URL } from './helpers/backend-server';
 
 const VALID_DISCOVERY_DATA = {
-  discovery_id: 'test-validation-001',
   title: 'Validation Test',
   goal: 'Test input validation',
   date: '2025-01-01',

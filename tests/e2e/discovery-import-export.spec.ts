@@ -12,7 +12,6 @@ import {
 
 function buildLinkedDiscovery(overrides: Partial<E2EDiscovery> = {}): E2EDiscovery {
   return buildDiscovery({
-    discovery_id: 'imported-001',
     title: 'Imported Discovery',
     goal: 'Imported goal',
     date: '2026-02-22',

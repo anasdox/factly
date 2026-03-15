@@ -7,8 +7,6 @@ import LoginPage from './pages/LoginPage';
 import PersonalSpace from './pages/PersonalSpace';
 import { AuthProvider } from './hooks/useAuth';
 import reportWebVitals from './reportWebVitals';
-import { QueryParamProvider } from 'use-query-params';
-import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 const root = ReactDOM.createRoot(
@@ -18,14 +16,13 @@ root.render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <QueryParamProvider adapter={ReactRouter6Adapter}>
-          <Routes>
-            <Route path="/" element={<App />}/>
-            <Route path="/login" element={<LoginPage />}/>
-            <Route path="/me" element={<PersonalSpace />}/>
-            <Route path="/benchmark" element={<BenchmarkPage />}/>
-          </Routes>
-        </QueryParamProvider>
+        <Routes>
+          <Route path="/" element={<App />}/>
+          <Route path="/documents/:id" element={<App />}/>
+          <Route path="/login" element={<LoginPage />}/>
+          <Route path="/me" element={<PersonalSpace />}/>
+          <Route path="/benchmark" element={<BenchmarkPage />}/>
+        </Routes>
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

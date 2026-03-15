@@ -72,14 +72,14 @@ interface TestOutput {
   version?: number; status?: EntityStatus; created_at?: string; versions?: VersionEntry[];
 }
 interface TestDiscoveryData {
-  discovery_id: string; title: string; goal: string; date: string;
+  title: string; goal: string; date: string;
   inputs: TestInput[]; facts: TestFact[]; insights: TestInsight[];
   recommendations: TestRecommendation[]; outputs: TestOutput[];
 }
 
 function makeTestDiscovery(): TestDiscoveryData {
   return {
-    discovery_id: 'test-001', title: 'Test', goal: 'Test goal', date: '2026-01-01',
+    title: 'Test', goal: 'Test goal', date: '2026-01-01',
     inputs: [
       { input_id: 'I-1', type: 'text', title: 'Input 1', text: 'Original input text', version: 1, status: 'draft' },
       { input_id: 'I-2', type: 'text', title: 'Input 2', text: 'Other input text', version: 1, status: 'draft' },

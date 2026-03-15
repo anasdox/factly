@@ -87,7 +87,7 @@ interface TestOutput {
   version?: number; status?: EntityStatus;
 }
 interface TestDiscoveryData {
-  discovery_id: string; title: string; goal: string; date: string;
+  title: string; goal: string; date: string;
   inputs: TestInput[]; facts: TestFact[]; insights: TestInsight[];
   recommendations: TestRecommendation[]; outputs: TestOutput[];
   chat_history?: ChatMessage[];
@@ -95,7 +95,7 @@ interface TestDiscoveryData {
 
 function makeTestDiscovery(): TestDiscoveryData {
   return {
-    discovery_id: 'test-001', title: 'Climate Analysis', goal: 'Identify climate risks', date: '2026-01-01',
+    title: 'Climate Analysis', goal: 'Identify climate risks', date: '2026-01-01',
     inputs: [
       { input_id: 'I-1', type: 'text', title: 'IPCC Report', text: 'Global temperatures have risen by 1.1C since pre-industrial times.', version: 1, status: 'draft' },
       { input_id: 'I-2', type: 'web', title: 'NASA Data', text: 'Sea levels rising at 3.3mm per year.', version: 1, status: 'draft' },
@@ -1039,7 +1039,7 @@ describe('Conversational Chat — Chat History', () => {
 
     it('imported JSON without chat_history defaults to empty array', () => {
       const imported = {
-        discovery_id: 'old-001', title: 'Old', goal: 'Old goal', date: '2025-01-01',
+        title: 'Old', goal: 'Old goal', date: '2025-01-01',
         inputs: [], facts: [], insights: [], recommendations: [], outputs: [],
         // No chat_history field — backward compatibility
       };
@@ -1059,7 +1059,7 @@ describe('Conversational Chat — Chat History', () => {
 
       // Create new discovery
       const newData: TestDiscoveryData = {
-        discovery_id: 'new-001', title: 'New Discovery', goal: 'New goal', date: '2026-02-18',
+        title: 'New Discovery', goal: 'New goal', date: '2026-02-18',
         inputs: [], facts: [], insights: [], recommendations: [], outputs: [],
         chat_history: [],
       };

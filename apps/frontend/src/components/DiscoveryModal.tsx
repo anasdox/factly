@@ -37,7 +37,6 @@ const DiscoveryModal: React.FC<Props> = ({
 
   const handleSave = () => {
     const newDiscoveryData: DiscoveryData = {
-      discovery_id: mode === 'edit' && discoveryData ? discoveryData.discovery_id : generateUniqueId(),
       title,
       goal,
       date,
@@ -84,11 +83,6 @@ const DiscoveryModal: React.FC<Props> = ({
       </div>
     </Modal>
   );
-};
-
-// Utility function to generate a unique ID for new discoveries
-const generateUniqueId = (): string => {
-  return Math.random().toString(36).substr(2, 9);
 };
 
 export default DiscoveryModal;

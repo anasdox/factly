@@ -111,7 +111,7 @@ app.get('/me/discoveries', requireAuth, async (req, res, next) => {
       try {
         const parsed = JSON.parse(row.value);
         const data = parsed.value; // Keyv wraps in { value, expires }
-        if (!data || !data.discovery_id) continue;
+        if (!data || !data.title) continue;
 
         const documentKey = row.key.replace('keyv:', '');
         // Skip metadata entries
@@ -128,7 +128,6 @@ app.get('/me/discoveries', requireAuth, async (req, res, next) => {
         if (role) {
           discoveries.push({
             document_id: documentKey,
-            discovery_id: data.discovery_id,
             title: data.title || '',
             goal: data.goal || '',
             date: data.date || '',
@@ -963,7 +962,7 @@ function validateArrayItems(items: any[], idField: string, label: string): Valid
 function validateDiscoveryData(body: any): ValidationResult {
   const bodyErr = requireBody(body);
   if (bodyErr) return bodyErr;
-  for (const field of ['discovery_id', 'title', 'goal', 'date']) {
+  for (const field of ['title', 'goal', 'date']) {
     if (typeof body[field] !== 'string') {
       return { valid: false, error: `Field "${field}" is required and must be a string` };
     }

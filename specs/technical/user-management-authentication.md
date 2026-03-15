@@ -196,14 +196,12 @@ Deletion requires authentication AND ownership. A discovery created anonymously 
 {
   "discoveries": [
     {
-      "discovery_id": "uuid",
       "title": "Discovery title",
       "goal": "Discovery goal",
       "date": "2026-03-14",
       "role": "owned"
     },
     {
-      "discovery_id": "uuid",
       "title": "Another discovery",
       "goal": "Another goal",
       "date": "2026-03-13",

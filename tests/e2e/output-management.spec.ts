@@ -3,7 +3,6 @@ import { expect, Page, test } from '@playwright/test';
 const STORAGE_KEY = 'factly_last_discovery';
 
 type TestDiscovery = {
-  discovery_id: string;
   title: string;
   goal: string;
   date: string;
@@ -24,7 +23,6 @@ type TestDiscovery = {
 
 function buildDiscovery(overrides: Partial<TestDiscovery> = {}): TestDiscovery {
   return {
-    discovery_id: 'e2e-output-001',
     title: 'E2E Output Management',
     goal: 'Validate output CRUD behavior',
     date: '2026-02-22',

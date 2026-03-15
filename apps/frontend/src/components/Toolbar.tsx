@@ -8,7 +8,6 @@ import FullAutoConfigModal from './FullAutoConfigModal';
 import FullAutoSummaryModal, { FullAutoStats } from './FullAutoSummaryModal';
 import Modal from './Modal';
 
-import { StringParam, useQueryParam } from "use-query-params";
 import { useLocalStorage } from 'usehooks-ts'
 import { isObjectEmpty } from "../lib";
 import { API_URL } from "../config";
@@ -20,6 +19,7 @@ import { useNavigate } from "react-router-dom";
 type Props = {
   data: DiscoveryData;
   setData: React.Dispatch<React.SetStateAction<DiscoveryData | null>>;
+  documentId: string | null;
   onError: (msg: string) => void;
   onInfo: (msg: string) => void;
   onWaiting: (msg: string) => void;
@@ -27,12 +27,12 @@ type Props = {
   onStartTour?: () => void;
 };
 
-const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, onStartTour }: Props) => {
+const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, onWaiting, backendAvailable, onStartTour }: Props) => {
   const { user, token, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
-  const [documentId, setDocumentId] = useQueryParam('doc', StringParam);
+  const [documentId, setDocumentId] = useState<string | null>(documentIdProp);
   const [uuid, setUuid] = useLocalStorage('uuid', null);
   const [username, setUsername] = useLocalStorage('username', null);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
@@ -349,7 +349,7 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
 
   const handleSave = async () => {
     try {
-      if (!data || !data.discovery_id) return;
+      if (!data) return;
       setIsSaving(true);
       onWaiting('Saving document...');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -381,6 +381,7 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
       if (!documentId) {
         const docData = await response.json();
         setDocumentId(docData.documentId);
+        navigate(`/documents/${docData.documentId}`, { replace: true });
       }
       onInfo('Document saved.');
     } catch (error) {
@@ -541,13 +542,15 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
       >
         <FontAwesomeIcon icon={isRunningFullAuto ? faSpinner : faRocket} size='lg' spin={isRunningFullAuto} />
       </div>
-      <div
-        title={isSaving ? "Saving..." : backendAvailable ? "Save" : "Backend unavailable"}
-        onClick={backendAvailable && !isSaving ? handleSave : undefined}
-        className={!backendAvailable || isSaving ? 'toolbar-disabled' : ''}
-      >
-        <FontAwesomeIcon icon={isSaving ? faSpinner : faSave} size='lg' spin={isSaving} />
-      </div>
+      {isAuthenticated && (
+        <div
+          title={isSaving ? "Saving..." : backendAvailable ? "Save" : "Backend unavailable"}
+          onClick={backendAvailable && !isSaving ? handleSave : undefined}
+          className={!backendAvailable || isSaving ? 'toolbar-disabled' : ''}
+        >
+          <FontAwesomeIcon icon={isSaving ? faSpinner : faSave} size='lg' spin={isSaving} />
+        </div>
+      )}
       {onStartTour && (
         <div title="Guided Tour" onClick={() => {
           if (documentId) {
@@ -555,7 +558,8 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
               eventSource.close();
             }
             setEventSource(null);
-            setDocumentId(undefined);
+            setDocumentId(null);
+            navigate('/', { replace: true });
           }
           onStartTour();
         }}>

@@ -50,7 +50,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
   const [extractingFacts, setExtractingFacts] = useState(false);
 
   // Clear selection when discovery changes
-  useEffect(() => { clearSelection(); }, [data.discovery_id, clearSelection]);
+  useEffect(() => { clearSelection(); }, [data.title, clearSelection]);
 
   const [suggestionData, setSuggestionData] = useState<FactSuggestionData | null>(null);
   const [isFactModalVisible, setIsFactModalVisible] = useState(false);

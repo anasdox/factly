@@ -60,7 +60,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
   const [selectedOutputType, setSelectedOutputType] = useState<OutputType['type']>('report');
 
   // Clear selection when discovery changes
-  useEffect(() => { clearSelection(); }, [data.discovery_id, clearSelection]);
+  useEffect(() => { clearSelection(); }, [data.title, clearSelection]);
   const [extractingOutputs, setExtractingOutputs] = useState(false);
   const [outputSuggestionData, setOutputSuggestionData] = useState<OutputSuggestionData | null>(null);
 

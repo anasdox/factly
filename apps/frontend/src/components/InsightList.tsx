@@ -62,7 +62,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
   const [extractingRecommendations, setExtractingRecommendations] = useState(false);
 
   // Clear selection when discovery changes
-  useEffect(() => { clearSelection(); }, [data.discovery_id, clearSelection]);
+  useEffect(() => { clearSelection(); }, [data.title, clearSelection]);
   const [recommendationSuggestionData, setRecommendationSuggestionData] = useState<RecommendationSuggestionData | null>(null);
 
   const [isRecommendationModalVisible, setIsRecommendationModalVisible] = useState(false);

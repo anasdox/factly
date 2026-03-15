@@ -39,7 +39,6 @@ const USERS_FILE = resolve(BACKEND_DIR, '../../data/users.json');
 const RUN_ID = Date.now().toString(36);
 
 const VALID_DISCOVERY_DATA = {
-  discovery_id: `auth-test-disc-${RUN_ID}`,
   title: 'Auth Test Discovery',
   goal: 'Test authentication',
   date: '2026-03-14',
@@ -248,10 +247,7 @@ describe('User Management and Authentication', () => {
       const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeader(token),
-        body: JSON.stringify({
-          ...VALID_DISCOVERY_DATA,
-          discovery_id: `auth-owned-${RUN_ID}`,
-        }),
+        body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
 
       expect(createResponse.status).toBe(200);
@@ -264,7 +260,7 @@ describe('User Management and Authentication', () => {
 
       if (meResponse.status === 200) {
         const { discoveries } = await meResponse.json();
-        const owned = discoveries.find((d: any) => d.discovery_id === `auth-owned-${RUN_ID}`);
+        const owned = discoveries.find((d: any) => d.document_id === documentId);
         expect(owned).toBeDefined();
       }
     });
@@ -287,10 +283,7 @@ describe('User Management and Authentication', () => {
       const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeader(token),
-        body: JSON.stringify({
-          ...VALID_DISCOVERY_DATA,
-          discovery_id: `auth-access-${RUN_ID}`,
-        }),
+        body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
 
       const { documentId } = await createResponse.json();
@@ -319,10 +312,7 @@ describe('User Management and Authentication', () => {
       const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeader(token),
-        body: JSON.stringify({
-          ...VALID_DISCOVERY_DATA,
-          discovery_id: `auth-delete-${RUN_ID}`,
-        }),
+        body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
 
       const { documentId } = await createResponse.json();
@@ -353,10 +343,7 @@ describe('User Management and Authentication', () => {
       const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeader(token),
-        body: JSON.stringify({
-          ...VALID_DISCOVERY_DATA,
-          discovery_id: `auth-nodelete-${RUN_ID}`,
-        }),
+        body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
 
       const { documentId } = await createResponse.json();
@@ -390,10 +377,7 @@ describe('User Management and Authentication', () => {
       const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeader(token),
-        body: JSON.stringify({
-          ...VALID_DISCOVERY_DATA,
-          discovery_id: `auth-anon-nodelete1-${RUN_ID}`,
-        }),
+        body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
 
       const { documentId } = await createResponse.json();
@@ -416,10 +400,7 @@ describe('User Management and Authentication', () => {
       const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...VALID_DISCOVERY_DATA,
-          discovery_id: `auth-anon-nodelete2-${RUN_ID}`,
-        }),
+        body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
 
       const { documentId } = await createResponse.json();
@@ -454,10 +435,7 @@ describe('User Management and Authentication', () => {
       const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...VALID_DISCOVERY_DATA,
-          discovery_id: `auth-visit-${RUN_ID}`,
-        }),
+        body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
 
       const { documentId } = await createResponse.json();
@@ -477,7 +455,7 @@ describe('User Management and Authentication', () => {
       if (meResponse.status === 200) {
         const { discoveries } = await meResponse.json();
         const visited = discoveries.find(
-          (d: any) => d.discovery_id === `auth-visit-${RUN_ID}` && d.role === 'visited'
+          (d: any) => d.document_id === documentId && d.role === 'visited'
         );
         expect(visited).toBeDefined();
       }
@@ -501,10 +479,7 @@ describe('User Management and Authentication', () => {
       const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...VALID_DISCOVERY_DATA,
-          discovery_id: `auth-idempotent-${RUN_ID}`,
-        }),
+        body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
 
       const { documentId } = await createResponse.json();
@@ -521,7 +496,7 @@ describe('User Management and Authentication', () => {
       if (meResponse.status === 200) {
         const { discoveries } = await meResponse.json();
         const matches = discoveries.filter(
-          (d: any) => d.discovery_id === `auth-idempotent-${RUN_ID}`
+          (d: any) => d.document_id === documentId
         );
         expect(matches.length).toBeLessThanOrEqual(1);
       }
@@ -552,7 +527,6 @@ describe('User Management and Authentication', () => {
       expect(Array.isArray(discoveries)).toBe(true);
 
       for (const d of discoveries.filter((d: any) => d.role === 'owned')) {
-        expect(d).toHaveProperty('discovery_id');
         expect(d).toHaveProperty('title');
         expect(d).toHaveProperty('goal');
         expect(d).toHaveProperty('date');
@@ -581,7 +555,6 @@ describe('User Management and Authentication', () => {
       if (meResponse.status === 200) {
         const { discoveries } = await meResponse.json();
         for (const d of discoveries.filter((d: any) => d.role === 'visited')) {
-          expect(d).toHaveProperty('discovery_id');
           expect(d).toHaveProperty('title');
           expect(d.role).toBe('visited');
         }
@@ -606,10 +579,7 @@ describe('User Management and Authentication', () => {
       const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeader(token),
-        body: JSON.stringify({
-          ...VALID_DISCOVERY_DATA,
-          discovery_id: `auth-own-visit-${RUN_ID}`,
-        }),
+        body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
 
       const { documentId } = await createResponse.json();
@@ -625,7 +595,7 @@ describe('User Management and Authentication', () => {
       if (meResponse.status === 200) {
         const { discoveries } = await meResponse.json();
         const matches = discoveries.filter(
-          (d: any) => d.discovery_id === `auth-own-visit-${RUN_ID}`
+          (d: any) => d.document_id === documentId
         );
         expect(matches.length).toBe(1);
         expect(matches[0].role).toBe('owned');

@@ -37,7 +37,6 @@ test.describe('Collaborative Session (E2E)', () => {
       await stubBackendStatusValue(page, true);
 
       const roomDiscovery = {
-        discovery_id: 'd-room-1',
         title: 'Joined Room E2E',
         goal: 'Collaborative room bootstrap',
         date: '2026-02-22',
@@ -60,7 +59,7 @@ test.describe('Collaborative Session (E2E)', () => {
         });
       });
 
-      const nav = page.goto('/?room=room-123');
+      const nav = page.goto('/documents/room-123');
 
       await expect(page.getByText(/joining room/i)).toBeVisible();
       await expect(page.locator('.welcome-new-discovery')).toHaveCount(0);

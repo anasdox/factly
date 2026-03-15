@@ -15,7 +15,6 @@ import { connectSse } from './helpers/sse-client';
 import { getTestToken, authHeaders } from './helpers/auth';
 
 const VALID_DISCOVERY_DATA = {
-  discovery_id: 'test-disc-001',
   title: 'Test Discovery',
   goal: 'Test Goal',
   date: '2025-01-01',
@@ -62,7 +61,6 @@ describe('Room Management', () => {
       expect(getResponse.status).toBe(200);
 
       const roomData = await getResponse.json();
-      expect(roomData.discovery_id).toBe(VALID_DISCOVERY_DATA.discovery_id);
       expect(roomData.title).toBe(VALID_DISCOVERY_DATA.title);
       expect(roomData.goal).toBe(VALID_DISCOVERY_DATA.goal);
     });

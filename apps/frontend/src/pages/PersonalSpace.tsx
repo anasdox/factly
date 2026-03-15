@@ -6,7 +6,6 @@ import './PersonalSpace.css';
 
 interface DiscoverySummary {
   document_id: string;
-  discovery_id: string;
   title: string;
   goal: string;
   date: string;
@@ -74,7 +73,7 @@ export default function PersonalSpace() {
             <h2>My discoveries ({owned.length})</h2>
             {owned.length === 0 && <p className="personal-space-empty">No discoveries created yet.</p>}
             {owned.map((d) => (
-              <Link key={d.discovery_id} to={`/?doc=${d.document_id}`} className="personal-space-card-link">
+              <Link key={d.document_id} to={`/documents/${d.document_id}`} className="personal-space-card-link">
                 <div className="personal-space-card">
                   <strong>{d.title || 'Untitled'}</strong>
                   <div className="personal-space-card-goal">{d.goal}</div>
@@ -88,7 +87,7 @@ export default function PersonalSpace() {
             <section className="personal-space-section">
               <h2>Shared with me ({visited.length})</h2>
               {visited.map((d) => (
-                <Link key={d.discovery_id} to={`/?doc=${d.document_id}`} className="personal-space-card-link">
+                <Link key={d.document_id} to={`/documents/${d.document_id}`} className="personal-space-card-link">
                   <div className="personal-space-card">
                     <strong>{d.title || 'Untitled'}</strong>
                     <div className="personal-space-card-goal">{d.goal}</div>

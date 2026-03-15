@@ -17,7 +17,6 @@ import { BASE_URL } from './helpers/backend-server';
 import { connectSse } from './helpers/sse-client';
 
 const VALID_DISCOVERY_DATA = {
-  discovery_id: 'test-collab-001',
   title: 'Collab Discovery',
   goal: 'Test collaborative session',
   date: '2025-01-01',

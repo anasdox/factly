@@ -138,7 +138,6 @@ components:
         example:
           type: update
           payload:
-            discovery_id: "abc123"
             title: "Market Analysis"
             goal: "Identify key trends"
             date: "2025-01-15"

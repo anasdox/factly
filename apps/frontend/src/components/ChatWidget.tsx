@@ -52,7 +52,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ data, setData, backendAvailable
       setChatHistory(data.chat_history);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data.discovery_id]);
+  }, [data.title]);
 
   // Persist chat history to discovery data whenever it changes
   useEffect(() => {

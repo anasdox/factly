@@ -52,7 +52,6 @@ export type E2EOutput = {
 };
 
 export type E2EDiscovery = {
-  discovery_id: string;
   title: string;
   goal: string;
   date: string;
@@ -66,7 +65,6 @@ export type E2EDiscovery = {
 
 export function buildDiscovery(overrides: Partial<E2EDiscovery> = {}): E2EDiscovery {
   return {
-    discovery_id: 'e2e-discovery-001',
     title: 'E2E Discovery',
     goal: 'Validate browser CRUD behaviors',
     date: '2026-02-22',

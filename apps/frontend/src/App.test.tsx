@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 jest.mock('./components/InputList', () => () => <div data-testid="input-list" />);
 jest.mock('./components/FactList', () => () => <div data-testid="fact-list" />);
@@ -23,13 +24,23 @@ jest.mock('./lib', () => ({
 
 import App from './App';
 
-describe('App room invite bootstrap', () => {
+const renderWithRouter = (initialPath: string) => {
+  return render(
+    <MemoryRouter initialEntries={[initialPath]}>
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path="/documents/:id" element={<App />} />
+      </Routes>
+    </MemoryRouter>
+  );
+};
+
+describe('App document invite bootstrap', () => {
   const originalFetch = global.fetch;
   const originalResizeObserver = (global as any).ResizeObserver;
 
   beforeEach(() => {
     window.localStorage.clear();
-    window.history.pushState({}, '', '/');
     (global as any).ResizeObserver = class {
       observe() {}
       disconnect() {}
@@ -43,11 +54,9 @@ describe('App room invite bootstrap', () => {
     jest.restoreAllMocks();
   });
 
-  test('does not show the welcome screen while bootstrapping a room from the URL on first use', () => {
+  test('does not show the welcome screen while bootstrapping a document from the URL on first use', () => {
     // @fsid:FS-JoinRoomViaInviteFirstUse
-    window.history.pushState({}, '', '/?room=room-123');
-
-    const pendingRoomFetch = new Promise<any>(() => {});
+    const pendingDocFetch = new Promise<any>(() => {});
     const pendingStatusFetch = new Promise<any>(() => {});
     global.fetch = jest.fn((input: any) => {
       const url = String(input);
@@ -57,25 +66,22 @@ describe('App room invite bootstrap', () => {
       }
 
       if (url.includes('/documents/room-123')) {
-        return pendingRoomFetch;
+        return pendingDocFetch;
       }
 
       return Promise.reject(new Error(`Unexpected fetch: ${url}`));
     }) as any;
 
-    render(<App />);
+    renderWithRouter('/documents/room-123');
 
     expect(screen.getByText(/loading document/i)).toBeInTheDocument();
     expect(screen.queryByText(/new discovery/i)).not.toBeInTheDocument();
     expect((global.fetch as jest.Mock).mock.calls.some(([url]) => String(url).includes('/documents/room-123'))).toBe(true);
   });
 
-  test('loads the room in React StrictMode without getting stuck on joining', async () => {
+  test('loads the document in React StrictMode without getting stuck on joining', async () => {
     // @fsid:FS-JoinRoomViaInviteFirstUse
-    window.history.pushState({}, '', '/?room=room-123');
-
     const roomDiscovery = {
-      discovery_id: 'd-1',
       title: 'Joined Room',
       goal: 'Test goal',
       date: '2026-02-22',
@@ -105,7 +111,12 @@ describe('App room invite bootstrap', () => {
 
     render(
       <React.StrictMode>
-        <App />
+        <MemoryRouter initialEntries={['/documents/room-123']}>
+          <Routes>
+            <Route path="/" element={<App />} />
+            <Route path="/documents/:id" element={<App />} />
+          </Routes>
+        </MemoryRouter>
       </React.StrictMode>
     );
 

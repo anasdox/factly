@@ -12,7 +12,7 @@ type Props = {
 
 const StartShareModal = ({ isDialogVisible, closeDialog, documentId }: Props) => {
   const [copied, setCopied] = useState(false);
-  const documentUrl = `${window.location.origin}?doc=${documentId}`;
+  const documentUrl = `${window.location.origin}/documents/${documentId}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(documentUrl).then(() => {

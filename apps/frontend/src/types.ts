@@ -78,7 +78,6 @@ type ChatMessage = {
 };
 
 type DiscoveryData = {
-  discovery_id: string;
   title: string;
   goal: string;
   date: string;

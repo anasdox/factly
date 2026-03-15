@@ -633,7 +633,6 @@ components:
     DiscoveryData:
       type: object
       required:
-        - discovery_id
         - title
         - goal
         - date
@@ -643,9 +642,6 @@ components:
         - recommendations
         - outputs
       properties:
-        discovery_id:
-          type: string
-          description: Unique identifier for the discovery
         title:
           type: string
         goal:
@@ -972,15 +968,11 @@ components:
           items:
             type: object
             required:
-              - discovery_id
               - title
               - goal
               - date
               - role
             properties:
-              discovery_id:
-                type: string
-                format: uuid
               title:
                 type: string
               goal:

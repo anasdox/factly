@@ -11,7 +11,7 @@ Feature: Room Management
 
   @fsid:FS-CreateRoom
   Scenario: Create a room from the current discovery
-    Given the Analyst is viewing a discovery with a discovery_id
+    Given the Analyst is viewing a discovery
     When the Analyst clicks "Start Event Room" in the toolbar
     Then a room is created on the backend with the current discovery data
     And a modal displays the shareable room URL containing the room ID as a query parameter

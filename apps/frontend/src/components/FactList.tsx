@@ -62,7 +62,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
   const [extractingInsights, setExtractingInsights] = useState(false);
 
   // Clear selection when discovery changes
-  useEffect(() => { clearSelection(); }, [data.discovery_id, clearSelection]);
+  useEffect(() => { clearSelection(); }, [data.title, clearSelection]);
   const [insightSuggestionData, setInsightSuggestionData] = useState<InsightSuggestionData | null>(null);
 
   const [isInsightModalVisible, setIsInsightModalVisible] = useState(false);

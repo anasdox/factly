@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './App.css';
 import InputList from './components/InputList';
 import FactList from './components/FactList';
@@ -15,11 +15,12 @@ import GuidedTour from './components/GuidedTour';
 import Modal from './components/Modal';
 import ChatWidget, { ChatToolAction } from './components/ChatWidget';
 import { API_URL } from './config';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from './hooks/useAuth';
 
 const STORAGE_KEY = 'factly_last_discovery';
 
 const EXAMPLE_DISCOVERY: DiscoveryData = {
-  discovery_id: 'example-001',
   title: 'Customer Churn Analysis Q4',
   goal: 'Understand why customer churn increased by 15% in Q4 and identify actionable retention strategies',
   date: new Date().toISOString().split('T')[0],
@@ -43,22 +44,21 @@ const EXAMPLE_DISCOVERY: DiscoveryData = {
   outputs: [],
 };
 
-const getDocumentIdFromQuery = (): string | null => {
-  const documentId = new URLSearchParams(window.location.search).get('doc');
-  if (!documentId) return null;
-  const trimmed = documentId.trim();
-  return trimmed.length > 0 ? trimmed : null;
-};
-
 const App: React.FC = () => {
+  const { id: routeDocumentId } = useParams<{ id: string }>();
+  const documentIdFromRoute = useMemo(() => routeDocumentId?.trim() || null, [routeDocumentId]);
+  const navigate = useNavigate();
+  const { token, isAuthenticated } = useAuth();
   const [data, setData] = useState<DiscoveryData | null>(() => {
+    // Only restore from localStorage when NOT on a document route
+    if (routeDocumentId) return null;
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       try { return JSON.parse(saved); } catch { return null; }
     }
     return null;
   });
-  const [isBootstrappingDocument, setIsBootstrappingDocument] = useState<boolean>(() => Boolean(getDocumentIdFromQuery()));
+  const [isBootstrappingDocument, setIsBootstrappingDocument] = useState<boolean>(() => Boolean(documentIdFromRoute));
   const [showNewDiscoveryModal, setShowNewDiscoveryModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'error' | 'info' | 'waiting'>('error');
@@ -104,10 +104,26 @@ const App: React.FC = () => {
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
+  // Redirect authenticated users to their last document when on /
   useEffect(() => {
-    const documentIdFromQuery = getDocumentIdFromQuery();
+    if (documentIdFromRoute || !isAuthenticated || !token) return;
+    let cancelled = false;
+    fetch(`${API_URL}/me/discoveries`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(body => {
+        if (cancelled || !body?.discoveries?.length) return;
+        const last = body.discoveries[0];
+        navigate(`/documents/${last.document_id}`, { replace: true });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documentIdFromRoute, isAuthenticated]);
 
-    if (data || !documentIdFromQuery) {
+  useEffect(() => {
+    if (data || !documentIdFromRoute) {
       setIsBootstrappingDocument(false);
       return;
     }
@@ -118,7 +134,7 @@ const App: React.FC = () => {
 
     const bootstrapDocument = async () => {
       try {
-        const response = await fetch(`${API_URL}/documents/${documentIdFromQuery}`);
+        const response = await fetch(`${API_URL}/documents/${documentIdFromRoute}`);
         if (!response.ok) {
           const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
           throw new Error(errorBody.error || 'Failed to fetch document');
@@ -164,8 +180,7 @@ const App: React.FC = () => {
   };
 
   const handleTryExample = () => {
-    const freshId = 'example-' + Date.now();
-    setData({ ...EXAMPLE_DISCOVERY, discovery_id: freshId });
+    setData({ ...EXAMPLE_DISCOVERY });
     setTourActive(true);
   };
 
@@ -249,6 +264,7 @@ const App: React.FC = () => {
         <ToolBar
           data={data}
           setData={setData}
+          documentId={documentIdFromRoute}
           onError={handleError}
           onInfo={handleInfo}
           onWaiting={handleWaiting}
@@ -258,8 +274,7 @@ const App: React.FC = () => {
               message: 'This will load the example discovery and start the guided tour. Continue?',
               onConfirm: () => {
                 setConfirmDialog(null);
-                const freshId = 'example-' + Date.now();
-                setData({ ...EXAMPLE_DISCOVERY, discovery_id: freshId });
+                setData({ ...EXAMPLE_DISCOVERY });
                 setTourActive(true);
               },
             });

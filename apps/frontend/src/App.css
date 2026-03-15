@@ -52,7 +52,7 @@
 }
 
 .column.inputs {
-  flex: 0.8;
+  flex: 0.95;
 }
 
 .column > h2,

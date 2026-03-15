@@ -19,7 +19,6 @@ Add schema validation on backend write endpoints and a global error middleware. 
 ### POST /rooms — DiscoveryData validation
 
 Required string fields (must be present and typeof string):
-- `discovery_id`
 - `title`
 - `goal`
 - `date`

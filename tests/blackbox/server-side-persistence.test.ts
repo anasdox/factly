@@ -16,7 +16,6 @@ import { existsSync, unlinkSync } from 'fs';
 const DB_PATH = resolve(__dirname, '../../apps/backend/data/factly.db');
 
 const DISCOVERY_DATA = {
-  discovery_id: 'persist-test-001',
   title: 'Persistence Test',
   goal: 'Verify data survives restart',
   date: '2025-01-01',
@@ -77,7 +76,6 @@ describe('Server-Side Persistence', () => {
       // Retrieve the room — data should persist
       const room = await getDocument(documentId);
       expect(room).toBeDefined();
-      expect(room.discovery_id).toBe(DISCOVERY_DATA.discovery_id);
       expect(room.title).toBe(DISCOVERY_DATA.title);
       expect(room.goal).toBe(DISCOVERY_DATA.goal);
     }, 60000);
