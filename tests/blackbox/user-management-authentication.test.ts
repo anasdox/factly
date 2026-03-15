@@ -216,8 +216,8 @@ describe('User Management and Authentication', () => {
 
   // @fsid:FS-AnonymousCreateDiscovery
   describe('FS-AnonymousCreateDiscovery', () => {
-    it('POST /rooms without auth creates a discovery with no owner', async () => {
-      const response = await fetch(`${BASE_URL}/rooms`, {
+    it('POST /documents without auth creates a discovery with no owner', async () => {
+      const response = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(VALID_DISCOVERY_DATA),
@@ -225,7 +225,7 @@ describe('User Management and Authentication', () => {
 
       expect(response.status).toBe(200);
       const result = await response.json();
-      expect(result).toHaveProperty('roomId');
+      expect(result).toHaveProperty('documentId');
     });
   });
 
@@ -233,7 +233,7 @@ describe('User Management and Authentication', () => {
 
   // @fsid:FS-AuthenticatedCreateDiscoverySetsOwner
   describe('FS-AuthenticatedCreateDiscoverySetsOwner', () => {
-    it('POST /rooms with valid token sets the user as owner', async () => {
+    it('POST /documents with valid token sets the user as owner', async () => {
       // Login first
       const loginResponse = await fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
@@ -245,7 +245,7 @@ describe('User Management and Authentication', () => {
 
       const { token } = await loginResponse.json();
 
-      const createResponse = await fetch(`${BASE_URL}/rooms`, {
+      const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeader(token),
         body: JSON.stringify({
@@ -255,7 +255,7 @@ describe('User Management and Authentication', () => {
       });
 
       expect(createResponse.status).toBe(200);
-      const { roomId } = await createResponse.json();
+      const { documentId } = await createResponse.json();
 
       // Verify ownership via personal space
       const meResponse = await fetch(`${BASE_URL}/me/discoveries`, {
@@ -284,7 +284,7 @@ describe('User Management and Authentication', () => {
 
       const { token } = await loginResponse.json();
 
-      const createResponse = await fetch(`${BASE_URL}/rooms`, {
+      const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeader(token),
         body: JSON.stringify({
@@ -293,10 +293,10 @@ describe('User Management and Authentication', () => {
         }),
       });
 
-      const { roomId } = await createResponse.json();
+      const { documentId } = await createResponse.json();
 
       // Access without auth
-      const getResponse = await fetch(`${BASE_URL}/rooms/${roomId}`);
+      const getResponse = await fetch(`${BASE_URL}/documents/${documentId}`);
       expect(getResponse.status).toBe(200);
     });
   });
@@ -316,7 +316,7 @@ describe('User Management and Authentication', () => {
 
       const { token } = await loginResponse.json();
 
-      const createResponse = await fetch(`${BASE_URL}/rooms`, {
+      const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeader(token),
         body: JSON.stringify({
@@ -325,9 +325,9 @@ describe('User Management and Authentication', () => {
         }),
       });
 
-      const { roomId } = await createResponse.json();
+      const { documentId } = await createResponse.json();
 
-      const deleteResponse = await fetch(`${BASE_URL}/rooms/${roomId}`, {
+      const deleteResponse = await fetch(`${BASE_URL}/documents/${documentId}`, {
         method: 'DELETE',
         headers: authHeader(token),
       });
@@ -350,7 +350,7 @@ describe('User Management and Authentication', () => {
       const { token } = await loginResponse.json();
 
       // Create a discovery as testuser
-      const createResponse = await fetch(`${BASE_URL}/rooms`, {
+      const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeader(token),
         body: JSON.stringify({
@@ -359,10 +359,10 @@ describe('User Management and Authentication', () => {
         }),
       });
 
-      const { roomId } = await createResponse.json();
+      const { documentId } = await createResponse.json();
 
       // Try to delete with a fake/different token (simulating another user)
-      const deleteResponse = await fetch(`${BASE_URL}/rooms/${roomId}`, {
+      const deleteResponse = await fetch(`${BASE_URL}/documents/${documentId}`, {
         method: 'DELETE',
         headers: { 'Authorization': 'Bearer invalid.token.here', 'Content-Type': 'application/json' },
       });
@@ -387,7 +387,7 @@ describe('User Management and Authentication', () => {
 
       const { token } = await loginResponse.json();
 
-      const createResponse = await fetch(`${BASE_URL}/rooms`, {
+      const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeader(token),
         body: JSON.stringify({
@@ -396,10 +396,10 @@ describe('User Management and Authentication', () => {
         }),
       });
 
-      const { roomId } = await createResponse.json();
+      const { documentId } = await createResponse.json();
 
       // Try to delete without auth
-      const deleteResponse = await fetch(`${BASE_URL}/rooms/${roomId}`, {
+      const deleteResponse = await fetch(`${BASE_URL}/documents/${documentId}`, {
         method: 'DELETE',
       });
 
@@ -413,7 +413,7 @@ describe('User Management and Authentication', () => {
   describe('FS-AnonymousCannotDeleteAnyDiscovery', () => {
     it('anonymous user gets 403 when deleting a discovery without owner', async () => {
       // Create discovery without auth (no owner)
-      const createResponse = await fetch(`${BASE_URL}/rooms`, {
+      const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -422,10 +422,10 @@ describe('User Management and Authentication', () => {
         }),
       });
 
-      const { roomId } = await createResponse.json();
+      const { documentId } = await createResponse.json();
 
       // Try to delete without auth
-      const deleteResponse = await fetch(`${BASE_URL}/rooms/${roomId}`, {
+      const deleteResponse = await fetch(`${BASE_URL}/documents/${documentId}`, {
         method: 'DELETE',
       });
 
@@ -439,7 +439,7 @@ describe('User Management and Authentication', () => {
 
   // @fsid:FS-VisitedDiscoveryTracked
   describe('FS-VisitedDiscoveryTracked', () => {
-    it('GET /rooms/:id with auth tracks the visit for non-owners', async () => {
+    it('GET /documents/:id with auth tracks the visit for non-owners', async () => {
       const loginResponse = await fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -451,7 +451,7 @@ describe('User Management and Authentication', () => {
       const { token } = await loginResponse.json();
 
       // Create a discovery without auth (no owner)
-      const createResponse = await fetch(`${BASE_URL}/rooms`, {
+      const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -460,10 +460,10 @@ describe('User Management and Authentication', () => {
         }),
       });
 
-      const { roomId } = await createResponse.json();
+      const { documentId } = await createResponse.json();
 
       // Visit with auth
-      const getResponse = await fetch(`${BASE_URL}/rooms/${roomId}`, {
+      const getResponse = await fetch(`${BASE_URL}/documents/${documentId}`, {
         headers: authHeader(token),
       });
 
@@ -498,7 +498,7 @@ describe('User Management and Authentication', () => {
       const { token } = await loginResponse.json();
 
       // Create a discovery
-      const createResponse = await fetch(`${BASE_URL}/rooms`, {
+      const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -507,11 +507,11 @@ describe('User Management and Authentication', () => {
         }),
       });
 
-      const { roomId } = await createResponse.json();
+      const { documentId } = await createResponse.json();
 
       // Visit twice
-      await fetch(`${BASE_URL}/rooms/${roomId}`, { headers: authHeader(token) });
-      await fetch(`${BASE_URL}/rooms/${roomId}`, { headers: authHeader(token) });
+      await fetch(`${BASE_URL}/documents/${documentId}`, { headers: authHeader(token) });
+      await fetch(`${BASE_URL}/documents/${documentId}`, { headers: authHeader(token) });
 
       // Check no duplicate in personal space
       const meResponse = await fetch(`${BASE_URL}/me/discoveries`, {
@@ -603,7 +603,7 @@ describe('User Management and Authentication', () => {
       const { token } = await loginResponse.json();
 
       // Create a discovery as testuser
-      const createResponse = await fetch(`${BASE_URL}/rooms`, {
+      const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeader(token),
         body: JSON.stringify({
@@ -612,10 +612,10 @@ describe('User Management and Authentication', () => {
         }),
       });
 
-      const { roomId } = await createResponse.json();
+      const { documentId } = await createResponse.json();
 
       // Visit own discovery
-      await fetch(`${BASE_URL}/rooms/${roomId}`, { headers: authHeader(token) });
+      await fetch(`${BASE_URL}/documents/${documentId}`, { headers: authHeader(token) });
 
       // Check it only appears as owned, not visited
       const meResponse = await fetch(`${BASE_URL}/me/discoveries`, {

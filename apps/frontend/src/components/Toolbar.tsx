@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { faEdit, faFileDownload, faPlus, faUpload, faPlayCircle, faMoon, faSun, faRoute, faRocket, faSpinner, faUser, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faFileDownload, faPlus, faUpload, faSave, faMoon, faSun, faRoute, faRocket, faSpinner, faUser, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./Toolbar.css";
 
@@ -33,8 +33,8 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
   const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
-  const [isStartEventRoomModalVisible, setIsStartEventRoomModalVisible] = useState(false);
-  const [roomId, setRoomId] = useQueryParam('room', StringParam);
+  const [isShareModalVisible, setIsShareModalVisible] = useState(false);
+  const [documentId, setDocumentId] = useQueryParam('doc', StringParam);
   const [uuid, setUuid] = useLocalStorage('uuid', null);
   const [username, setUsername] = useLocalStorage('username', null);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
@@ -347,14 +347,14 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
     });
   };
 
-  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleStartEventRoom = async () => {
+  const handleSave = async () => {
     try {
       if (data && data.discovery_id) {
-        setIsCreatingRoom(true);
-        onWaiting('Creating event room...');
-        const response = await fetch(`${API_URL}/rooms`, {
+        setIsSaving(true);
+        onWaiting('Saving document...');
+        const response = await fetch(`${API_URL}/documents`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -363,39 +363,39 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         });
         if (!response.ok) {
           const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
-          onError(errorBody.error || 'Failed to create room');
+          onError(errorBody.error || 'Failed to save document');
           return;
         }
-        const roomData = await response.json();
-        setRoomId(roomData.roomId);
-        setIsStartEventRoomModalVisible(true);
-        onInfo('Event room created.');
+        const docData = await response.json();
+        setDocumentId(docData.documentId);
+        setIsShareModalVisible(true);
+        onInfo('Document saved.');
       }
     } catch (error) {
       onError('Network error: could not reach the server');
     } finally {
-      setIsCreatingRoom(false);
+      setIsSaving(false);
     }
   };
 
   useEffect(() => {
-    if (roomId && !eventSource) {
-      // Fetch room data
-      const fetchRoomData = async () => {
+    if (documentId && !eventSource) {
+      // Fetch document data
+      const fetchDocData = async () => {
         try {
-          const response = await fetch(`${API_URL}/rooms/${roomId}`);
+          const response = await fetch(`${API_URL}/documents/${documentId}`);
           if (!response.ok) {
             const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
-            onError(errorBody.error || 'Failed to fetch room data');
+            onError(errorBody.error || 'Failed to fetch document');
             return;
           }
-          const roomData = await response.json();
-          if (roomData && Object.keys(roomData).length !== 0) {
+          const docData = await response.json();
+          if (docData && Object.keys(docData).length !== 0) {
             isRemoteUpdate.current = true;
-            setData(roomData);
+            setData(docData);
           }
 
-          let esurl = `${API_URL}/events/${roomId}?`;
+          let esurl = `${API_URL}/events/${documentId}?`;
           if (uuid) {
             esurl += `uuid=${uuid}&`;
           }
@@ -423,7 +423,7 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
 
           newEventSource.onerror = () => {
             if (newEventSource.readyState === EventSource.CLOSED) {
-              onError('Lost connection to the room');
+              onError('Lost connection to the document');
             }
           };
           setEventSource(newEventSource);
@@ -438,26 +438,26 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         }
       };
 
-      fetchRoomData();
+      fetchDocData();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId]);
+  }, [documentId]);
 
-  // Polling fallback: fetch latest room data periodically in case SSE misses updates
+  // Polling fallback: fetch latest document data periodically in case SSE misses updates
   useEffect(() => {
-    if (!roomId) return;
+    if (!documentId) return;
     const poll = setInterval(async () => {
       try {
-        const response = await fetch(`${API_URL}/rooms/${roomId}`);
+        const response = await fetch(`${API_URL}/documents/${documentId}`);
         if (!response.ok) return;
-        const roomData = await response.json();
-        if (roomData && Object.keys(roomData).length !== 0) {
+        const docData = await response.json();
+        if (docData && Object.keys(docData).length !== 0) {
           // Only update if the data actually changed (compare stringified)
-          const remote = JSON.stringify(roomData);
+          const remote = JSON.stringify(docData);
           const local = JSON.stringify(data);
           if (remote !== local) {
             isRemoteUpdate.current = true;
-            setData(roomData);
+            setData(docData);
           }
         }
       } catch {
@@ -466,16 +466,16 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
     }, 5000);
     return () => clearInterval(poll);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, data]);
+  }, [documentId, data]);
 
   useEffect(() => {
     if (isRemoteUpdate.current) {
       isRemoteUpdate.current = false;
       return;
     }
-    if (roomId && uuidRef.current && usernameRef.current && !isObjectEmpty(data)) {
+    if (documentId && uuidRef.current && usernameRef.current && !isObjectEmpty(data)) {
       const timer = setTimeout(() => {
-        fetch(`${API_URL}/rooms/${roomId}/update`, {
+        fetch(`${API_URL}/documents/${documentId}/update`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -488,7 +488,7 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         }).then((response) => {
           if (!response.ok) {
             response.json().catch(() => ({ error: 'Unknown error' })).then((body) => {
-              onError(body.error || 'Failed to update room');
+              onError(body.error || 'Failed to update document');
             });
           }
         }).catch(() => {
@@ -498,7 +498,7 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
       return () => clearTimeout(timer);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, roomId]);
+  }, [data, documentId]);
 
 
   return (
@@ -530,20 +530,20 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         <FontAwesomeIcon icon={isRunningFullAuto ? faSpinner : faRocket} size='lg' spin={isRunningFullAuto} />
       </div>
       <div
-        title={isCreatingRoom ? "Creating room..." : backendAvailable ? "Start Event Room" : "Backend unavailable"}
-        onClick={backendAvailable && !isCreatingRoom ? handleStartEventRoom : undefined}
-        className={!backendAvailable || isCreatingRoom ? 'toolbar-disabled' : ''}
+        title={isSaving ? "Saving..." : backendAvailable ? "Save" : "Backend unavailable"}
+        onClick={backendAvailable && !isSaving ? handleSave : undefined}
+        className={!backendAvailable || isSaving ? 'toolbar-disabled' : ''}
       >
-        <FontAwesomeIcon icon={isCreatingRoom ? faSpinner : faPlayCircle} size='lg' spin={isCreatingRoom} />
+        <FontAwesomeIcon icon={isSaving ? faSpinner : faSave} size='lg' spin={isSaving} />
       </div>
       {onStartTour && (
         <div title="Guided Tour" onClick={() => {
-          if (roomId) {
+          if (documentId) {
             if (eventSource && eventSource.readyState !== EventSource.CLOSED) {
               eventSource.close();
             }
             setEventSource(null);
-            setRoomId(undefined);
+            setDocumentId(undefined);
           }
           onStartTour();
         }}>
@@ -568,9 +568,9 @@ const Toolbar = ({ data, setData, onError, onInfo, onWaiting, backendAvailable, 
         <FontAwesomeIcon icon={theme === 'light' ? faMoon : faSun} size='lg' />
       </div>
       <StartEventRoomModal
-        isDialogVisible={isStartEventRoomModalVisible}
-        closeDialog={() => setIsStartEventRoomModalVisible(false)}
-        roomId={roomId ?? ""}
+        isDialogVisible={isShareModalVisible}
+        closeDialog={() => setIsShareModalVisible(false)}
+        documentId={documentId ?? ""}
       />
       <DiscoveryModal
         mode={modalMode}

@@ -27,8 +27,8 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
     }
 
-    location /rooms {
-        proxy_pass ${BACKEND_URL}/rooms;
+    location /documents {
+        proxy_pass ${BACKEND_URL}/documents;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         client_max_body_size 5m;

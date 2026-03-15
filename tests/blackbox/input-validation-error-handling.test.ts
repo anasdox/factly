@@ -30,8 +30,8 @@ describe('Input Validation and Error Handling', () => {
 
   // @fsid:FS-RejectEmptyRoomBody
   describe('FS-RejectEmptyRoomBody', () => {
-    it('POST /rooms with empty body returns 400', async () => {
-      const response = await fetch(`${BASE_URL}/rooms`, {
+    it('POST /documents with empty body returns 400', async () => {
+      const response = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
@@ -46,9 +46,9 @@ describe('Input Validation and Error Handling', () => {
 
   // @fsid:FS-RejectMissingRequiredFields
   describe('FS-RejectMissingRequiredFields', () => {
-    it('POST /rooms without title returns 400 with message mentioning "title"', async () => {
+    it('POST /documents without title returns 400 with message mentioning "title"', async () => {
       const { title, ...dataWithoutTitle } = VALID_DISCOVERY_DATA;
-      const response = await fetch(`${BASE_URL}/rooms`, {
+      const response = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dataWithoutTitle),
@@ -63,8 +63,8 @@ describe('Input Validation and Error Handling', () => {
 
   // @fsid:FS-RejectInvalidFieldTypes
   describe('FS-RejectInvalidFieldTypes', () => {
-    it('POST /rooms with inputs as string instead of array returns 400', async () => {
-      const response = await fetch(`${BASE_URL}/rooms`, {
+    it('POST /documents with inputs as string instead of array returns 400', async () => {
+      const response = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...VALID_DISCOVERY_DATA, inputs: 'not-an-array' }),
@@ -78,20 +78,20 @@ describe('Input Validation and Error Handling', () => {
 
   // @fsid:FS-RejectInvalidUpdateBody
   describe('FS-RejectInvalidUpdateBody', () => {
-    let roomId: string;
+    let documentId: string;
 
     beforeAll(async () => {
-      const response = await fetch(`${BASE_URL}/rooms`, {
+      const response = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
       const body = await response.json();
-      roomId = body.roomId;
+      documentId = body.documentId;
     });
 
-    it('POST /rooms/:id/update without payload returns 400', async () => {
-      const response = await fetch(`${BASE_URL}/rooms/${roomId}/update`, {
+    it('POST /documents/:id/update without payload returns 400', async () => {
+      const response = await fetch(`${BASE_URL}/documents/${documentId}/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ senderUuid: 'abc', username: 'user' }),
@@ -105,16 +105,16 @@ describe('Input Validation and Error Handling', () => {
 
   // @fsid:FS-RejectInvalidRoomIdFormat
   describe('FS-RejectInvalidRoomIdFormat', () => {
-    it('GET /rooms/not-a-uuid returns 400', async () => {
-      const response = await fetch(`${BASE_URL}/rooms/not-a-uuid`);
+    it('GET /documents/not-a-uuid returns 400', async () => {
+      const response = await fetch(`${BASE_URL}/documents/not-a-uuid`);
 
       expect(response.status).toBe(400);
       const body = await response.json();
       expect(body).toHaveProperty('error');
     });
 
-    it('DELETE /rooms/not-a-uuid returns 400', async () => {
-      const response = await fetch(`${BASE_URL}/rooms/not-a-uuid`, {
+    it('DELETE /documents/not-a-uuid returns 400', async () => {
+      const response = await fetch(`${BASE_URL}/documents/not-a-uuid`, {
         method: 'DELETE',
       });
 
@@ -123,8 +123,8 @@ describe('Input Validation and Error Handling', () => {
       expect(body).toHaveProperty('error');
     });
 
-    it('POST /rooms/not-a-uuid/update returns 400', async () => {
-      const response = await fetch(`${BASE_URL}/rooms/not-a-uuid/update`, {
+    it('POST /documents/not-a-uuid/update returns 400', async () => {
+      const response = await fetch(`${BASE_URL}/documents/not-a-uuid/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -143,8 +143,8 @@ describe('Input Validation and Error Handling', () => {
   // @fsid:FS-ReturnStructuredErrorResponse
   describe('FS-ReturnStructuredErrorResponse', () => {
     it('all validation errors return JSON with { error: string }', async () => {
-      // Test with empty body on POST /rooms
-      const response = await fetch(`${BASE_URL}/rooms`, {
+      // Test with empty body on POST /documents
+      const response = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),

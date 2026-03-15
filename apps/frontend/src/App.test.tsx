@@ -56,7 +56,7 @@ describe('App room invite bootstrap', () => {
         return pendingStatusFetch;
       }
 
-      if (url.includes('/rooms/room-123')) {
+      if (url.includes('/documents/room-123')) {
         return pendingRoomFetch;
       }
 
@@ -65,9 +65,9 @@ describe('App room invite bootstrap', () => {
 
     render(<App />);
 
-    expect(screen.getByText(/joining room/i)).toBeInTheDocument();
+    expect(screen.getByText(/loading document/i)).toBeInTheDocument();
     expect(screen.queryByText(/new discovery/i)).not.toBeInTheDocument();
-    expect((global.fetch as jest.Mock).mock.calls.some(([url]) => String(url).includes('/rooms/room-123'))).toBe(true);
+    expect((global.fetch as jest.Mock).mock.calls.some(([url]) => String(url).includes('/documents/room-123'))).toBe(true);
   });
 
   test('loads the room in React StrictMode without getting stuck on joining', async () => {
@@ -93,7 +93,7 @@ describe('App room invite bootstrap', () => {
         return Promise.resolve({ ok: true });
       }
 
-      if (url.includes('/rooms/room-123')) {
+      if (url.includes('/documents/room-123')) {
         return Promise.resolve({
           ok: true,
           json: async () => roomDiscovery,
@@ -109,8 +109,8 @@ describe('App room invite bootstrap', () => {
       </React.StrictMode>
     );
 
-    expect(screen.getByText(/joining room/i)).toBeInTheDocument();
+    expect(screen.getByText(/loading document/i)).toBeInTheDocument();
     expect(await screen.findByText(/joined room/i)).toBeInTheDocument();
-    expect(screen.queryByText(/joining room/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/loading document/i)).not.toBeInTheDocument();
   });
 });

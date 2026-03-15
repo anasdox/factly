@@ -43,10 +43,10 @@ const EXAMPLE_DISCOVERY: DiscoveryData = {
   outputs: [],
 };
 
-const getRoomIdFromQuery = (): string | null => {
-  const roomId = new URLSearchParams(window.location.search).get('room');
-  if (!roomId) return null;
-  const trimmed = roomId.trim();
+const getDocumentIdFromQuery = (): string | null => {
+  const documentId = new URLSearchParams(window.location.search).get('doc');
+  if (!documentId) return null;
+  const trimmed = documentId.trim();
   return trimmed.length > 0 ? trimmed : null;
 };
 
@@ -58,7 +58,7 @@ const App: React.FC = () => {
     }
     return null;
   });
-  const [isBootstrappingInviteRoom, setIsBootstrappingInviteRoom] = useState<boolean>(() => Boolean(getRoomIdFromQuery()));
+  const [isBootstrappingDocument, setIsBootstrappingDocument] = useState<boolean>(() => Boolean(getDocumentIdFromQuery()));
   const [showNewDiscoveryModal, setShowNewDiscoveryModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [toastType, setToastType] = useState<'error' | 'info' | 'waiting'>('error');
@@ -105,42 +105,42 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const roomIdFromQuery = getRoomIdFromQuery();
+    const documentIdFromQuery = getDocumentIdFromQuery();
 
-    if (data || !roomIdFromQuery) {
-      setIsBootstrappingInviteRoom(false);
+    if (data || !documentIdFromQuery) {
+      setIsBootstrappingDocument(false);
       return;
     }
 
-    setIsBootstrappingInviteRoom(true);
+    setIsBootstrappingDocument(true);
 
     let cancelled = false;
 
-    const bootstrapRoomFromInvite = async () => {
+    const bootstrapDocument = async () => {
       try {
-        const response = await fetch(`${API_URL}/rooms/${roomIdFromQuery}`);
+        const response = await fetch(`${API_URL}/documents/${documentIdFromQuery}`);
         if (!response.ok) {
           const errorBody = await response.json().catch(() => ({ error: 'Unknown error' }));
-          throw new Error(errorBody.error || 'Failed to fetch room data');
+          throw new Error(errorBody.error || 'Failed to fetch document');
         }
 
-        const roomData = await response.json();
-        if (!roomData || Object.keys(roomData).length === 0) {
-          throw new Error('Room not found');
+        const docData = await response.json();
+        if (!docData || Object.keys(docData).length === 0) {
+          throw new Error('Document not found');
         }
 
         if (!cancelled) {
-          setData(roomData);
+          setData(docData);
         }
       } catch (error: any) {
         if (!cancelled) {
-          handleError(error?.message || 'Failed to open room');
-          setIsBootstrappingInviteRoom(false);
+          handleError(error?.message || 'Failed to open document');
+          setIsBootstrappingDocument(false);
         }
       }
     };
 
-    bootstrapRoomFromInvite();
+    bootstrapDocument();
 
     return () => {
       cancelled = true;
@@ -169,12 +169,12 @@ const App: React.FC = () => {
     setTourActive(true);
   };
 
-  if (!data && isBootstrappingInviteRoom) return (
+  if (!data && isBootstrappingDocument) return (
     <div className="App">
       <Toast message={errorMessage} type={toastType} onClose={clearError} />
       <div className="welcome-screen">
         <h1>Factly</h1>
-        <p className="welcome-subtitle">Joining room...</p>
+        <p className="welcome-subtitle">Loading document...</p>
       </div>
     </div>
   );

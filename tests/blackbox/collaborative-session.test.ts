@@ -28,24 +28,24 @@ const VALID_DISCOVERY_DATA = {
   outputs: [],
 };
 
-let roomId: string;
+let documentId: string;
 
 describe('Collaborative Session', () => {
   beforeAll(async () => {
     // Create a room for all tests
-    const response = await fetch(`${BASE_URL}/rooms`, {
+    const response = await fetch(`${BASE_URL}/documents`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(VALID_DISCOVERY_DATA),
     });
     const body = await response.json();
-    roomId = body.roomId;
+    documentId = body.documentId;
   });
 
   // @fsid:FS-SseCredentialsGenerated
   describe('FS-SseCredentialsGenerated', () => {
     it('connecting without uuid or username receives generated credentials', async () => {
-      const connection = await connectSse(`${BASE_URL}/events/${roomId}`);
+      const connection = await connectSse(`${BASE_URL}/events/${documentId}`);
       try {
         const messages = await connection.waitForMessages(1, 3000);
         expect(messages[0]).toHaveProperty('type', 'credentials');
@@ -62,7 +62,7 @@ describe('Collaborative Session', () => {
   // @fsid:FS-JoinRoomViaSse
   describe('FS-JoinRoomViaSse', () => {
     it('SSE connection to a valid room returns a credentials message', async () => {
-      const connection = await connectSse(`${BASE_URL}/events/${roomId}`);
+      const connection = await connectSse(`${BASE_URL}/events/${documentId}`);
       try {
         const messages = await connection.waitForMessages(1, 3000);
         expect(messages[0].type).toBe('credentials');
@@ -77,7 +77,7 @@ describe('Collaborative Session', () => {
     it('connecting with uuid and username query params receives them back', async () => {
       const testUuid = '550e8400-e29b-41d4-a716-446655440000';
       const testUsername = 'TestAnalyst';
-      const url = `${BASE_URL}/events/${roomId}?uuid=${testUuid}&username=${testUsername}`;
+      const url = `${BASE_URL}/events/${documentId}?uuid=${testUuid}&username=${testUsername}`;
 
       const connection = await connectSse(url);
       try {
@@ -93,8 +93,8 @@ describe('Collaborative Session', () => {
 
   // @fsid:FS-SendUpdateToRoom
   describe('FS-SendUpdateToRoom', () => {
-    it('POST /rooms/:id/update with payload returns 204', async () => {
-      const response = await fetch(`${BASE_URL}/rooms/${roomId}/update`, {
+    it('POST /documents/:id/update with payload returns 204', async () => {
+      const response = await fetch(`${BASE_URL}/documents/${documentId}/update`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -112,7 +112,7 @@ describe('Collaborative Session', () => {
   describe('FS-ConcurrentUpdateLastWriteWins', () => {
     it('concurrent updates result in last-write-wins, no merge attempted', async () => {
       // Connect a subscriber to observe the final state
-      const subscriber = await connectSse(`${BASE_URL}/events/${roomId}`);
+      const subscriber = await connectSse(`${BASE_URL}/events/${documentId}`);
       try {
         await subscriber.waitForMessages(1, 3000);
         const messageCountBefore = subscriber.messages.length;
@@ -123,7 +123,7 @@ describe('Collaborative Session', () => {
           title: 'Update from A',
           facts: [{ fact_id: 'fact-a', content: 'Fact from Analyst A', source: '', related_inputs: [] }],
         };
-        await fetch(`${BASE_URL}/rooms/${roomId}/update`, {
+        await fetch(`${BASE_URL}/documents/${documentId}/update`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ payload: payloadA, senderUuid: 'uuid-a', username: 'AnalystA' }),
@@ -135,7 +135,7 @@ describe('Collaborative Session', () => {
           title: 'Update from B',
           facts: [],
         };
-        await fetch(`${BASE_URL}/rooms/${roomId}/update`, {
+        await fetch(`${BASE_URL}/documents/${documentId}/update`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ payload: payloadB, senderUuid: 'uuid-b', username: 'AnalystB' }),
@@ -151,7 +151,7 @@ describe('Collaborative Session', () => {
         expect(lastUpdate.payload.facts).toEqual([]);
 
         // Verify stored state matches last write
-        const roomResponse = await fetch(`${BASE_URL}/rooms/${roomId}`);
+        const roomResponse = await fetch(`${BASE_URL}/documents/${documentId}`);
         const roomData = await roomResponse.json();
         expect(roomData.title).toBe('Update from B');
         expect(roomData.facts).toEqual([]);
@@ -165,14 +165,14 @@ describe('Collaborative Session', () => {
   describe('FS-BroadcastUpdateToSubscribers', () => {
     it('sending an update broadcasts to other subscribers', async () => {
       // Connect a subscriber
-      const subscriber = await connectSse(`${BASE_URL}/events/${roomId}`);
+      const subscriber = await connectSse(`${BASE_URL}/events/${documentId}`);
       try {
         // Wait for credentials message
         await subscriber.waitForMessages(1, 3000);
         const messageCountBefore = subscriber.messages.length;
 
         // Send an update from another client
-        await fetch(`${BASE_URL}/rooms/${roomId}/update`, {
+        await fetch(`${BASE_URL}/documents/${documentId}/update`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -196,7 +196,7 @@ describe('Collaborative Session', () => {
   // @fsid:FS-SseSubscribersRegistered
   describe('FS-SseSubscribersRegistered', () => {
     it('after connecting, GET /status shows the client count for the room', async () => {
-      const connection = await connectSse(`${BASE_URL}/events/${roomId}`);
+      const connection = await connectSse(`${BASE_URL}/events/${documentId}`);
       try {
         await connection.waitForMessages(1, 3000);
 
@@ -204,7 +204,7 @@ describe('Collaborative Session', () => {
         const status = await statusResponse.json();
 
         // Subscribers are now properly registered
-        expect(status[roomId]).toBeGreaterThanOrEqual(1);
+        expect(status[documentId]).toBeGreaterThanOrEqual(1);
       } finally {
         connection.close();
       }
@@ -214,7 +214,7 @@ describe('Collaborative Session', () => {
   // @fsid:FS-SseDisconnection
   describe('FS-SseDisconnection', () => {
     it('disconnecting a client removes it from subscribers', async () => {
-      const connection = await connectSse(`${BASE_URL}/events/${roomId}`);
+      const connection = await connectSse(`${BASE_URL}/events/${documentId}`);
       await connection.waitForMessages(1, 3000);
 
       // Close the connection
@@ -226,7 +226,7 @@ describe('Collaborative Session', () => {
       // Verify via status — client count should be 0 after disconnection
       const statusResponse = await fetch(`${BASE_URL}/status`);
       const status = await statusResponse.json();
-      const clientCount = status[roomId] ?? 0;
+      const clientCount = status[documentId] ?? 0;
       expect(clientCount).toBe(0);
     });
   });

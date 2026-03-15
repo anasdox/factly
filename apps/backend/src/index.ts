@@ -113,8 +113,8 @@ app.get('/me/discoveries', requireAuth, async (req, res, next) => {
         const data = parsed.value; // Keyv wraps in { value, expires }
         if (!data || !data.discovery_id) continue;
 
-        const roomKey = row.key.replace('keyv:', '');
-        const meta = await store.get(`meta:${roomKey}`);
+        const documentKey = row.key.replace('keyv:', '');
+        const meta = await store.get(`meta:${documentKey}`);
         const owner = meta?.owner || null;
         const visitedBy: string[] = meta?.visited_by || [];
 
@@ -143,68 +143,68 @@ app.get('/me/discoveries', requireAuth, async (req, res, next) => {
 });
 
 // Define API endpoints
-app.post('/rooms', optionalAuth, async (req, res, next) => {
+app.post('/documents', optionalAuth, async (req, res, next) => {
   try {
     const validation = validateDiscoveryData(req.body);
     if (!validation.valid) {
       return res.status(400).json({ error: validation.error });
     }
-    const roomId = await createRoom(req.body);
+    const documentId = await createDocument(req.body);
     // Store ownership metadata
     const owner = req.user?.username || null;
-    await store.set(`meta:${roomId}`, { owner, visited_by: [] });
-    logger.info(`Created room with ID: ${roomId}, owner: ${owner || 'anonymous'}`);
-    res.send({ roomId });
+    await store.set(`meta:${documentId}`, { owner, visited_by: [] });
+    logger.info(`Created document with ID: ${documentId}, owner: ${owner || 'anonymous'}`);
+    res.send({ documentId });
   } catch (err) {
     next(err);
   }
 });
 
-app.get('/rooms/:id', optionalAuth, async (req, res, next) => {
+app.get('/documents/:id', optionalAuth, async (req, res, next) => {
   try {
-    if (!isRoomValid(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid room ID format. Must be UUID v4.' });
+    if (!isDocumentIdValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid document ID format. Must be UUID v4.' });
     }
-    const roomId = req.params.id;
-    const room = await getRoom(roomId);
+    const documentId = req.params.id;
+    const doc = await getDocument(documentId);
 
     // Track visit for authenticated non-owners
     if (req.user?.username) {
-      const meta = await store.get(`meta:${roomId}`) || { owner: null, visited_by: [] };
+      const meta = await store.get(`meta:${documentId}`) || { owner: null, visited_by: [] };
       if (meta.owner !== req.user.username && !meta.visited_by.includes(req.user.username)) {
         meta.visited_by.push(req.user.username);
-        await store.set(`meta:${roomId}`, meta);
+        await store.set(`meta:${documentId}`, meta);
       }
     }
 
-    logger.debug(`Fetched room data for ID: ${roomId}`);
-    res.send(room);
+    logger.debug(`Fetched document data for ID: ${documentId}`);
+    res.send(doc);
   } catch (err) {
     next(err);
   }
 });
 
-app.delete('/rooms/:id', optionalAuth, async (req, res, next) => {
+app.delete('/documents/:id', optionalAuth, async (req, res, next) => {
   try {
-    if (!isRoomValid(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid room ID format. Must be UUID v4.' });
+    if (!isDocumentIdValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid document ID format. Must be UUID v4.' });
     }
-    const roomId = req.params.id;
+    const documentId = req.params.id;
 
     // Enforce deletion authorization when auth system is active
     if (process.env.JWT_SECRET) {
       if (!req.user) {
         return res.status(403).json({ error: 'Authentication required to delete a discovery' });
       }
-      const meta = await store.get(`meta:${roomId}`);
+      const meta = await store.get(`meta:${documentId}`);
       if (meta && meta.owner && meta.owner !== req.user.username) {
         return res.status(403).json({ error: 'Only the owner can delete this discovery' });
       }
     }
 
-    await stopRoom(roomId);
-    await store.delete(`meta:${roomId}`);
-    logger.info(`Stopped room with ID: ${roomId}`);
+    await stopDocument(documentId);
+    await store.delete(`meta:${documentId}`);
+    logger.info(`Stopped document with ID: ${documentId}`);
     res.sendStatus(204);
   } catch (err) {
     next(err);
@@ -633,8 +633,8 @@ app.post('/research', async (req, res, next) => {
 });
 
 app.get('/status', (req, res) => {
-  const status: any = Array.from(subscribers.entries()).reduce((prev: any, [roomId, sockets]) => {
-    prev[roomId] = sockets.size;
+  const status: any = Array.from(subscribers.entries()).reduce((prev: any, [documentId, sockets]) => {
+    prev[documentId] = sockets.size;
     return prev;
   }, {});
   status.searchAvailable = searchProvider !== null && llmProvider !== null;
@@ -642,11 +642,11 @@ app.get('/status', (req, res) => {
   res.send(status);
 });
 
-app.post('/rooms/:id/update', async (req, res, next) => {
+app.post('/documents/:id/update', async (req, res, next) => {
   try {
-    const roomId = req.params.id;
-    if (!isRoomValid(roomId)) {
-      return res.status(400).json({ error: 'Invalid room ID format. Must be UUID v4.' });
+    const documentId = req.params.id;
+    if (!isDocumentIdValid(documentId)) {
+      return res.status(400).json({ error: 'Invalid document ID format. Must be UUID v4.' });
     }
     const validation = validateUpdateBody(req.body);
     if (!validation.valid) {
@@ -657,12 +657,12 @@ app.post('/rooms/:id/update', async (req, res, next) => {
     const username = data.username;
     const payload = data.payload;
 
-    logger.debug(`Received update for room ${roomId}: ${JSON.stringify({ senderUuid, username, payload })}`);
+    logger.debug(`Received update for document ${documentId}: ${JSON.stringify({ senderUuid, username, payload })}`);
 
-    await saveRoom(roomId, payload);
-    if (senderUuid && subscribers.has(roomId)) {
-      logger.info(`Broadcasting update for room ${roomId} from user ${senderUuid}`);
-      broadcastUpdate(roomId, payload, senderUuid, username);
+    await saveDocument(documentId, payload);
+    if (senderUuid && subscribers.has(documentId)) {
+      logger.info(`Broadcasting update for document ${documentId} from user ${senderUuid}`);
+      broadcastUpdate(documentId, payload, senderUuid, username);
     }
     res.sendStatus(204);
   } catch (err) {
@@ -773,14 +773,14 @@ app.post('/chat/message', async (req, res, next) => {
 interface UserSocket extends Socket {
   uuid?: string;
   username?: string;
-  roomId?: string;
+  documentId?: string;
 }
 
 const subscribers: Map<string, Set<UserSocket>> = new Map();
 const users: Map<string, Set<string>> = new Map();
 
-app.get('/events/:roomId', async (req, res) => {
-  const roomId = req.params.roomId;
+app.get('/events/:documentId', async (req, res) => {
+  const documentId = req.params.documentId;
 
   // Disable timeouts and buffering for SSE
   req.setTimeout(0);
@@ -798,8 +798,8 @@ app.get('/events/:roomId', async (req, res) => {
   });
   res.flushHeaders();
 
-  if (!roomId || !isRoomValid(roomId)) {
-    logger.error(`Invalid or missing room ID for SSE: ${roomId}`);
+  if (!documentId || !isDocumentIdValid(documentId)) {
+    logger.error(`Invalid or missing document ID for SSE: ${documentId}`);
     return res.destroy();
   }
   const uuidParam = req.query.uuid;
@@ -808,24 +808,24 @@ app.get('/events/:roomId', async (req, res) => {
   const socket = res as any;
   socket.uuid = uuidParam ?? uuid();
   socket.username = usernameParam ?? generateUsername();
-  socket.roomId = roomId;
+  socket.documentId = documentId;
 
-  if (!subscribers.has(roomId)) {
-    subscribers.set(roomId, new Set());
+  if (!subscribers.has(documentId)) {
+    subscribers.set(documentId, new Set());
   }
-  subscribers.get(roomId)!.add(socket);
+  subscribers.get(documentId)!.add(socket);
 
-  if (!users.has(roomId)) {
-    users.set(roomId, new Set());
+  if (!users.has(documentId)) {
+    users.set(documentId, new Set());
   }
-  users.get(roomId)!.add(socket.username!);
+  users.get(documentId)!.add(socket.username!);
 
   res.write(`data: {"type": "credentials", "uuid": "${socket.uuid}", "username": "${socket.username}"}\n\n`);
 
-  // Send current room data so the new subscriber is immediately in sync
-  const roomData = await loadRoom(roomId);
-  if (roomData) {
-    res.write(`data: ${JSON.stringify({ type: 'init', payload: roomData })}\n\n`);
+  // Send current document data so the new subscriber is immediately in sync
+  const docData = await loadDocument(documentId);
+  if (docData) {
+    res.write(`data: ${JSON.stringify({ type: 'init', payload: docData })}\n\n`);
   }
 
   // Heartbeat to keep the connection alive
@@ -836,39 +836,39 @@ app.get('/events/:roomId', async (req, res) => {
   req.on('close', () => {
     clearInterval(heartbeat);
     logger.debug(`Client with uuid: ${socket.uuid} and username: ${socket.username} disconnected`);
-    if (socket.username && socket.roomId) {
-      subscribers.get(socket.roomId)?.delete(socket);
-      users.get(socket.roomId)?.delete(socket.username);
+    if (socket.username && socket.documentId) {
+      subscribers.get(socket.documentId)?.delete(socket);
+      users.get(socket.documentId)?.delete(socket.username);
     }
   });
 }); 
 
 
 // Implement CRUD operations for data storage
-async function createRoom(data: any): Promise<string> {
-  // Create a new room with the provided data and store it in the database
-  const roomId = uuid();
-  logger.debug(`Creating room with ID: ${roomId}`);
+async function createDocument(data: any): Promise<string> {
+  // Create a new document with the provided data and store it in the database
+  const documentId = uuid();
+  logger.debug(`Creating document with ID: ${documentId}`);
   if (!data) throw new Error('No data provided');
-  await saveRoom(roomId, data);
-  logger.debug(`Created room with ID: ${roomId}`);
-  return roomId;
+  await saveDocument(documentId, data);
+  logger.debug(`Created document with ID: ${documentId}`);
+  return documentId;
 }
 
-async function getRoom(id: string): Promise<any> {
-  // Retrieve the current state of a room by ID from the database
-  const room = await loadRoom(id);
-  logger.debug(`Fetched room data for ID: ${id}`);
-  return room;
+async function getDocument(id: string): Promise<any> {
+  // Retrieve the current state of a document by ID from the database
+  const doc = await loadDocument(id);
+  logger.debug(`Fetched document data for ID: ${id}`);
+  return doc;
 }
 
-async function saveRoom(id: string, data: any) {
+async function saveDocument(id: string, data: any) {
   await store.set(id, data);
-  logger.debug(`Saved room data for ID: ${id}`);
+  logger.debug(`Saved document data for ID: ${id}`);
 }
 
-async function loadRoom(id: string) {
-  logger.debug(`Loaded room data for ID: ${id}`);
+async function loadDocument(id: string) {
+  logger.debug(`Loaded document data for ID: ${id}`);
   return await store.get(id);
 }
 
@@ -880,18 +880,18 @@ async function getAllStoreRows(): Promise<{ key: string; value: string }[]> {
   return [];
 }
 
-async function stopRoom(id: string) {
+async function stopDocument(id: string) {
   subscribers.delete(id);
   users.delete(id);
   await store.delete(id);
-  logger.debug(`Stopped room with ID: ${id}`);
+  logger.debug(`Stopped document with ID: ${id}`);
 }
 
 
-function broadcastUpdate(roomId: string, payload: any, senderUuid: string, username?: string) {
-  const sockets = subscribers.get(roomId);
+function broadcastUpdate(documentId: string, payload: any, senderUuid: string, username?: string) {
+  const sockets = subscribers.get(documentId);
   if (sockets) {
-    logger.info(`Broadcasting update to ${sockets.size} clients in room: ${roomId} (sender: ${senderUuid})`);
+    logger.info(`Broadcasting update to clients in document: ${documentId} (sender: ${senderUuid})`);
     const message = `data: ${JSON.stringify({ type: 'update', payload })}\n\n`;
     for (const socket of sockets) {
       // Send update to all clients except the one who sent the update
@@ -906,12 +906,12 @@ function broadcastUpdate(roomId: string, payload: any, senderUuid: string, usern
       }
     }
   } else {
-    logger.warn(`No subscribers found for room ${roomId}`);
+    logger.warn(`No subscribers found for document ${documentId}`);
   }
 }
 
-const isRoomValid = (roomId: string): boolean => {
-  return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(roomId);
+const isDocumentIdValid = (documentId: string): boolean => {
+  return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(documentId);
 };
 
 // ── Validation helpers ──

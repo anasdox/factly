@@ -27,27 +27,27 @@ const DISCOVERY_DATA = {
   outputs: [],
 };
 
-async function createRoom(data: object): Promise<string> {
+async function createDocument(data: object): Promise<string> {
   const token = await getTestToken();
-  const res = await fetch(`${BASE_URL}/rooms`, {
+  const res = await fetch(`${BASE_URL}/documents`, {
     method: 'POST',
     headers: authHeaders(token),
     body: JSON.stringify(data),
   });
   const body = await res.json();
-  return body.roomId;
+  return body.documentId;
 }
 
-async function getRoom(roomId: string): Promise<any> {
-  const res = await fetch(`${BASE_URL}/rooms/${roomId}`);
+async function getDocument(documentId: string): Promise<any> {
+  const res = await fetch(`${BASE_URL}/documents/${documentId}`);
   const text = await res.text();
   if (!text) return null;
   return JSON.parse(text);
 }
 
-async function deleteRoom(roomId: string): Promise<void> {
+async function deleteDocument(documentId: string): Promise<void> {
   const token = await getTestToken();
-  await fetch(`${BASE_URL}/rooms/${roomId}`, { method: 'DELETE', headers: authHeaders(token) });
+  await fetch(`${BASE_URL}/documents/${documentId}`, { method: 'DELETE', headers: authHeaders(token) });
 }
 
 describe('Server-Side Persistence', () => {
@@ -66,7 +66,7 @@ describe('Server-Side Persistence', () => {
   describe('FS-RoomDataSurvivesRestart', () => {
     it('room data is retrievable after a server restart', async () => {
       // Create a room
-      const roomId = await createRoom(DISCOVERY_DATA);
+      const documentId = await createDocument(DISCOVERY_DATA);
 
       // Stop the server
       await stopServer();
@@ -75,7 +75,7 @@ describe('Server-Side Persistence', () => {
       await startServer();
 
       // Retrieve the room — data should persist
-      const room = await getRoom(roomId);
+      const room = await getDocument(documentId);
       expect(room).toBeDefined();
       expect(room.discovery_id).toBe(DISCOVERY_DATA.discovery_id);
       expect(room.title).toBe(DISCOVERY_DATA.title);
@@ -87,8 +87,8 @@ describe('Server-Side Persistence', () => {
   describe('FS-RoomDeletionSurvivesRestart', () => {
     it('a deleted room remains deleted after a server restart', async () => {
       // Create and delete a room
-      const roomId = await createRoom(DISCOVERY_DATA);
-      await deleteRoom(roomId);
+      const documentId = await createDocument(DISCOVERY_DATA);
+      await deleteDocument(documentId);
 
       // Stop the server
       await stopServer();
@@ -97,7 +97,7 @@ describe('Server-Side Persistence', () => {
       await startServer();
 
       // Room should still be gone
-      const room = await getRoom(roomId);
+      const room = await getDocument(documentId);
       expect(room).toBeNull();
     }, 60000);
   });
@@ -106,21 +106,21 @@ describe('Server-Side Persistence', () => {
   describe('FS-StoragePathDeterministic', () => {
     it('rooms from different server lifecycles coexist', async () => {
       // Create a room in the current lifecycle
-      const roomId1 = await createRoom({ ...DISCOVERY_DATA, title: 'Lifecycle 1' });
+      const documentId1 = await createDocument({ ...DISCOVERY_DATA, title: 'Lifecycle 1' });
 
       // Restart
       await stopServer();
       await startServer();
 
       // Create a second room in the new lifecycle
-      const roomId2 = await createRoom({ ...DISCOVERY_DATA, title: 'Lifecycle 2' });
+      const documentId2 = await createDocument({ ...DISCOVERY_DATA, title: 'Lifecycle 2' });
 
       // Both rooms should be retrievable
-      const room1 = await getRoom(roomId1);
+      const room1 = await getDocument(documentId1);
       expect(room1).toBeDefined();
       expect(room1.title).toBe('Lifecycle 1');
 
-      const room2 = await getRoom(roomId2);
+      const room2 = await getDocument(documentId2);
       expect(room2).toBeDefined();
       expect(room2.title).toBe('Lifecycle 2');
     }, 60000);

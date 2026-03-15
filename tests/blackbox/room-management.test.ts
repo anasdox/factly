@@ -32,8 +32,8 @@ describe('Room Management', () => {
 
   // @fsid:FS-CreateRoom
   describe('FS-CreateRoom', () => {
-    it('POST /rooms with discovery data returns a UUID v4 roomId', async () => {
-      const response = await fetch(`${BASE_URL}/rooms`, {
+    it('POST /documents with discovery data returns a UUID v4 documentId', async () => {
+      const response = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(VALID_DISCOVERY_DATA),
@@ -41,24 +41,24 @@ describe('Room Management', () => {
 
       expect(response.status).toBe(200);
       const body = await response.json();
-      expect(body).toHaveProperty('roomId');
-      expect(body.roomId).toMatch(UUID_V4_REGEX);
+      expect(body).toHaveProperty('documentId');
+      expect(body.documentId).toMatch(UUID_V4_REGEX);
     });
   });
 
   // @fsid:FS-RetrieveRoom
   describe('FS-RetrieveRoom', () => {
-    it('GET /rooms/:id returns the stored discovery data', async () => {
+    it('GET /documents/:id returns the stored discovery data', async () => {
       // Create a room first
-      const createResponse = await fetch(`${BASE_URL}/rooms`, {
+      const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
-      const { roomId } = await createResponse.json();
+      const { documentId } = await createResponse.json();
 
       // Retrieve it
-      const getResponse = await fetch(`${BASE_URL}/rooms/${roomId}`);
+      const getResponse = await fetch(`${BASE_URL}/documents/${documentId}`);
       expect(getResponse.status).toBe(200);
 
       const roomData = await getResponse.json();
@@ -70,16 +70,16 @@ describe('Room Management', () => {
 
   // @fsid:FS-DeleteRoom
   describe('FS-DeleteRoom', () => {
-    it('DELETE /rooms/:id returns 204', async () => {
+    it('DELETE /documents/:id returns 204', async () => {
       const token = await getTestToken();
-      const createResponse = await fetch(`${BASE_URL}/rooms`, {
+      const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeaders(token),
         body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
-      const { roomId } = await createResponse.json();
+      const { documentId } = await createResponse.json();
 
-      const deleteResponse = await fetch(`${BASE_URL}/rooms/${roomId}`, {
+      const deleteResponse = await fetch(`${BASE_URL}/documents/${documentId}`, {
         method: 'DELETE',
         headers: authHeaders(token),
       });
@@ -89,26 +89,26 @@ describe('Room Management', () => {
     it('deleting one room does not affect other rooms', async () => {
       const token = await getTestToken();
       // Create two rooms
-      const create1 = await fetch(`${BASE_URL}/rooms`, {
+      const create1 = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeaders(token),
         body: JSON.stringify({ ...VALID_DISCOVERY_DATA, title: 'Room 1' }),
       });
-      const { roomId: roomId1 } = await create1.json();
+      const { documentId: documentId1 } = await create1.json();
 
-      const create2 = await fetch(`${BASE_URL}/rooms`, {
+      const create2 = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: authHeaders(token),
         body: JSON.stringify({ ...VALID_DISCOVERY_DATA, title: 'Room 2' }),
       });
-      const { roomId: roomId2 } = await create2.json();
+      const { documentId: documentId2 } = await create2.json();
 
       // Delete room 1
-      await fetch(`${BASE_URL}/rooms/${roomId1}`, { method: 'DELETE', headers: authHeaders(token) });
+      await fetch(`${BASE_URL}/documents/${documentId1}`, { method: 'DELETE', headers: authHeaders(token) });
 
       // Room 2 should still exist
-      const getRoom2 = await fetch(`${BASE_URL}/rooms/${roomId2}`);
-      const room2Data = await getRoom2.json();
+      const getDocument2 = await fetch(`${BASE_URL}/documents/${documentId2}`);
+      const room2Data = await getDocument2.json();
       expect(room2Data).toBeDefined();
       expect(room2Data.title).toBe('Room 2');
     });
@@ -127,7 +127,7 @@ describe('Room Management', () => {
 
   // @fsid:FS-ValidateRoomId
   describe('FS-ValidateRoomId', () => {
-    it('SSE connection with invalid roomId is destroyed', async () => {
+    it('SSE connection with invalid documentId is destroyed', async () => {
       try {
         const connection = await connectSse(`${BASE_URL}/events/not-a-uuid`);
         // If we got here, connection was established but should have been destroyed
@@ -139,16 +139,16 @@ describe('Room Management', () => {
       }
     });
 
-    it('SSE connection with valid UUID v4 roomId is accepted', async () => {
-      // Create a room first to have a valid roomId
-      const createResponse = await fetch(`${BASE_URL}/rooms`, {
+    it('SSE connection with valid UUID v4 documentId is accepted', async () => {
+      // Create a room first to have a valid documentId
+      const createResponse = await fetch(`${BASE_URL}/documents`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(VALID_DISCOVERY_DATA),
       });
-      const { roomId } = await createResponse.json();
+      const { documentId } = await createResponse.json();
 
-      const connection = await connectSse(`${BASE_URL}/events/${roomId}`);
+      const connection = await connectSse(`${BASE_URL}/events/${documentId}`);
       try {
         // Connection should be established (got past the promise)
         expect(connection).toBeDefined();
