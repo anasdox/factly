@@ -5,6 +5,8 @@ import App from './App';
 import BenchmarkPage from './pages/BenchmarkPage';
 import LoginPage from './pages/LoginPage';
 import PersonalSpace from './pages/PersonalSpace';
+import FeedbackPage from './pages/FeedbackPage';
+import NotFoundPage from './pages/NotFoundPage';
 import { AuthProvider } from './hooks/useAuth';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
@@ -21,7 +23,11 @@ root.render(
           <Route path="/documents/:id" element={<App />}/>
           <Route path="/login" element={<LoginPage />}/>
           <Route path="/me" element={<PersonalSpace />}/>
-          <Route path="/benchmark" element={<BenchmarkPage />}/>
+          <Route path="/feedback" element={<FeedbackPage />}/>
+          {process.env.REACT_APP_ENABLE_BENCHMARK === 'true' && (
+            <Route path="/benchmark" element={<BenchmarkPage />}/>
+          )}
+          <Route path="*" element={<NotFoundPage />}/>
         </Routes>
       </AuthProvider>
     </BrowserRouter>

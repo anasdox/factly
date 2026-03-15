@@ -17,7 +17,7 @@ import { buildChatSystemPrompt, CHAT_TOOLS, DiscoveryContext, ReferencedItem } f
 import benchmarkRoutes from './benchmark-routes';
 import oauthRoutes from './auth/oauth';
 import bcrypt from 'bcrypt';
-import { findUser } from './auth/user-store';
+import { findUser, createUser } from './auth/user-store';
 import { signToken } from './auth/jwt';
 import { optionalAuth, requireAuth } from './auth/middleware';
 import { store, dbPath } from './store';
@@ -88,7 +88,15 @@ const generalLimiter = rateLimit({
 });
 app.use(generalLimiter);
 
-app.use('/benchmark', benchmarkRoutes);
+if (process.env.ENABLE_BENCHMARK === 'true') {
+  app.use('/benchmark', benchmarkRoutes);
+}
+
+// --- Feedback ---
+
+import { feedbackRoutes } from './feedback';
+
+app.use('/feedback', feedbackRoutes);
 
 // --- Authentication endpoints ---
 
@@ -113,6 +121,38 @@ app.post('/auth/login', async (req, res, next) => {
     }
     const token = signToken(username);
     res.json({ token });
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post('/auth/register', async (req, res, next) => {
+  try {
+    if (!process.env.JWT_SECRET) {
+      return res.status(503).json({ error: 'Authentication not configured (JWT_SECRET missing)' });
+    }
+    const { username, password } = req.body || {};
+    if (!username || typeof username !== 'string' || username.trim().length < 3) {
+      return res.status(400).json({ error: 'Username must be at least 3 characters' });
+    }
+    if (!password || typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(username.trim())) {
+      return res.status(400).json({ error: 'Username can only contain letters, numbers, hyphens and underscores' });
+    }
+    const existing = await findUser(username.trim());
+    if (existing) {
+      return res.status(409).json({ error: 'Username already taken' });
+    }
+    const hash = await bcrypt.hash(password, 10);
+    await createUser({
+      username: username.trim(),
+      password_hash: hash,
+      created_at: new Date().toISOString(),
+    });
+    const token = signToken(username.trim());
+    res.status(201).json({ token });
   } catch (err) {
     next(err);
   }
@@ -544,7 +584,7 @@ app.post('/propose/update', async (req, res, next) => {
 
 // ── Reformulation endpoint ──
 
-const VALID_REFORMULATE_ENTITY_TYPES = ['fact', 'insight', 'recommendation'];
+const VALID_REFORMULATE_ENTITY_TYPES = ['fact', 'insight', 'recommendation', 'goal'];
 
 app.post('/reformulate', async (req, res, next) => {
   try {

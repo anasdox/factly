@@ -37,7 +37,8 @@
 }
 .chat-panel-expanded {
   width: min(700px, calc(100vw - 48px));
-  height: 80vh;
+  height: calc(100vh - 108px);
+  max-height: calc(100vh - 108px);
   bottom: 84px;
   right: 24px;
 }

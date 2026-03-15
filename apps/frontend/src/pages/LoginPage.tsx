@@ -5,6 +5,7 @@ import { API_URL } from '../config';
 import './LoginPage.css';
 
 export default function LoginPage() {
+  const [mode, setMode] = useState<'login' | 'register'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -24,6 +25,13 @@ export default function LoginPage() {
     }
   }, [searchParams, loginWithToken, navigate]);
 
+  // Check mode from URL
+  useEffect(() => {
+    if (searchParams.get('mode') === 'register') {
+      setMode('register');
+    }
+  }, [searchParams]);
+
   // Fetch available OAuth providers
   useEffect(() => {
     fetch(`${API_URL}/auth/providers`)
@@ -37,10 +45,24 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(username, password);
+      if (mode === 'register') {
+        const response = await fetch(`${API_URL}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        if (!response.ok) {
+          const result = await response.json();
+          throw new Error(result.error || 'Registration failed');
+        }
+        const { token } = await response.json();
+        loginWithToken(token, username);
+      } else {
+        await login(username, password);
+      }
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(err.message || (mode === 'register' ? 'Registration failed' : 'Login failed'));
     } finally {
       setLoading(false);
     }
@@ -53,7 +75,7 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <form onSubmit={handleSubmit} className="login-form">
-        <h2 className="login-title">Login</h2>
+        <h2 className="login-title">{mode === 'register' ? 'Create Account' : 'Login'}</h2>
         {error && <div className="login-error">{error}</div>}
 
         {oauthProviders.length > 0 && (
@@ -94,8 +116,15 @@ export default function LoginPage() {
           />
         </div>
         <button type="submit" disabled={loading} className="login-btn">
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? (mode === 'register' ? 'Creating...' : 'Logging in...') : (mode === 'register' ? 'Create Account' : 'Login')}
         </button>
+        <p className="login-switch">
+          {mode === 'login' ? (
+            <>No account? <button type="button" className="login-switch-btn" onClick={() => { setMode('register'); setError(''); }}>Sign up</button></>
+          ) : (
+            <>Already have an account? <button type="button" className="login-switch-btn" onClick={() => { setMode('login'); setError(''); }}>Login</button></>
+          )}
+        </p>
       </form>
     </div>
   );

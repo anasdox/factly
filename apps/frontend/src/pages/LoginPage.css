@@ -118,3 +118,20 @@
 .login-divider span {
   padding: 0 0.75rem;
 }
+
+.login-switch {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.85em;
+  color: var(--text-secondary);
+}
+
+.login-switch-btn {
+  background: none;
+  border: none;
+  color: var(--color-accent, #2563eb);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-size: inherit;
+}

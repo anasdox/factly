@@ -66,6 +66,12 @@ server {
         proxy_read_timeout 120s;
     }
 
+    location /feedback {
+        proxy_pass ${BACKEND_URL}/feedback;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
     location /dedup {
         proxy_pass ${BACKEND_URL}/dedup;
         proxy_set_header Host $host;

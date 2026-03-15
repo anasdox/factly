@@ -310,6 +310,10 @@
   --border-toast-waiting: #3a3a5a;
 }
 
+html, body, #root {
+  height: 100%;
+}
+
 body {
   margin: 0;
   font-family: Consolas, 'Courier New', monospace;

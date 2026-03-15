@@ -545,7 +545,7 @@ input[type=text], select, textarea {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 80vh;
+  min-height: 100vh;
   gap: 1em;
 }
 
@@ -650,6 +650,30 @@ input[type=text], select, textarea {
   background: var(--bg-welcome-btn-hover);
   color: var(--color-welcome-btn-hover);
   transition: 0.2s;
+}
+
+.welcome-auth {
+  display: flex;
+  gap: 0.75em;
+  margin-top: 1.5em;
+}
+
+.welcome-auth-btn {
+  padding: 8px 20px;
+  border: 1px solid var(--border-btn);
+  border-radius: 6px;
+  background: var(--bg-btn);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.welcome-auth-btn:hover {
+  border-color: var(--border-btn-hover);
+}
+
+.welcome-auth-register {
+  background: transparent;
 }
 
 .empty-state-hint {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { faEdit, faFileDownload, faPlus, faUpload, faSave, faMoon, faSun, faRoute, faRocket, faSpinner, faUser, faSignOutAlt } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faFileDownload, faPlus, faUpload, faSave, faMoon, faSun, faRoute, faRocket, faSpinner, faUser, faSignOutAlt, faLightbulb } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./Toolbar.css";
 
@@ -41,7 +41,7 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
   const usernameRef = useRef<string | null>(username);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('theme');
-    return saved === 'dark' ? 'dark' : 'light';
+    return saved === 'light' ? 'light' : 'dark';
   });
 
   useEffect(() => {
@@ -516,31 +516,12 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
 
   return (
     <div className="toolbar">
-      <label htmlFor="file-input" className="toolbar-upload" title="Open Discovery">
-        <FontAwesomeIcon icon={faUpload} size='lg' />
-        <input
-          id="file-input"
-          type="file"
-          accept=".json"
-          onChange={handleFileInputChange}
-          style={{ display: 'none' }}
-        />
-      </label>
-      <div title="Save Discovery" onClick={handleExport}>
-        <FontAwesomeIcon icon={faFileDownload} size='lg' />
-      </div>
-      <div title="Edit Discovery Goal" onClick={handleEditDiscovery}>
-        <FontAwesomeIcon icon={faEdit} size='lg' />
-      </div>
+      {/* — Discovery actions — */}
       <div title="New Discovery" onClick={handleNewDiscovery}>
         <FontAwesomeIcon icon={faPlus} size='lg' />
       </div>
-      <div
-        title={!backendAvailable ? "Backend unavailable" : isRunningFullAuto ? "Pipeline running..." : data.inputs.length === 0 ? "Add inputs first" : "Full Auto Pipeline"}
-        onClick={backendAvailable && !isRunningFullAuto && data.inputs.length > 0 ? () => setIsFullAutoConfigVisible(true) : undefined}
-        className={!backendAvailable || isRunningFullAuto || data.inputs.length === 0 ? 'toolbar-disabled' : ''}
-      >
-        <FontAwesomeIcon icon={isRunningFullAuto ? faSpinner : faRocket} size='lg' spin={isRunningFullAuto} />
+      <div title="Edit Discovery Goal" onClick={handleEditDiscovery}>
+        <FontAwesomeIcon icon={faEdit} size='lg' />
       </div>
       {isAuthenticated && (
         <div
@@ -551,6 +532,30 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
           <FontAwesomeIcon icon={isSaving ? faSpinner : faSave} size='lg' spin={isSaving} />
         </div>
       )}
+      <div
+        title={!backendAvailable ? "Backend unavailable" : isRunningFullAuto ? "Pipeline running..." : data.inputs.length === 0 ? "Add inputs first" : "Full Auto Pipeline"}
+        onClick={backendAvailable && !isRunningFullAuto && data.inputs.length > 0 ? () => setIsFullAutoConfigVisible(true) : undefined}
+        className={!backendAvailable || isRunningFullAuto || data.inputs.length === 0 ? 'toolbar-disabled' : ''}
+      >
+        <FontAwesomeIcon icon={isRunningFullAuto ? faSpinner : faRocket} size='lg' spin={isRunningFullAuto} />
+      </div>
+      <span className="toolbar-separator" />
+      {/* — File actions — */}
+      <label htmlFor="file-input" className="toolbar-upload" title="Import">
+        <FontAwesomeIcon icon={faUpload} size='lg' />
+        <input
+          id="file-input"
+          type="file"
+          accept=".json"
+          onChange={handleFileInputChange}
+          style={{ display: 'none' }}
+        />
+      </label>
+      <div title="Export" onClick={handleExport}>
+        <FontAwesomeIcon icon={faFileDownload} size='lg' />
+      </div>
+      <span className="toolbar-separator" />
+      {/* — App actions — */}
       {onStartTour && (
         <div title="Guided Tour" onClick={() => {
           if (documentId) {
@@ -566,6 +571,14 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
           <FontAwesomeIcon icon={faRoute} size='lg' />
         </div>
       )}
+      <div title="Ideas & Feedback" onClick={() => navigate('/feedback')}>
+        <FontAwesomeIcon icon={faLightbulb} size='lg' />
+      </div>
+      <div title={theme === 'light' ? 'Dark mode' : 'Light mode'} onClick={toggleTheme}>
+        <FontAwesomeIcon icon={theme === 'light' ? faMoon : faSun} size='lg' />
+      </div>
+      <span className="toolbar-separator" />
+      {/* — User — */}
       {isAuthenticated ? (
         <>
           <div title="My Space" onClick={() => navigate('/me')}>
@@ -580,15 +593,13 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
           <FontAwesomeIcon icon={faUser} size='lg' />
         </div>
       )}
-      <div title={theme === 'light' ? 'Dark mode' : 'Light mode'} onClick={toggleTheme}>
-        <FontAwesomeIcon icon={theme === 'light' ? faMoon : faSun} size='lg' />
-      </div>
       <DiscoveryModal
         mode={modalMode}
         isDialogVisible={isModalVisible}
         discoveryData={data}
         setDiscoveryData={setData}
         closeDialog={() => setIsModalVisible(false)}
+        backendAvailable={backendAvailable}
       />
       <FullAutoConfigModal
         isVisible={isFullAutoConfigVisible}

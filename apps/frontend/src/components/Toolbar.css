@@ -1,6 +1,15 @@
 .toolbar {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+}
+
+.toolbar-separator {
+  width: 1px;
+  height: 24px;
+  background: var(--text-primary);
+  margin: 0 6px;
+  opacity: 0.25;
 }
 
 .toolbar > div,

@@ -318,20 +318,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ data, setData, backendAvailable
   }, []);
 
   const toggleExpand = useCallback(() => {
-    setIsExpanded(prev => {
-      const next = !prev;
-      const w = next ? 700 : 400;
-      const h = next ? window.innerHeight * 0.8 : 500;
-      if (position.x >= 0) {
-        // Clamp to viewport
-        setPosition({
-          x: Math.min(position.x, window.innerWidth - w - 8),
-          y: Math.max(0, Math.min(position.y, window.innerHeight - h - 8)),
-        });
-      }
-      return next;
-    });
-  }, [position]);
+    setIsExpanded(prev => !prev);
+    setPosition({ x: -1, y: -1 });
+  }, []);
 
   const panelStyle = position.x >= 0 ? { left: position.x, top: position.y, bottom: 'auto', right: 'auto' } : {};
 

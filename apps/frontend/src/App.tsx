@@ -236,6 +236,12 @@ const App: React.FC = () => {
           <button className="welcome-new-discovery" onClick={handleNewDiscoveryFromWelcome}>New Discovery</button>
           <button className="welcome-example-btn" onClick={handleTryExample}>Try with an Example</button>
         </div>
+        {!isAuthenticated && (
+          <div className="welcome-auth">
+            <button className="welcome-auth-btn" onClick={() => navigate('/login')}>Sign in</button>
+            <button className="welcome-auth-btn welcome-auth-register" onClick={() => navigate('/login?mode=register')}>Sign up</button>
+          </div>
+        )}
       </div>
       <DiscoveryModal
         mode="add"
@@ -243,6 +249,7 @@ const App: React.FC = () => {
         discoveryData={null}
         setDiscoveryData={setData}
         closeDialog={() => setShowNewDiscoveryModal(false)}
+        backendAvailable={backendAvailable}
       />
     </div>
   );
