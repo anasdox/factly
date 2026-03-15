@@ -36,8 +36,10 @@ import { existsSync, readFileSync, writeFileSync } from 'fs';
 const BACKEND_DIR = resolve(__dirname, '../../apps/backend');
 const USERS_FILE = resolve(BACKEND_DIR, '../../data/users.json');
 
+const RUN_ID = Date.now().toString(36);
+
 const VALID_DISCOVERY_DATA = {
-  discovery_id: 'auth-test-disc-001',
+  discovery_id: `auth-test-disc-${RUN_ID}`,
   title: 'Auth Test Discovery',
   goal: 'Test authentication',
   date: '2026-03-14',
@@ -248,7 +250,7 @@ describe('User Management and Authentication', () => {
         headers: authHeader(token),
         body: JSON.stringify({
           ...VALID_DISCOVERY_DATA,
-          discovery_id: 'auth-owned-disc-001',
+          discovery_id: `auth-owned-${RUN_ID}`,
         }),
       });
 
@@ -262,7 +264,7 @@ describe('User Management and Authentication', () => {
 
       if (meResponse.status === 200) {
         const { discoveries } = await meResponse.json();
-        const owned = discoveries.find((d: any) => d.discovery_id === 'auth-owned-disc-001');
+        const owned = discoveries.find((d: any) => d.discovery_id === `auth-owned-${RUN_ID}`);
         expect(owned).toBeDefined();
       }
     });
@@ -287,7 +289,7 @@ describe('User Management and Authentication', () => {
         headers: authHeader(token),
         body: JSON.stringify({
           ...VALID_DISCOVERY_DATA,
-          discovery_id: 'auth-access-disc-001',
+          discovery_id: `auth-access-${RUN_ID}`,
         }),
       });
 
@@ -319,7 +321,7 @@ describe('User Management and Authentication', () => {
         headers: authHeader(token),
         body: JSON.stringify({
           ...VALID_DISCOVERY_DATA,
-          discovery_id: 'auth-delete-disc-001',
+          discovery_id: `auth-delete-${RUN_ID}`,
         }),
       });
 
@@ -353,7 +355,7 @@ describe('User Management and Authentication', () => {
         headers: authHeader(token),
         body: JSON.stringify({
           ...VALID_DISCOVERY_DATA,
-          discovery_id: 'auth-nodelete-disc-001',
+          discovery_id: `auth-nodelete-${RUN_ID}`,
         }),
       });
 
@@ -390,7 +392,7 @@ describe('User Management and Authentication', () => {
         headers: authHeader(token),
         body: JSON.stringify({
           ...VALID_DISCOVERY_DATA,
-          discovery_id: 'auth-anon-nodelete-001',
+          discovery_id: `auth-anon-nodelete1-${RUN_ID}`,
         }),
       });
 
@@ -416,7 +418,7 @@ describe('User Management and Authentication', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...VALID_DISCOVERY_DATA,
-          discovery_id: 'auth-anon-nodelete-002',
+          discovery_id: `auth-anon-nodelete2-${RUN_ID}`,
         }),
       });
 
@@ -454,7 +456,7 @@ describe('User Management and Authentication', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...VALID_DISCOVERY_DATA,
-          discovery_id: 'auth-visit-disc-001',
+          discovery_id: `auth-visit-${RUN_ID}`,
         }),
       });
 
@@ -475,7 +477,7 @@ describe('User Management and Authentication', () => {
       if (meResponse.status === 200) {
         const { discoveries } = await meResponse.json();
         const visited = discoveries.find(
-          (d: any) => d.discovery_id === 'auth-visit-disc-001' && d.role === 'visited'
+          (d: any) => d.discovery_id === `auth-visit-${RUN_ID}` && d.role === 'visited'
         );
         expect(visited).toBeDefined();
       }
@@ -501,7 +503,7 @@ describe('User Management and Authentication', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...VALID_DISCOVERY_DATA,
-          discovery_id: 'auth-idempotent-disc-001',
+          discovery_id: `auth-idempotent-${RUN_ID}`,
         }),
       });
 
@@ -519,7 +521,7 @@ describe('User Management and Authentication', () => {
       if (meResponse.status === 200) {
         const { discoveries } = await meResponse.json();
         const matches = discoveries.filter(
-          (d: any) => d.discovery_id === 'auth-idempotent-disc-001'
+          (d: any) => d.discovery_id === `auth-idempotent-${RUN_ID}`
         );
         expect(matches.length).toBeLessThanOrEqual(1);
       }
@@ -606,7 +608,7 @@ describe('User Management and Authentication', () => {
         headers: authHeader(token),
         body: JSON.stringify({
           ...VALID_DISCOVERY_DATA,
-          discovery_id: 'auth-own-visit-disc-001',
+          discovery_id: `auth-own-visit-${RUN_ID}`,
         }),
       });
 
@@ -623,7 +625,7 @@ describe('User Management and Authentication', () => {
       if (meResponse.status === 200) {
         const { discoveries } = await meResponse.json();
         const matches = discoveries.filter(
-          (d: any) => d.discovery_id === 'auth-own-visit-disc-001'
+          (d: any) => d.discovery_id === `auth-own-visit-${RUN_ID}`
         );
         expect(matches.length).toBe(1);
         expect(matches[0].role).toBe('owned');

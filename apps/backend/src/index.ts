@@ -104,25 +104,8 @@ app.post('/auth/login', async (req, res, next) => {
 app.get('/me/discoveries', requireAuth, async (req, res, next) => {
   try {
     const username = req.user!.username;
+    const rows = await getAllStoreRows();
     const discoveries: any[] = [];
-
-    // Iterate all keys in the store — Keyv with SQLite doesn't expose iteration,
-    // so we use the internal SQLite store to query all keys.
-    const sqliteStore = (store as any).opts.store;
-    let rows: { key: string; value: string }[] = [];
-    if (sqliteStore && typeof sqliteStore.query === 'function') {
-      rows = await sqliteStore.query('SELECT key, value FROM keyv');
-    } else if (sqliteStore && sqliteStore.db) {
-      // Alternative: direct db access
-      const db = sqliteStore.db;
-      rows = await new Promise((resolve, reject) => {
-        if (db.all) {
-          db.all('SELECT key, value FROM keyv', (err: any, r: any) => err ? reject(err) : resolve(r || []));
-        } else {
-          resolve([]);
-        }
-      });
-    }
 
     for (const row of rows) {
       try {
@@ -130,25 +113,22 @@ app.get('/me/discoveries', requireAuth, async (req, res, next) => {
         const data = parsed.value; // Keyv wraps in { value, expires }
         if (!data || !data.discovery_id) continue;
 
-        const meta = await store.get(`meta:${row.key.replace('keyv:', '')}`);
+        const roomKey = row.key.replace('keyv:', '');
+        const meta = await store.get(`meta:${roomKey}`);
         const owner = meta?.owner || null;
         const visitedBy: string[] = meta?.visited_by || [];
 
-        if (owner === username) {
+        let role: string | null = null;
+        if (owner === username) role = 'owned';
+        else if (visitedBy.includes(username)) role = 'visited';
+
+        if (role) {
           discoveries.push({
             discovery_id: data.discovery_id,
             title: data.title || '',
             goal: data.goal || '',
             date: data.date || '',
-            role: 'owned',
-          });
-        } else if (visitedBy.includes(username)) {
-          discoveries.push({
-            discovery_id: data.discovery_id,
-            title: data.title || '',
-            goal: data.goal || '',
-            date: data.date || '',
-            role: 'visited',
+            role,
           });
         }
       } catch {
@@ -890,6 +870,14 @@ async function saveRoom(id: string, data: any) {
 async function loadRoom(id: string) {
   logger.debug(`Loaded room data for ID: ${id}`);
   return await store.get(id);
+}
+
+async function getAllStoreRows(): Promise<{ key: string; value: string }[]> {
+  const sqliteStore = (store as any).opts.store;
+  if (sqliteStore && typeof sqliteStore.query === 'function') {
+    return sqliteStore.query('SELECT key, value FROM keyv');
+  }
+  return [];
 }
 
 async function stopRoom(id: string) {

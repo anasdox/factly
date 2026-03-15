@@ -20,7 +20,7 @@ Deliver M22: User Management and Authentication — optional login/password auth
 - [x] Implement M22 (8 slices: user-store, JWT, middleware, login, ownership, visit tracking, nginx, frontend)
 - [x] All acceptance tests pass (257/257, 17 suites)
 - [x] TypeScript compiles cleanly (frontend + backend)
-- [ ] Refactoring phase
+- [x] Refactoring phase (extracted getAllStoreRows helper, unique test IDs)
 - [ ] Demo and user validation
 
 ## Validation
