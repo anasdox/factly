@@ -114,6 +114,9 @@ app.get('/me/discoveries', requireAuth, async (req, res, next) => {
         if (!data || !data.discovery_id) continue;
 
         const documentKey = row.key.replace('keyv:', '');
+        // Skip metadata entries
+        if (documentKey.startsWith('meta:')) continue;
+
         const meta = await store.get(`meta:${documentKey}`);
         const owner = meta?.owner || null;
         const visitedBy: string[] = meta?.visited_by || [];
@@ -124,6 +127,7 @@ app.get('/me/discoveries', requireAuth, async (req, res, next) => {
 
         if (role) {
           discoveries.push({
+            document_id: documentKey,
             discovery_id: data.discovery_id,
             title: data.title || '',
             goal: data.goal || '',
