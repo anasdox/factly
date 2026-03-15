@@ -299,6 +299,11 @@ docker compose up --build -d
 | `PORT` | No | `3002` | Backend listening port |
 | `RATE_LIMIT_LLM` | No | `20` | Max LLM requests per minute per IP |
 | `RATE_LIMIT_GENERAL` | No | `120` | Max general requests per minute per IP |
+| `OAUTH_GITHUB_CLIENT_ID` | No | — | GitHub OAuth app client ID |
+| `OAUTH_GITHUB_CLIENT_SECRET` | No | — | GitHub OAuth app client secret |
+| `OAUTH_GOOGLE_CLIENT_ID` | No | — | Google OAuth client ID |
+| `OAUTH_GOOGLE_CLIENT_SECRET` | No | — | Google OAuth client secret |
+| `OAUTH_CALLBACK_BASE_URL` | No | auto-detected | Public URL for OAuth callbacks (required behind reverse proxy) |
 | `CHAT_CONTEXT_THRESHOLD` | No | `50` | Max items in chat context |
 | `CHAT_MAX_HISTORY` | No | `10` | Max chat messages sent to LLM |
 

@@ -15,6 +15,7 @@ import { VALID_OUTPUT_TYPES, ExtractedFact } from './llm/prompts';
 import { embeddingCheckDuplicates, embeddingScanDuplicates } from './llm/embeddings';
 import { buildChatSystemPrompt, CHAT_TOOLS, DiscoveryContext, ReferencedItem } from './llm/chat-prompts';
 import benchmarkRoutes from './benchmark-routes';
+import oauthRoutes from './auth/oauth';
 import bcrypt from 'bcrypt';
 import { findUser } from './auth/user-store';
 import { signToken } from './auth/jwt';
@@ -90,6 +91,8 @@ app.use(generalLimiter);
 app.use('/benchmark', benchmarkRoutes);
 
 // --- Authentication endpoints ---
+
+app.use('/auth', oauthRoutes);
 
 app.post('/auth/login', async (req, res, next) => {
   try {
