@@ -574,6 +574,118 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /auth/providers:
+    get:
+      operationId: listIdentityProviders
+      summary: List the identity providers the sign-in page should offer
+      x-tsid: TS-ListIdentityProviders
+      x-fsid-links:
+        - FS-FederatedProvidersListed
+      responses:
+        '200':
+          description: The configured providers, in no particular order
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - providers
+                properties:
+                  providers:
+                    type: array
+                    items:
+                      type: string
+                      enum: [pocketid, github, google]
+
+  /auth/{provider}:
+    get:
+      operationId: startFederatedSignIn
+      summary: Begin a sign-in by redirecting to the identity provider
+      x-tsid: TS-StartFederatedSignIn
+      x-fsid-links:
+        - FS-FederatedSignInRedirectsToProvider
+        - FS-FederatedProviderNotConfigured
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [pocketid, github, google]
+      responses:
+        '302':
+          description: Redirect to the provider's authorization endpoint
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Authorization URL carrying client_id, redirect_uri, scope and state
+            Set-Cookie:
+              schema:
+                type: string
+              description: >-
+                factly_oauth_state, HttpOnly, Secure, SameSite=Lax, Path=/auth.
+                Bound to this sign-in and checked at the callback.
+        '503':
+          description: The provider is not configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/{provider}/callback:
+    get:
+      operationId: completeFederatedSignIn
+      summary: Complete a sign-in and return the visitor to the application
+      x-tsid: TS-CompleteFederatedSignIn
+      x-fsid-links:
+        - FS-FederatedFirstSignInCreatesAccount
+        - FS-FederatedReturningSignInReusesAccount
+        - FS-FederatedSignInRejectsForgedState
+        - FS-FederatedSignInRejectsMissingCode
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [pocketid, github, google]
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Sign-in succeeded; redirect to the frontend carrying the JWT
+          headers:
+            Location:
+              schema:
+                type: string
+        '400':
+          description: State did not match the cookie, or the code was absent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: The provider could not be reached or refused the exchange
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: The provider is not configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /me/discoveries:
     get:
       operationId: getMyDiscoveries
