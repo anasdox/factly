@@ -178,12 +178,73 @@ Feature: User Management and Authentication
     Then the response status is 401
     And the response contains an error message
 
+  # --- Federated Identity ---
+
+  @fsid:FS-FederatedProvidersListed
+  Scenario: The sign-in page learns which identity providers are available
+    Given the system is configured with a Pocket ID client
+    When the sign-in page requests the list of identity providers
+    Then the response status is 200
+    And the list contains "pocketid"
+
+  @fsid:FS-FederatedProviderNotConfigured
+  Scenario: Signing in with an unconfigured provider is refused
+    Given the system has no Pocket ID client configured
+    When a visitor starts a sign-in with "pocketid"
+    Then the response status is 503
+    And the response contains an error message saying the provider is not configured
+
+  @fsid:FS-FederatedSignInRedirectsToProvider
+  Scenario: Starting a sign-in sends the visitor to the identity provider
+    Given the system is configured with a Pocket ID client
+    When a visitor starts a sign-in with "pocketid"
+    Then the visitor is redirected to the provider's authorization page
+    And the redirect carries a single-use state value
+    And the same state value is stored in the visitor's browser
+
+  @fsid:FS-FederatedFirstSignInCreatesAccount
+  Scenario: A first sign-in creates the account
+    Given the system is configured with a Pocket ID client
+    And no account yet exists for the Pocket ID identity "u-123"
+    When the identity provider confirms the sign-in for "u-123"
+    Then an account is created for that identity
+    And the visitor is returned to the application signed in
+
+  @fsid:FS-FederatedReturningSignInReusesAccount
+  Scenario: A returning sign-in reuses the same account
+    Given an account already exists for the Pocket ID identity "u-123"
+    When the identity provider confirms the sign-in for "u-123"
+    Then no second account is created
+    And the visitor is returned to the application signed in as the same user
+
+  @fsid:FS-FederatedSignInRejectsForgedState
+  Scenario: A sign-in that does not match the state it started with is rejected
+    Given a visitor did not start a sign-in
+    When a callback arrives carrying a state value the browser does not hold
+    Then the response status is 400
+    And no account is created
+    And no session is issued
+
+  @fsid:FS-FederatedSignInRejectsMissingCode
+  Scenario: A callback without an authorization code is rejected
+    Given a visitor started a sign-in with "pocketid"
+    When the callback arrives without an authorization code
+    Then the response status is 400
+    And no session is issued
+
+  # --- Self-Registration ---
+
+  @fsid:FS-SelfRegistrationRefused
+  Scenario: A visitor cannot create their own account
+    When a visitor posts a username and password to the registration endpoint
+    Then the response status is 404
+    And no account is created
+
   # --- Non-goals ---
   # - Private discoveries (all discoveries remain public)
-  # - Self-registration (users created via CLI only)
+  # - Self-registration (accounts come from the CLI or from an identity provider)
   # - Password recovery or reset
   # - Admin UI for user management
   # - Role-based access control
-  # - OAuth or social login
   # - Multi-factor authentication
   # - Manual save/bookmark (tracking is automatic on visit)
