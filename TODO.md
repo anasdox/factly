@@ -22,5 +22,30 @@ M1–M23 delivered. Application ready for production deployment.
 - [x] Write deployment guide in README
 - [x] Update ROADMAP.md (M22 delivered, M23 delivered)
 
-## No Active Feature
+## Active Feature: Sign in with Pocket ID
+Branch: `feature/pocket-id-sso` (branched from `feature/vps-deployment`).
+
+- [x] Functional spec — federated identity scenarios; two stale non-goals corrected
+- [x] Technical spec — `specs/technical/federated-identity.md` + OpenAPI paths
+- [x] Acceptance tests — `tests/blackbox/federated-identity.test.ts` (14, all green)
+- [x] Implementation — Pocket ID provider, state/CSRF defence, form-encoded token
+      exchange, `POST /auth/register` withdrawn with its sign-up UI
+- [x] Pocket ID deployed at `https://id.betafactory.co` (own project, `../pocketid`)
+- [x] Factly deployed with the code; provider dormant until a client is registered
+- [ ] **BLOCKED ON UoR** — create the admin account at `https://id.betafactory.co/setup`
+      (passkey enrolment cannot be automated), then register an OIDC client with
+      callback `https://factly.betafactory.co/auth/pocketid/callback` and put
+      `OAUTH_POCKETID_*` into `~/factly/deploy/.env` on the server
+- [ ] Redeploy, verify the sign-in flow end to end
+- [ ] Demo note and UoR validation, then merge
+
+## Known Gaps (pre-existing, not introduced by this feature)
+- Acceptance suite is red on `main`: 94 failures before this branch, unchanged by it.
+  Local `apps/backend/.env` has no `JWT_SECRET`, and `server-side-persistence.test.ts`
+  restarts the shared backend, leaving later suites without one.
+- Traceability gate fails on 6 `REFERENCED_ONLY` FSIDs in `ai-assisted-updates`.
+- Production OAuth for GitHub/Google remains unconfigured; web research needs
+  `SEARCH_PROVIDER`/`SEARCH_API_KEY`.
+
+## No Other Active Feature
 Next milestone to be decided by UoR.
