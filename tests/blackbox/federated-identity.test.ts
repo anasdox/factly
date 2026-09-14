@@ -26,8 +26,13 @@ import { tmpdir } from 'os';
 import { resolve, join } from 'path';
 
 const BACKEND_DIR = resolve(__dirname, '../../apps/backend');
-const BACKEND_PORT = 3097;
-const BACKEND_URL = `http://localhost:${BACKEND_PORT}`;
+
+/**
+ * Claimed at run time rather than hard-coded: a fixed port turns a backend that
+ * outlived an earlier run into a confusing failure in this one.
+ */
+let backendPort: number;
+let BACKEND_URL: string;
 
 const SUBJECT = 'pocket-subject-001';
 const USERNAME = 'alice';
@@ -84,16 +89,33 @@ function startFakeProvider(): Promise<void> {
   });
 }
 
-function startBackend(): Promise<void> {
-  dataDir = mkdtempSync(join(tmpdir(), 'factly-federated-'));
+/** A port nothing is listening on, as reported by the OS. */
+function freePort(): Promise<number> {
+  return new Promise((done) => {
+    const probe = http.createServer();
+    probe.listen(0, '127.0.0.1', () => {
+      const address = probe.address();
+      const port = address && typeof address === 'object' ? address.port : 0;
+      probe.close(() => done(port));
+    });
+  });
+}
 
-  return new Promise((done, fail) => {
+async function startBackend(): Promise<void> {
+  dataDir = mkdtempSync(join(tmpdir(), 'factly-federated-'));
+  backendPort = await freePort();
+  BACKEND_URL = `http://127.0.0.1:${backendPort}`;
+
+  return new Promise<void>((done, fail) => {
     backend = spawn('npx', ['ts-node', 'src/index.ts'], {
       cwd: BACKEND_DIR,
       stdio: ['pipe', 'pipe', 'pipe'],
+      // Its own process group: npx is the child but node is the grandchild, and
+      // signalling npx alone leaves the server running and holding its port.
+      detached: true,
       env: {
         ...process.env,
-        PORT: String(BACKEND_PORT),
+        PORT: String(backendPort),
         DATA_DIR: dataDir,
         JWT_SECRET: 'test-secret-for-federated-identity',
         OAUTH_POCKETID_ISSUER_URL: providerUrl,
@@ -115,7 +137,9 @@ function startBackend(): Promise<void> {
     backend.stderr?.on('data', watch);
     backend.on('error', (err) => fail(new Error(`backend failed to start: ${err.message}`)));
 
-    setTimeout(() => fail(new Error('backend start timeout (30s)')), 30000);
+    // Generous: a cold ts-node start competes with the rest of the suite when
+    // the whole thing runs in band.
+    setTimeout(() => fail(new Error('backend start timeout (90s)')), 90000);
   });
 }
 
@@ -133,11 +157,16 @@ async function beginSignIn(): Promise<{ state: string; cookie: string; location:
 beforeAll(async () => {
   await startFakeProvider();
   await startBackend();
-}, 40000);
+}, 100000);
 
 afterAll(async () => {
-  backend?.kill('SIGTERM');
-  await new Promise((r) => setTimeout(r, 500));
+  // The whole group, so the node grandchild goes with npx. SIGKILL follows the
+  // polite attempt because jest runs with --forceExit.
+  if (backend?.pid) {
+    try { process.kill(-backend.pid, 'SIGTERM'); } catch { /* already gone */ }
+    await new Promise((r) => setTimeout(r, 500));
+    try { process.kill(-backend.pid, 'SIGKILL'); } catch { /* already gone */ }
+  }
   await new Promise<void>((r) => provider.close(() => r()));
   if (dataDir) rmSync(dataDir, { recursive: true, force: true });
 });

@@ -4,8 +4,14 @@ import { useAuth } from '../hooks/useAuth';
 import { API_URL } from '../config';
 import './LoginPage.css';
 
+/** Label and styling for each provider the backend may offer. */
+const PROVIDERS: Record<string, { label: string; className: string }> = {
+  pocketid: { label: 'Sign in with Pocket ID', className: 'login-oauth-pocketid' },
+  github: { label: 'Sign in with GitHub', className: 'login-oauth-github' },
+  google: { label: 'Sign in with Google', className: 'login-oauth-google' },
+};
+
 export default function LoginPage() {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,7 +21,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Handle OAuth callback (token in URL)
+  // Handle the return from an identity provider (token in URL)
   useEffect(() => {
     const token = searchParams.get('token');
     const user = searchParams.get('user');
@@ -25,14 +31,7 @@ export default function LoginPage() {
     }
   }, [searchParams, loginWithToken, navigate]);
 
-  // Check mode from URL
-  useEffect(() => {
-    if (searchParams.get('mode') === 'register') {
-      setMode('register');
-    }
-  }, [searchParams]);
-
-  // Fetch available OAuth providers
+  // Which identity providers to offer
   useEffect(() => {
     fetch(`${API_URL}/auth/providers`)
       .then(res => res.ok ? res.json() : { providers: [] })
@@ -45,24 +44,10 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      if (mode === 'register') {
-        const response = await fetch(`${API_URL}/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password }),
-        });
-        if (!response.ok) {
-          const result = await response.json();
-          throw new Error(result.error || 'Registration failed');
-        }
-        const { token } = await response.json();
-        loginWithToken(token, username);
-      } else {
-        await login(username, password);
-      }
+      await login(username, password);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || (mode === 'register' ? 'Registration failed' : 'Login failed'));
+      setError(err.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -72,24 +57,26 @@ export default function LoginPage() {
     window.location.href = `${API_URL}/auth/${provider}`;
   };
 
+  const offered = oauthProviders.filter((name) => name in PROVIDERS);
+
   return (
     <div className="login-page">
       <form onSubmit={handleSubmit} className="login-form">
-        <h2 className="login-title">{mode === 'register' ? 'Create Account' : 'Login'}</h2>
+        <h2 className="login-title">Login</h2>
         {error && <div className="login-error">{error}</div>}
 
-        {oauthProviders.length > 0 && (
+        {offered.length > 0 && (
           <div className="login-oauth">
-            {oauthProviders.includes('github') && (
-              <button type="button" className="login-oauth-btn login-oauth-github" onClick={() => handleOAuth('github')}>
-                Sign in with GitHub
+            {offered.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className={`login-oauth-btn ${PROVIDERS[name].className}`}
+                onClick={() => handleOAuth(name)}
+              >
+                {PROVIDERS[name].label}
               </button>
-            )}
-            {oauthProviders.includes('google') && (
-              <button type="button" className="login-oauth-btn login-oauth-google" onClick={() => handleOAuth('google')}>
-                Sign in with Google
-              </button>
-            )}
+            ))}
             <div className="login-divider"><span>or</span></div>
           </div>
         )}
@@ -116,15 +103,9 @@ export default function LoginPage() {
           />
         </div>
         <button type="submit" disabled={loading} className="login-btn">
-          {loading ? (mode === 'register' ? 'Creating...' : 'Logging in...') : (mode === 'register' ? 'Create Account' : 'Login')}
+          {loading ? 'Logging in...' : 'Login'}
         </button>
-        <p className="login-switch">
-          {mode === 'login' ? (
-            <>No account? <button type="button" className="login-switch-btn" onClick={() => { setMode('register'); setError(''); }}>Sign up</button></>
-          ) : (
-            <>Already have an account? <button type="button" className="login-switch-btn" onClick={() => { setMode('login'); setError(''); }}>Login</button></>
-          )}
-        </p>
+        {/* No sign-up link: accounts come from an identity provider or the CLI. */}
       </form>
     </div>
   );

@@ -299,6 +299,9 @@ docker compose up --build -d
 | `PORT` | No | `3002` | Backend listening port |
 | `RATE_LIMIT_LLM` | No | `20` | Max LLM requests per minute per IP |
 | `RATE_LIMIT_GENERAL` | No | `120` | Max general requests per minute per IP |
+| `OAUTH_POCKETID_ISSUER_URL` | No | — | Pocket ID origin, e.g. `https://id.betafactory.co` |
+| `OAUTH_POCKETID_CLIENT_ID` | No | — | Pocket ID OIDC client ID |
+| `OAUTH_POCKETID_CLIENT_SECRET` | No | — | Pocket ID OIDC client secret |
 | `OAUTH_GITHUB_CLIENT_ID` | No | — | GitHub OAuth app client ID |
 | `OAUTH_GITHUB_CLIENT_SECRET` | No | — | GitHub OAuth app client secret |
 | `OAUTH_GOOGLE_CLIENT_ID` | No | — | Google OAuth client ID |

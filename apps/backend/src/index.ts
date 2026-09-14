@@ -126,37 +126,9 @@ app.post('/auth/login', async (req, res, next) => {
   }
 });
 
-app.post('/auth/register', async (req, res, next) => {
-  try {
-    if (!process.env.JWT_SECRET) {
-      return res.status(503).json({ error: 'Authentication not configured (JWT_SECRET missing)' });
-    }
-    const { username, password } = req.body || {};
-    if (!username || typeof username !== 'string' || username.trim().length < 3) {
-      return res.status(400).json({ error: 'Username must be at least 3 characters' });
-    }
-    if (!password || typeof password !== 'string' || password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
-    }
-    if (!/^[a-zA-Z0-9_-]+$/.test(username.trim())) {
-      return res.status(400).json({ error: 'Username can only contain letters, numbers, hyphens and underscores' });
-    }
-    const existing = await findUser(username.trim());
-    if (existing) {
-      return res.status(409).json({ error: 'Username already taken' });
-    }
-    const hash = await bcrypt.hash(password, 10);
-    await createUser({
-      username: username.trim(),
-      password_hash: hash,
-      created_at: new Date().toISOString(),
-    });
-    const token = signToken(username.trim());
-    res.status(201).json({ token });
-  } catch (err) {
-    next(err);
-  }
-});
+// Registration is deliberately absent: accounts come from `make add-user` or
+// from an identity provider. Withdrawn rather than gated, so that no
+// configuration mistake can reopen it. See specs/technical/federated-identity.md.
 
 app.get('/me/discoveries', requireAuth, async (req, res, next) => {
   try {

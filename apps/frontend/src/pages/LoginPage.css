@@ -80,6 +80,16 @@
   margin-bottom: 0.5rem;
 }
 
+.login-oauth-pocketid {
+  background: #1d4ed8;
+  color: #fff;
+  border-color: #1d4ed8;
+}
+
+.login-oauth-pocketid:hover {
+  background: #1e40af;
+}
+
 .login-oauth-github {
   background: #24292e;
   color: #fff;

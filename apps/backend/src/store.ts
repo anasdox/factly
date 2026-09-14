@@ -3,7 +3,8 @@ import * as path from 'path';
 import Keyv from 'keyv';
 import KeyvSqlite from '@keyv/sqlite';
 
-const dataDir = path.join(__dirname, '..', 'data');
+// DATA_DIR lets a test drive its own store instead of sharing this one.
+const dataDir = process.env.DATA_DIR || path.join(__dirname, '..', 'data');
 fs.mkdirSync(dataDir, { recursive: true });
 
 const dbPath = path.join(dataDir, 'factly.db');
