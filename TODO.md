@@ -32,12 +32,12 @@ Branch: `feature/pocket-id-sso` (branched from `feature/vps-deployment`).
       exchange, `POST /auth/register` withdrawn with its sign-up UI
 - [x] Pocket ID deployed at `https://id.betafactory.co` (own project, `../pocketid`)
 - [x] Factly deployed with the code; provider dormant until a client is registered
-- [ ] **BLOCKED ON UoR** — create the admin account at `https://id.betafactory.co/setup`
-      (passkey enrolment cannot be automated), then register an OIDC client with
-      callback `https://factly.betafactory.co/auth/pocketid/callback` and put
-      `OAUTH_POCKETID_*` into `~/factly/deploy/.env` on the server
-- [ ] Redeploy, verify the sign-in flow end to end
-- [ ] Demo note and UoR validation, then merge
+- [x] UoR registered the OIDC client; `OAUTH_POCKETID_*` set in `~/factly/deploy/.env`
+- [x] Redeployed; provider live and the redirect, state cookie and callback
+      rejections verified in production
+- [x] Demo note — `demos/FederatedIdentityPocketId/README.md`
+- [ ] **UoR to confirm** one real passkey sign-in end to end in a browser
+- [ ] Merge `feature/vps-deployment`, then `feature/pocket-id-sso`, into `main`
 
 ## Known Gaps (pre-existing, not introduced by this feature)
 - Acceptance suite is red on `main`: 94 failures before this branch, unchanged by it.
