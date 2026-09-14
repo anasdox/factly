@@ -127,7 +127,10 @@ function oauthRoutes(provider: string, getConfig: () => OAuthProviderConfig | nu
       // Lax, not Strict: the callback is a cross-site top-level navigation back
       // from the provider, and Strict would withhold the cookie exactly then.
       sameSite: 'lax',
-      secure: req.protocol === 'https',
+      // Taken from the callback URL, not from req.protocol: behind the edge the
+      // request arrives over plain HTTP and req.protocol would drop the flag on
+      // a deployment that is HTTPS everywhere the browser can see.
+      secure: getCallbackUrl(req, provider).startsWith('https://'),
       path: '/auth',
       maxAge: STATE_TTL_SECONDS * 1000,
     });
