@@ -672,10 +672,6 @@ input[type=text], select, textarea {
   border-color: var(--border-btn-hover);
 }
 
-.welcome-auth-register {
-  background: transparent;
-}
-
 .empty-state-hint {
   color: var(--color-welcome-text);
   text-align: center;

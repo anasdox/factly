@@ -238,8 +238,8 @@ const App: React.FC = () => {
         </div>
         {!isAuthenticated && (
           <div className="welcome-auth">
+            {/* One way in: accounts come from an identity provider or the CLI. */}
             <button className="welcome-auth-btn" onClick={() => navigate('/login')}>Sign in</button>
-            <button className="welcome-auth-btn welcome-auth-register" onClick={() => navigate('/login?mode=register')}>Sign up</button>
           </div>
         )}
       </div>
