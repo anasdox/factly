@@ -14,10 +14,12 @@ export interface ChatStreamCallbacks {
 }
 
 export interface LLMProvider {
-  extractFacts(text: string, goal: string): Promise<ExtractedFact[]>;
-  extractInsights(facts: string[], goal: string): Promise<ExtractedInsight[]>;
-  extractRecommendations(insights: string[], goal: string): Promise<ExtractedRecommendation[]>;
-  formulateOutputs(recommendations: string[], goal: string, outputType: string, context?: OutputTraceabilityContext): Promise<string[]>;
+  // `language` is trailing and optional so that every existing call site stays
+  // valid. See specs/technical/discovery-language.md.
+  extractFacts(text: string, goal: string, language?: string): Promise<ExtractedFact[]>;
+  extractInsights(facts: string[], goal: string, language?: string): Promise<ExtractedInsight[]>;
+  extractRecommendations(insights: string[], goal: string, language?: string): Promise<ExtractedRecommendation[]>;
+  formulateOutputs(recommendations: string[], goal: string, outputType: string, context?: OutputTraceabilityContext, language?: string): Promise<string[]>;
   checkDuplicates(text: string, candidates: { id: string; text: string }[]): Promise<DedupResult[]>;
   scanDuplicates(items: { id: string; text: string }[]): Promise<DedupGroup[]>;
   proposeUpdate(entityType: string, currentText: string, upstreamOldText: string, upstreamNewText: string, upstreamEntityType: string, goal: string, outputType?: string): Promise<UpdateProposal>;

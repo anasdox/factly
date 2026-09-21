@@ -338,6 +338,7 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
         body: JSON.stringify({
           facts: selected.map(f => ({ fact_id: f.fact_id, text: f.text })),
           goal: data.goal,
+          ...(data.language ? { language: data.language } : {}),
         }),
       });
       if (!response.ok) {

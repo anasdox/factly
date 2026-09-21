@@ -77,6 +77,7 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
         const payload: Record<string, string> = {
           goal: data.goal,
           input_id: input.input_id,
+          ...(data.language ? { language: data.language } : {}),
         };
         if (input.type === 'web') {
           payload.input_url = input.url || '';
@@ -138,6 +139,7 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
         body: JSON.stringify({
           facts: finalFacts.map(f => ({ fact_id: f.fact_id, text: f.text })),
           goal: data.goal,
+          ...(data.language ? { language: data.language } : {}),
         }),
       });
       if (!insightsResponse.ok) {
@@ -182,6 +184,7 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
         body: JSON.stringify({
           insights: finalInsights.map(i => ({ insight_id: i.insight_id, text: i.text })),
           goal: data.goal,
+          ...(data.language ? { language: data.language } : {}),
         }),
       });
       if (!recsResponse.ok) {
@@ -238,6 +241,7 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
         body: JSON.stringify({
           recommendations: finalRecommendations.map(r => ({ recommendation_id: r.recommendation_id, text: r.text })),
           goal: data.goal,
+          ...(data.language ? { language: data.language } : {}),
           output_type: config.outputType,
           facts: relatedFacts.map(f => ({ text: f.text, source_excerpt: f.source_excerpt })),
           insights: relatedInsights.map(i => ({ text: i.text })),

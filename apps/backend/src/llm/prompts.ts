@@ -595,3 +595,48 @@ export function parseImpactCheckResult(
 
   return results;
 }
+
+// --- Discovery language ---------------------------------------------------
+//
+// A discovery is written in one language, and what the model generates follows
+// it. See specs/technical/discovery-language.md.
+
+export const DEFAULT_LANGUAGE = 'en';
+
+export const SUPPORTED_LANGUAGES: Record<string, string> = {
+  en: 'English',
+  fr: 'French',
+  es: 'Spanish',
+  de: 'German',
+  it: 'Italian',
+  pt: 'Portuguese',
+  nl: 'Dutch',
+};
+
+export function isSupportedLanguage(language: string): boolean {
+  return Object.prototype.hasOwnProperty.call(SUPPORTED_LANGUAGES, language);
+}
+
+/**
+ * Append the language directive to a system prompt.
+ *
+ * English returns the prompt untouched: these prompts are written in English,
+ * and instructing a model to write English inside an English prompt adds a
+ * sentence that can only compete with the instructions already there.
+ *
+ * The excerpt carve-out is the part that matters. An excerpt is the evidence a
+ * fact rests on; translate it and it can no longer be found in the document it
+ * came from, so traceability breaks while still looking intact.
+ */
+export function withLanguage(systemPrompt: string, language?: string): string {
+  const code = (language || DEFAULT_LANGUAGE).toLowerCase();
+  if (code === DEFAULT_LANGUAGE || !isSupportedLanguage(code)) {
+    return systemPrompt;
+  }
+  const name = SUPPORTED_LANGUAGES[code];
+  return `${systemPrompt}
+
+Language:
+- Write every "text" value you produce in ${name}, regardless of the language of the source material.
+- Do NOT translate "source_excerpt": quote it verbatim, in the language of the source it was taken from.`;
+}

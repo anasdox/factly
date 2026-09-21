@@ -81,6 +81,8 @@ type DiscoveryData = {
   title: string;
   goal: string;
   date: string;
+  /** Absent means English, so discoveries predating this field still work. */
+  language?: string;
   inputs: InputType[];
   facts: FactType[];
   insights: InsightType[];

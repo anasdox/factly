@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { LLMProvider, ChatStreamCallbacks } from './provider';
 import { ChatToolDefinition } from './chat-prompts';
-import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, UPDATE_PROPOSAL_OUTPUT_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, REFORMULATION_SYSTEM_PROMPT, RESEARCH_SYSTEM_PROMPT, SEARCH_QUERY_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, buildReformulationUserContent, buildResearchUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseOutputUpdateProposal, parseImpactCheckResult, parseReformulationSuggestions, parseResearchSuggestions, ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult, ReformulationSuggestion, ResearchSuggestion } from './prompts';
+import { withLanguage, EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, UPDATE_PROPOSAL_OUTPUT_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, REFORMULATION_SYSTEM_PROMPT, RESEARCH_SYSTEM_PROMPT, SEARCH_QUERY_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, buildReformulationUserContent, buildResearchUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseOutputUpdateProposal, parseImpactCheckResult, parseReformulationSuggestions, parseResearchSuggestions, ExtractedFact, ExtractedInsight, ExtractedRecommendation, OutputTraceabilityContext, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult, ReformulationSuggestion, ResearchSuggestion } from './prompts';
 
 export class AnthropicProvider implements LLMProvider {
   private client: Anthropic;
@@ -28,12 +28,12 @@ export class AnthropicProvider implements LLMProvider {
     return content.text;
   }
 
-  async extractFacts(text: string, goal: string): Promise<ExtractedFact[]> {
+  async extractFacts(text: string, goal: string, language?: string): Promise<ExtractedFact[]> {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 4096,
       temperature: this.tempExtraction,
-      system: EXTRACTION_SYSTEM_PROMPT,
+      system: withLanguage(EXTRACTION_SYSTEM_PROMPT, language),
       messages: [
         {
           role: 'user',
@@ -45,13 +45,13 @@ export class AnthropicProvider implements LLMProvider {
     return parseFactArray(this.extractText(response));
   }
 
-  async extractInsights(facts: string[], goal: string): Promise<ExtractedInsight[]> {
+  async extractInsights(facts: string[], goal: string, language?: string): Promise<ExtractedInsight[]> {
     const numberedFacts = facts.map((f, i) => `${i + 1}. ${f}`).join('\n');
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 4096,
       temperature: this.tempExtraction,
-      system: INSIGHTS_SYSTEM_PROMPT,
+      system: withLanguage(INSIGHTS_SYSTEM_PROMPT, language),
       messages: [
         {
           role: 'user',
@@ -63,13 +63,13 @@ export class AnthropicProvider implements LLMProvider {
     return parseInsightArray(this.extractText(response));
   }
 
-  async extractRecommendations(insights: string[], goal: string): Promise<ExtractedRecommendation[]> {
+  async extractRecommendations(insights: string[], goal: string, language?: string): Promise<ExtractedRecommendation[]> {
     const numberedInsights = insights.map((ins, i) => `${i + 1}. ${ins}`).join('\n');
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 4096,
       temperature: this.tempExtraction,
-      system: RECOMMENDATIONS_SYSTEM_PROMPT,
+      system: withLanguage(RECOMMENDATIONS_SYSTEM_PROMPT, language),
       messages: [
         {
           role: 'user',
@@ -81,12 +81,12 @@ export class AnthropicProvider implements LLMProvider {
     return parseRecommendationArray(this.extractText(response));
   }
 
-  async formulateOutputs(recommendations: string[], goal: string, outputType: string, context?: OutputTraceabilityContext): Promise<string[]> {
+  async formulateOutputs(recommendations: string[], goal: string, outputType: string, context?: OutputTraceabilityContext, language?: string): Promise<string[]> {
     const response = await this.client.messages.create({
       model: this.model,
       max_tokens: 4096,
       temperature: this.tempExtraction,
-      system: buildOutputsPrompt(outputType),
+      system: withLanguage(buildOutputsPrompt(outputType), language),
       messages: [
         {
           role: 'user',

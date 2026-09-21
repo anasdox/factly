@@ -315,6 +315,7 @@ const RecommendationList: React.FC<Props> = ({ recommendationRefs, data, setData
         body: JSON.stringify({
           recommendations: selected.map(r => ({ recommendation_id: r.recommendation_id, text: r.text })),
           goal: data.goal,
+          ...(data.language ? { language: data.language } : {}),
           output_type: selectedOutputType,
           facts: relatedFacts.map(f => ({ text: f.text, source_excerpt: f.source_excerpt })),
           insights: relatedInsights.map(i => ({ text: i.text })),

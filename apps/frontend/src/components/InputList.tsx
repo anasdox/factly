@@ -172,6 +172,7 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
         const payload: Record<string, string> = {
           goal: data.goal,
           input_id: input.input_id,
+          ...(data.language ? { language: data.language } : {}),
         };
         if (input.type === 'web') {
           payload.input_url = input.url || '';

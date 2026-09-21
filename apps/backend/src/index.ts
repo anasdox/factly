@@ -11,7 +11,7 @@ import winston from 'winston';
 import { createProvider, LLMProvider, OutputTraceabilityContext } from './llm/provider';
 import { createSearchProvider, SearchProvider } from './search/provider';
 import { fetchAllPages } from './search/page-fetcher';
-import { VALID_OUTPUT_TYPES, ExtractedFact } from './llm/prompts';
+import { VALID_OUTPUT_TYPES, ExtractedFact, SUPPORTED_LANGUAGES, isSupportedLanguage } from './llm/prompts';
 import { embeddingCheckDuplicates, embeddingScanDuplicates } from './llm/embeddings';
 import { buildChatSystemPrompt, CHAT_TOOLS, DiscoveryContext, ReferencedItem } from './llm/chat-prompts';
 import benchmarkRoutes from './benchmark-routes';
@@ -268,7 +268,7 @@ app.post('/extract/facts', async (req, res, next) => {
       return res.status(503).json({ error: 'Extraction service not configured' });
     }
 
-    const { input_text, input_url, goal, input_id } = req.body;
+    const { input_text, input_url, goal, input_id, language } = req.body;
     logger.info(`Extracting facts for input ${input_id}`);
 
     let text: string;
@@ -287,7 +287,7 @@ app.post('/extract/facts', async (req, res, next) => {
 
     let facts: ExtractedFact[];
     try {
-      facts = await llmProvider.extractFacts(text, goal);
+      facts = await llmProvider.extractFacts(text, goal, language);
     } catch (err: any) {
       return handleLLMError(err, res);
     }
@@ -317,7 +317,7 @@ app.post('/extract/insights', async (req, res, next) => {
 
     let insights: import('./llm/prompts').ExtractedInsight[];
     try {
-      insights = await llmProvider.extractInsights(factTexts, goal);
+      insights = await llmProvider.extractInsights(factTexts, goal, req.body.language);
     } catch (err: any) {
       return handleLLMError(err, res);
     }
@@ -357,7 +357,7 @@ app.post('/extract/recommendations', async (req, res, next) => {
 
     let recommendations: import('./llm/prompts').ExtractedRecommendation[];
     try {
-      recommendations = await llmProvider.extractRecommendations(insightTexts, goal);
+      recommendations = await llmProvider.extractRecommendations(insightTexts, goal, req.body.language);
     } catch (err: any) {
       return handleLLMError(err, res);
     }
@@ -404,7 +404,7 @@ app.post('/extract/outputs', async (req, res, next) => {
 
     let outputs: string[];
     try {
-      outputs = await llmProvider.formulateOutputs(recTexts, goal, output_type, traceabilityContext);
+      outputs = await llmProvider.formulateOutputs(recTexts, goal, output_type, traceabilityContext, req.body.language);
     } catch (err: any) {
       return handleLLMError(err, res);
     }
@@ -1012,7 +1012,9 @@ function validateDiscoveryData(body: any): ValidationResult {
       return { valid: false, error: `Field "${field}" is required and must be an array` };
     }
   }
-  return VALID_RESULT;
+  // Checked on the way in as well as at generation: a discovery saved with a
+  // language nobody supports would only fail later, at the point of use.
+  return validateLanguage(body) || VALID_RESULT;
 }
 
 function validateUpdateBody(body: any): { valid: boolean; error?: string } {
@@ -1031,6 +1033,22 @@ function validateUpdateBody(body: any): { valid: boolean; error?: string } {
   return { valid: true };
 }
 
+/**
+ * A language reaches a prompt, so it is input that must be validated. An
+ * enumerated set is the only version of that check which cannot be argued with.
+ */
+function validateLanguage(body: any): ValidationResult | null {
+  const language = body?.language;
+  if (language === undefined || language === null || language === '') return null;
+  if (typeof language !== 'string' || !isSupportedLanguage(language.toLowerCase())) {
+    return {
+      valid: false,
+      error: `Unsupported language. Supported languages: ${Object.keys(SUPPORTED_LANGUAGES).join(', ')}`,
+    };
+  }
+  return null;
+}
+
 function validateExtractionRequest(body: any): ValidationResult {
   const bodyErr = requireBody(body);
   if (bodyErr) return bodyErr;
@@ -1039,6 +1057,8 @@ function validateExtractionRequest(body: any): ValidationResult {
   if (!hasText && !hasUrl) {
     return { valid: false, error: 'Either "input_text" or "input_url" must be a non-empty string' };
   }
+  const langErr = validateLanguage(body);
+  if (langErr) return langErr;
   return requireNonEmptyString(body, 'goal') || requireNonEmptyString(body, 'input_id') || VALID_RESULT;
 }
 
@@ -1049,6 +1069,8 @@ function validateInsightsExtractionRequest(body: any): ValidationResult {
   if (arrErr) return arrErr;
   const itemErr = validateArrayItems(body.facts, 'fact_id', 'fact');
   if (itemErr) return itemErr;
+  const langErr = validateLanguage(body);
+  if (langErr) return langErr;
   return requireNonEmptyString(body, 'goal') || VALID_RESULT;
 }
 
@@ -1059,6 +1081,8 @@ function validateRecommendationsExtractionRequest(body: any): ValidationResult {
   if (arrErr) return arrErr;
   const itemErr = validateArrayItems(body.insights, 'insight_id', 'insight');
   if (itemErr) return itemErr;
+  const langErr = validateLanguage(body);
+  if (langErr) return langErr;
   return requireNonEmptyString(body, 'goal') || VALID_RESULT;
 }
 
@@ -1074,7 +1098,7 @@ function validateOutputsFormulationRequest(body: any): ValidationResult {
   if (typeof body.output_type !== 'string' || !VALID_OUTPUT_TYPES.includes(body.output_type)) {
     return { valid: false, error: `Field "output_type" must be one of: ${VALID_OUTPUT_TYPES.join(', ')}` };
   }
-  return VALID_RESULT;
+  return validateLanguage(body) || VALID_RESULT;
 }
 
 function validateDedupCheckRequest(body: any): ValidationResult {

@@ -342,6 +342,7 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
         body: JSON.stringify({
           insights: selected.map(i => ({ insight_id: i.insight_id, text: i.text })),
           goal: data.goal,
+          ...(data.language ? { language: data.language } : {}),
         }),
       });
       if (!response.ok) {

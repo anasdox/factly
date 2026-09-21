@@ -24,9 +24,10 @@ Feature: Discovery Language
 
   @fsid:FS-DiscoveryLanguageRejectedWhenUnknown
   Scenario: A language Factly does not support is refused
-    When an analyst asks for generation in a language Factly does not offer
+    When an analyst uses a language Factly does not offer
     Then the request is refused with a message naming the languages it offers
     And nothing is generated
+    And the discovery is not saved with it
 
   # --- What gets written in that language ---
 

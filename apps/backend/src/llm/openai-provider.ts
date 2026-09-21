@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import { LLMProvider, OutputTraceabilityContext, ChatStreamCallbacks } from './provider';
 import { ChatToolDefinition } from './chat-prompts';
-import { EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, UPDATE_PROPOSAL_OUTPUT_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, REFORMULATION_SYSTEM_PROMPT, RESEARCH_SYSTEM_PROMPT, SEARCH_QUERY_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, buildReformulationUserContent, buildResearchUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseOutputUpdateProposal, parseImpactCheckResult, parseReformulationSuggestions, parseResearchSuggestions, ExtractedFact, ExtractedInsight, ExtractedRecommendation, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult, ReformulationSuggestion, ResearchSuggestion } from './prompts';
+import { withLanguage, EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, UPDATE_PROPOSAL_OUTPUT_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, REFORMULATION_SYSTEM_PROMPT, RESEARCH_SYSTEM_PROMPT, SEARCH_QUERY_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, buildReformulationUserContent, buildResearchUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseOutputUpdateProposal, parseImpactCheckResult, parseReformulationSuggestions, parseResearchSuggestions, ExtractedFact, ExtractedInsight, ExtractedRecommendation, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult, ReformulationSuggestion, ResearchSuggestion } from './prompts';
 
 export class OpenAIProvider implements LLMProvider {
   private client: OpenAI;
@@ -96,12 +96,12 @@ export class OpenAIProvider implements LLMProvider {
     }
   }
 
-  async extractFacts(text: string, goal: string): Promise<ExtractedFact[]> {
+  async extractFacts(text: string, goal: string, language?: string): Promise<ExtractedFact[]> {
     const response = await this.createChatCompletion({
       model: this.model,
       temperature: this.tempExtraction,
       messages: [
-        { role: 'system', content: EXTRACTION_SYSTEM_PROMPT },
+        { role: 'system', content: withLanguage(EXTRACTION_SYSTEM_PROMPT, language) },
         {
           role: 'user',
           content: `Research goal: ${goal}\n\nText to extract facts from:\n${text}`,
@@ -112,13 +112,13 @@ export class OpenAIProvider implements LLMProvider {
     return parseFactArray(this.extractText(response));
   }
 
-  async extractInsights(facts: string[], goal: string): Promise<ExtractedInsight[]> {
+  async extractInsights(facts: string[], goal: string, language?: string): Promise<ExtractedInsight[]> {
     const numberedFacts = facts.map((f, i) => `${i + 1}. ${f}`).join('\n');
     const response = await this.createChatCompletion({
       model: this.model,
       temperature: this.tempExtraction,
       messages: [
-        { role: 'system', content: INSIGHTS_SYSTEM_PROMPT },
+        { role: 'system', content: withLanguage(INSIGHTS_SYSTEM_PROMPT, language) },
         {
           role: 'user',
           content: `Research goal: ${goal}\n\nFacts to derive insights from:\n${numberedFacts}`,
@@ -129,13 +129,13 @@ export class OpenAIProvider implements LLMProvider {
     return parseInsightArray(this.extractText(response));
   }
 
-  async extractRecommendations(insights: string[], goal: string): Promise<ExtractedRecommendation[]> {
+  async extractRecommendations(insights: string[], goal: string, language?: string): Promise<ExtractedRecommendation[]> {
     const numberedInsights = insights.map((ins, i) => `${i + 1}. ${ins}`).join('\n');
     const response = await this.createChatCompletion({
       model: this.model,
       temperature: this.tempExtraction,
       messages: [
-        { role: 'system', content: RECOMMENDATIONS_SYSTEM_PROMPT },
+        { role: 'system', content: withLanguage(RECOMMENDATIONS_SYSTEM_PROMPT, language) },
         {
           role: 'user',
           content: `Research goal: ${goal}\n\nInsights to formulate recommendations from:\n${numberedInsights}`,
@@ -146,12 +146,12 @@ export class OpenAIProvider implements LLMProvider {
     return parseRecommendationArray(this.extractText(response));
   }
 
-  async formulateOutputs(recommendations: string[], goal: string, outputType: string, context?: OutputTraceabilityContext): Promise<string[]> {
+  async formulateOutputs(recommendations: string[], goal: string, outputType: string, context?: OutputTraceabilityContext, language?: string): Promise<string[]> {
     const response = await this.createChatCompletion({
       model: this.model,
       temperature: this.tempExtraction,
       messages: [
-        { role: 'system', content: buildOutputsPrompt(outputType) },
+        { role: 'system', content: withLanguage(buildOutputsPrompt(outputType), language) },
         {
           role: 'user',
           content: buildOutputsUserContent(recommendations, goal, context),
