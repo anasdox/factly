@@ -36,6 +36,20 @@ Merged to `main`. Validated by UoR in the browser on 2026-09-21.
 - [x] Demo note — `demos/FederatedIdentityPocketId/README.md`
 - [x] Merged and deployed
 
+## Completed: Discovery Language (M25)
+Merged to `main`. Nine FSIDs, 15 acceptance tests, all green.
+
+- [x] Functional spec — `specs/functional/discovery-language.feature`
+- [x] Technical spec — `specs/technical/discovery-language.md`; also documents
+      `/extract/recommendations` and `/extract/outputs`, live but previously
+      absent from the OpenAPI contract
+- [x] Acceptance tests — fake language model recording the system prompt
+- [x] Implementation — `withLanguage`, seven languages, validated at generation
+      and on save; excerpts never translated
+- [x] Refactoring — language read the same way in all four endpoints
+- [x] Demo note — `demos/DiscoveryLanguage/README.md`
+- [ ] UoR to confirm in the browser
+
 ## Open Question
 How new users get an account is undecided. Pocket ID's `ALLOW_USER_SIGNUPS` is
 `disabled`, so today an admin must create each user and send a login code.
