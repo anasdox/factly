@@ -310,14 +310,14 @@ app.post('/extract/insights', async (req, res, next) => {
       return res.status(503).json({ error: 'Extraction service not configured' });
     }
 
-    const { facts, goal } = req.body;
+    const { facts, goal, language } = req.body;
     const factTexts = facts.map((f: any) => f.weight != null ? `[weight: ${f.weight}/10] ${f.text}` : f.text);
     const factIds: string[] = facts.map((f: any) => f.fact_id);
     logger.info(`Extracting insights from ${facts.length} facts`);
 
     let insights: import('./llm/prompts').ExtractedInsight[];
     try {
-      insights = await llmProvider.extractInsights(factTexts, goal, req.body.language);
+      insights = await llmProvider.extractInsights(factTexts, goal, language);
     } catch (err: any) {
       return handleLLMError(err, res);
     }
@@ -350,14 +350,14 @@ app.post('/extract/recommendations', async (req, res, next) => {
       return res.status(503).json({ error: 'Extraction service not configured' });
     }
 
-    const { insights, goal } = req.body;
+    const { insights, goal, language } = req.body;
     const insightTexts = insights.map((i: any) => i.weight != null ? `[weight: ${i.weight}/10] ${i.text}` : i.text);
     const insightIds: string[] = insights.map((i: any) => i.insight_id);
     logger.info(`Extracting recommendations from ${insights.length} insights`);
 
     let recommendations: import('./llm/prompts').ExtractedRecommendation[];
     try {
-      recommendations = await llmProvider.extractRecommendations(insightTexts, goal, req.body.language);
+      recommendations = await llmProvider.extractRecommendations(insightTexts, goal, language);
     } catch (err: any) {
       return handleLLMError(err, res);
     }
@@ -386,7 +386,7 @@ app.post('/extract/outputs', async (req, res, next) => {
       return res.status(503).json({ error: 'Extraction service not configured' });
     }
 
-    const { recommendations, goal, output_type, facts, insights, inputs } = req.body;
+    const { recommendations, goal, output_type, facts, insights, inputs, language } = req.body;
     const recTexts = recommendations.map((r: any) => r.text);
     const recIds = recommendations.map((r: any) => r.recommendation_id);
     logger.info(`Formulating ${output_type} outputs from ${recommendations.length} recommendations`);
@@ -404,7 +404,7 @@ app.post('/extract/outputs', async (req, res, next) => {
 
     let outputs: string[];
     try {
-      outputs = await llmProvider.formulateOutputs(recTexts, goal, output_type, traceabilityContext, req.body.language);
+      outputs = await llmProvider.formulateOutputs(recTexts, goal, output_type, traceabilityContext, language);
     } catch (err: any) {
       return handleLLMError(err, res);
     }
