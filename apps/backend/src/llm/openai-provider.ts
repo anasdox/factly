@@ -36,6 +36,18 @@ export class OpenAIProvider implements LLMProvider {
     return message.includes(`Unsupported parameter: '${param}'`);
   }
 
+  /**
+   * Reasoning models accept only the default temperature and reject any
+   * explicit value outright, so a whole pipeline fails on a parameter that was
+   * only ever a preference. Detected from the provider's own message and
+   * retried without it, the same way an unsupported token parameter already is.
+   */
+  private isUnsupportedTemperatureError(err: any): boolean {
+    const message = typeof err?.message === 'string' ? err.message : '';
+    return message.includes("'temperature' does not support")
+      || message.includes('Unsupported parameter: \'temperature\'');
+  }
+
   private async createChatCompletion(
     params: Omit<OpenAI.Chat.ChatCompletionCreateParamsNonStreaming, 'max_tokens' | 'max_completion_tokens'>,
     maxTokens?: number,
@@ -47,20 +59,30 @@ export class OpenAIProvider implements LLMProvider {
       max_completion_tokens: tokens,
     };
 
+    const send = (body: any) =>
+      this.client.chat.completions.create(body as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming);
+
+    const withoutTemperature = (body: any) => {
+      const { temperature, ...rest } = body;
+      return rest;
+    };
+
     try {
-      return await this.client.chat.completions.create(
-        withMaxCompletionTokens as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
-      );
+      return await send(withMaxCompletionTokens);
     } catch (err: any) {
       if (this.isUnsupportedParamError(err, 'max_completion_tokens')) {
-        const withMaxTokens = {
-          ...params,
-          stream: false,
-          max_tokens: tokens,
-        };
-        return await this.client.chat.completions.create(
-          withMaxTokens as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming,
-        );
+        const withMaxTokens = { ...params, stream: false, max_tokens: tokens };
+        try {
+          return await send(withMaxTokens);
+        } catch (retryErr: any) {
+          if (this.isUnsupportedTemperatureError(retryErr)) {
+            return await send(withoutTemperature(withMaxTokens));
+          }
+          throw retryErr;
+        }
+      }
+      if (this.isUnsupportedTemperatureError(err)) {
+        return await send(withoutTemperature(withMaxCompletionTokens));
       }
       throw err;
     }
