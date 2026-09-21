@@ -22,8 +22,8 @@ M1–M23 delivered. Application ready for production deployment.
 - [x] Write deployment guide in README
 - [x] Update ROADMAP.md (M22 delivered, M23 delivered)
 
-## Active Feature: Sign in with Pocket ID
-Branch: `feature/pocket-id-sso` (branched from `feature/vps-deployment`).
+## Completed: Sign in with Pocket ID (M24)
+Merged to `main`. Validated by UoR in the browser on 2026-09-21.
 
 - [x] Functional spec — federated identity scenarios; two stale non-goals corrected
 - [x] Technical spec — `specs/technical/federated-identity.md` + OpenAPI paths
@@ -31,13 +31,17 @@ Branch: `feature/pocket-id-sso` (branched from `feature/vps-deployment`).
 - [x] Implementation — Pocket ID provider, state/CSRF defence, form-encoded token
       exchange, `POST /auth/register` withdrawn with its sign-up UI
 - [x] Pocket ID deployed at `https://id.betafactory.co` (own project, `../pocketid`)
-- [x] Factly deployed with the code; provider dormant until a client is registered
-- [x] UoR registered the OIDC client; `OAUTH_POCKETID_*` set in `~/factly/deploy/.env`
-- [x] Redeployed; provider live and the redirect, state cookie and callback
-      rejections verified in production
+- [x] Access gated by the `factly-users` group in Pocket ID
+- [x] Passkey sign-in confirmed end to end by UoR
 - [x] Demo note — `demos/FederatedIdentityPocketId/README.md`
-- [ ] **UoR to confirm** one real passkey sign-in end to end in a browser
-- [ ] Merge `feature/vps-deployment`, then `feature/pocket-id-sso`, into `main`
+- [x] Merged and deployed
+
+## Open Question
+How new users get an account is undecided. Pocket ID's `ALLOW_USER_SIGNUPS` is
+`disabled`, so today an admin must create each user and send a login code.
+Options are `withToken` (invite link, expiry and usage limit) or `open`.
+`SIGNUP_DEFAULT_USER_GROUP_IDS` would auto-assign `factly-users`
+(`0ed96aba-3f35-42d3-a824-16948d0104fa`). Awaiting UoR.
 
 ## Known Gaps (pre-existing, not introduced by this feature)
 - Acceptance suite is red on `main`: 94 failures before this branch, unchanged by it.
