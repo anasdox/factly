@@ -229,6 +229,13 @@ paths:
                 - goal
                 - input_id
               properties:
+                language:
+                  type: string
+                  enum: [en, fr, es, de, it, pt, nl]
+                  default: en
+                  description: >-
+                    Language the generated text is written in. Absent means en.
+                    Supporting excerpts are never translated.
                 input_text:
                   type: string
                   minLength: 1
@@ -276,6 +283,7 @@ paths:
         - FS-TriggerInsightsExtraction
         - FS-DisplaySuggestedInsights
         - FS-InsightsExtractionErrorDisplay
+        - FS-InsightsDerivedInDiscoveryLanguage
       requestBody:
         required: true
         content:
@@ -286,6 +294,13 @@ paths:
                 - facts
                 - goal
               properties:
+                language:
+                  type: string
+                  enum: [en, fr, es, de, it, pt, nl]
+                  default: en
+                  description: >-
+                    Language the generated text is written in. Absent means en.
+                    Supporting excerpts are never translated.
                 facts:
                   type: array
                   minItems: 1
@@ -328,6 +343,155 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '503':
           description: Extraction service not configured (missing LLM_PROVIDER or LLM_API_KEY)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /extract/recommendations:
+    post:
+      operationId: extractRecommendations
+      summary: Formulate recommendations from selected insights using AI
+      description: Sends insight texts and discovery goal to an LLM provider to formulate actionable recommendations. Returns suggested recommendation texts for analyst validation.
+      x-tsid: TS-ExtractRecommendations
+      x-fsid-links:
+        - FS-RecommendationsFormulatedInDiscoveryLanguage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - insights
+                - goal
+              properties:
+                language:
+                  type: string
+                  enum: [en, fr, es, de, it, pt, nl]
+                  default: en
+                  description: >-
+                    Language the generated text is written in. Absent means en.
+                insights:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - insight_id
+                      - text
+                    properties:
+                      insight_id:
+                        type: string
+                      text:
+                        type: string
+                        minLength: 1
+                  description: The selected insights to formulate recommendations from
+                goal:
+                  type: string
+                  minLength: 1
+      responses:
+        '200':
+          description: Formulation successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      type: object
+        '400':
+          description: Validation error, including an unsupported language
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: LLM provider error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Extraction service not configured
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /extract/outputs:
+    post:
+      operationId: formulateOutputs
+      summary: Formulate an output document from selected recommendations using AI
+      description: Sends recommendation texts, the discovery goal and an output type to an LLM provider to produce a Markdown deliverable with traceability to the underlying chain.
+      x-tsid: TS-FormulateOutputs
+      x-fsid-links:
+        - FS-OutputsFormulatedInDiscoveryLanguage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - recommendations
+                - goal
+                - output_type
+              properties:
+                language:
+                  type: string
+                  enum: [en, fr, es, de, it, pt, nl]
+                  default: en
+                  description: >-
+                    Language the generated text is written in. Absent means en.
+                recommendations:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    required:
+                      - recommendation_id
+                      - text
+                    properties:
+                      recommendation_id:
+                        type: string
+                      text:
+                        type: string
+                        minLength: 1
+                goal:
+                  type: string
+                  minLength: 1
+                output_type:
+                  type: string
+                  enum: [report, presentation, action_plan, brief]
+      responses:
+        '200':
+          description: Formulation successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          description: Validation error, including an unsupported language
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: LLM provider error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Extraction service not configured
           content:
             application/json:
               schema:
