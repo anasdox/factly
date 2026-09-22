@@ -106,11 +106,9 @@ const DiscoveryModal: React.FC<Props> = ({
           placeholder="e.g. Understand why customer churn increased by 15% in Q4 and identify actionable retention strategies"
         />
         <p className="discovery-modal-help">Describe what you want to discover. Factly uses this goal to guide fact extraction and insight generation.</p>
-
         <label htmlFor="discovery-language">Language</label>
         <select
           id="discovery-language"
-          className="discovery-modal-select"
           value={language}
           onChange={(e) => setLanguage(e.target.value)}
         >
