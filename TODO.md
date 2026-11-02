@@ -50,6 +50,23 @@ Merged to `main`. Nine FSIDs, 15 acceptance tests, all green.
 - [x] Demo note — `demos/DiscoveryLanguage/README.md`
 - [ ] UoR to confirm in the browser
 
+## In Progress: Shared Document Link Fix (branch `feature/api-path-prefix`)
+Opening `/documents/<id>` directly returns backend JSON: nginx proxies the page
+path to the backend. Fix: backend calls move under `/api/` (Q&A "Bug: a shared
+document link shows raw JSON").
+
+- [x] Functional spec — `specs/functional/shared-document-link.feature` (validated by UoR 2026-11-02)
+- [ ] Technical spec + decision record
+- [ ] Acceptance test — real frontend nginx image in Docker in front of a fake backend
+- [ ] Implementation
+- [ ] Refactoring
+- [ ] Demo note
+- Blocker: Docker daemon not running on the dev machine; the acceptance test cannot run locally until it is
+
+## Next: Share Button (M26)
+Always-visible Share button reusing the existing link dialog. Starts after the
+shared-document-link fix is merged. Own branch `feature/share-button`.
+
 ## Open Question
 How new users get an account is undecided. Pocket ID's `ALLOW_USER_SIGNUPS` is
 `disabled`, so today an admin must create each user and send a login code.

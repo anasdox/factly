@@ -266,6 +266,14 @@
 - No account linking: a GitHub user and a password user with the same email are separate accounts
 - No self-registration via password (unchanged)
 
+### M26: Share Button
+**Status:** Planned
+**Depends on:** the shared-document-link fix (`feature/api-path-prefix`) — sharing a link that opens raw JSON would spread a broken link
+**Outcome:** An analyst can copy a saved document's link at any time, from a Share button that is always visible on a saved document. Today the link is shown only once, in the dialog that follows a save, and cannot be reopened.
+- Share button in the toolbar, shown only when the document has been saved
+- Reuses the existing link dialog (`StartEventRoomModal.tsx`): document URL + copy to clipboard
+- Non-goals: per-person access rights, link expiry, sharing by email or chat integration
+
 ## Risks and Dependencies
 
 | Risk | Mitigation |

@@ -112,3 +112,17 @@
 - **Context:** Choix entre fichier JSON et SQLite.
 - **Options:** 1) Fichier JSON (`data/users.json`), 2) SQLite
 - **Answer:** Option 1 — Fichier JSON, cohérent avec l'architecture de stockage existante.
+
+## Bug: a shared document link shows raw JSON
+
+### Q1: How to separate UI routes from backend routes?
+- **Date:** 2026-11-02
+- **Context:** Opening `/documents/<id>` directly (shared link, new tab, reload) returns the backend's JSON instead of the UI: in production the API is same-origin and nginx's `location /documents` proxies every request under that path, including the page itself. Client-side navigation hides the problem.
+- **Options:** A) Route by `Accept` header in nginx, B) Prefix every backend call with `/api` and proxy only `/api/`, C) Rename the UI route (breaks existing links)
+- **Answer:** Option B — prefix the API with `/api`.
+
+### Q2: How to guard against regression?
+- **Date:** 2026-11-02
+- **Context:** The bug lives in the frontend's nginx config; the Playwright e2e suite runs the React dev server, which never goes through nginx.
+- **Options:** 1) Blackbox test running the real frontend nginx image in Docker in front of a fake backend, 2) Static check of `nginx.conf.template`, 3) Both
+- **Answer:** Option 1 — real nginx in Docker, in front of a fake backend.
