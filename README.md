@@ -188,11 +188,11 @@ Verify the deployment:
 
 ```bash
 # Backend health
-curl http://localhost/health
+curl http://localhost/api/health
 # Expected: {"status":"ok","timestamp":"..."}
 
 # Backend status
-curl http://localhost/status
+curl http://localhost/api/status
 # Expected: {"searchAvailable":true}
 ```
 
@@ -245,7 +245,7 @@ docker compose restart backend
 
 **Health check endpoint:**
 
-`GET /health` — returns `200 {"status":"ok"}` when the database is reachable, `503` otherwise.
+`GET /api/health` (on the backend itself: `GET /health`) — returns `200 {"status":"ok"}` when the database is reachable, `503` otherwise. Behind the frontend web server every backend route is under `/api/`.
 
 Docker HEALTHCHECK is configured in both containers. Check status with:
 

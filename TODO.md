@@ -55,13 +55,12 @@ Opening `/documents/<id>` directly returns backend JSON: nginx proxies the page
 path to the backend. Fix: backend calls move under `/api/` (Q&A "Bug: a shared
 document link shows raw JSON").
 
-- [x] Functional spec — `specs/functional/shared-document-link.feature` (validated by UoR 2026-11-02)
-- [x] Technical spec + decision record — `specs/technical/shared-document-link.md`, `decisions/20261102-PrefixBackendApiPath.md` (validated by UoR 2026-11-02; `/feedback` scenario added)
-- [ ] Acceptance test — real frontend nginx image in Docker in front of a fake backend
-- [ ] Implementation
-- [ ] Refactoring
-- [ ] Demo note
-- Blocker: Docker daemon not running on the dev machine; the acceptance test cannot run locally until it is
+- [x] Decision record — `decisions/20261102-PrefixBackendApiPath.md` (no spec: bug fixes need no scenario, UoR 2026-11-02)
+- [x] Regression test — `tests/blackbox/nginx-routing.test.ts`, real frontend nginx (Docker, or `NGINX_BIN`) in front of a fake backend; 24 red on the old config, 24 green on the fix
+- [x] Implementation — nginx proxies `/api/` (prefix stripped) and `/auth/` (sign-in callback only); build sets `REACT_APP_API_URL=/api`
+- [x] Full suite: no new failure (the 84 red are the pre-existing backend gap below); frontend typecheck + build green
+- [ ] Deployed to `factly.betafactory.co` and checked by opening a shared link
+- Note: public `/health` and `/status` are now `/api/health` and `/api/status`
 
 ## Next: Share Button (M26)
 Always-visible Share button reusing the existing link dialog. Starts after the

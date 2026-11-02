@@ -7,7 +7,8 @@ RUN npm install --legacy-peer-deps
 
 COPY . .
 
-ENV REACT_APP_API_URL=
+# Same origin, under the prefix nginx reserves for the backend.
+ENV REACT_APP_API_URL=/api
 RUN npm run build
 
 FROM nginx:alpine
