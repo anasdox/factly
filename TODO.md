@@ -50,7 +50,7 @@ Merged to `main`. Nine FSIDs, 15 acceptance tests, all green.
 - [x] Demo note — `demos/DiscoveryLanguage/README.md`
 - [ ] UoR to confirm in the browser
 
-## In Progress: Shared Document Link Fix (branch `feature/api-path-prefix`)
+## Completed: Shared Document Link Fix (merged to `main`, deployed 2026-11-02)
 Opening `/documents/<id>` directly returns backend JSON: nginx proxies the page
 path to the backend. Fix: backend calls move under `/api/` (Q&A "Bug: a shared
 document link shows raw JSON").
@@ -59,7 +59,7 @@ document link shows raw JSON").
 - [x] Regression test — `tests/blackbox/nginx-routing.test.ts`, real frontend nginx (Docker, or `NGINX_BIN`) in front of a fake backend; 24 red on the old config, 24 green on the fix
 - [x] Implementation — nginx proxies `/api/` (prefix stripped) and `/auth/` (sign-in callback only); build sets `REACT_APP_API_URL=/api`
 - [x] Full suite: no new failure (the 84 red are the pre-existing backend gap below); frontend typecheck + build green
-- [ ] Deployed to `factly.betafactory.co` and checked by opening a shared link
+- [x] Deployed to `factly.betafactory.co`: `/documents/<id>` and `/feedback` serve the application; `/api/*` reaches the backend; sign-in start, callback and event stream checked
 - Note: public `/health` and `/status` are now `/api/health` and `/api/status`
 
 ## Next: Share Button (M26)
