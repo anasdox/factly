@@ -24,6 +24,12 @@ Feature: Shared Document Link
     When the Analyst reloads the page
     Then the application is displayed again with the same document
 
+  @fsid:FS-OpenFeedbackPageDirectlyShowsApplication
+  @status:bug
+  Scenario: Opening the feedback page directly shows the application
+    When an Analyst opens the feedback page's link directly or reloads it
+    Then the application is displayed with the feedback page
+
   @fsid:FS-ApplicationStillReachesBackendServices
   Scenario: The application still reaches every backend service
     Given the application is served by its production web server

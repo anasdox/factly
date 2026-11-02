@@ -56,7 +56,7 @@ path to the backend. Fix: backend calls move under `/api/` (Q&A "Bug: a shared
 document link shows raw JSON").
 
 - [x] Functional spec — `specs/functional/shared-document-link.feature` (validated by UoR 2026-11-02)
-- [ ] Technical spec + decision record
+- [x] Technical spec + decision record — `specs/technical/shared-document-link.md`, `decisions/20261102-PrefixBackendApiPath.md` (validated by UoR 2026-11-02; `/feedback` scenario added)
 - [ ] Acceptance test — real frontend nginx image in Docker in front of a fake backend
 - [ ] Implementation
 - [ ] Refactoring
