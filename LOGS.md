@@ -43,3 +43,4 @@
 - 2026-02-06: Added `FS-ConcurrentUpdateLastWriteWins` scenario and acceptance test to document last-write-wins strategy as observable behavior.
 - 2026-02-06: Fixed `traceability_check.sh` regex to support CamelCase FSID format.
 - 2026-02-06: Corrected AsyncAPI spec — removed 2 stale BUG comments, fixed `FS-SseSubscribersNotRegistered` → `FS-SseSubscribersRegistered`.
+- 2026-11-02: UoR — bug fixes need no functional scenario or technical spec. The shared-document-link fix ships with its decision record (`decisions/20261102-PrefixBackendApiPath.md`) and a regression test (`tests/blackbox/nginx-routing.test.ts`) only.

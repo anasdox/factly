@@ -40,5 +40,6 @@ registered with Pocket ID does not change.
   future UI route.
 
 ## Affected Features
-- Shared Document Link (`specs/functional/shared-document-link.feature`)
+- Bug fix: shared document link (no functional scenario — bug fixes are exempt, UoR 2026-11-02)
+- Regression test: `tests/blackbox/nginx-routing.test.ts`
 - Every feature whose frontend calls the backend (transport only, no behavior change)
