@@ -267,7 +267,7 @@
 - No self-registration via password (unchanged)
 
 ### M26: Share Button
-**Status:** Planned
+**Status:** Delivered (2026-11-02)
 **Depends on:** the shared-document-link fix (`feature/api-path-prefix`) — sharing a link that opens raw JSON would spread a broken link
 **Outcome:** An analyst can copy a saved document's link at any time, from a Share button that is always visible on a saved document. Today the link is shown only once, in the dialog that follows a save, and cannot be reopened.
 - Share button in the toolbar, shown only when the document has been saved

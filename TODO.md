@@ -62,9 +62,17 @@ document link shows raw JSON").
 - [x] Deployed to `factly.betafactory.co`: `/documents/<id>` and `/feedback` serve the application; `/api/*` reaches the backend; sign-in start, callback and event stream checked
 - Note: public `/health` and `/status` are now `/api/health` and `/api/status`
 
-## Next: Share Button (M26)
-Always-visible Share button reusing the existing link dialog. Starts after the
-shared-document-link fix is merged. Own branch `feature/share-button`.
+## Completed: Share Button (M26)
+Merged to `main` and deployed 2026-11-02.
+
+- [x] Functional spec — `specs/functional/share-button.feature` (5 FSIDs)
+- [x] Technical spec — `specs/technical/share-button.md` (frontend only)
+- [x] Acceptance tests — `tests/e2e/share-button.spec.ts` (6, green; red before the change)
+- [x] Implementation — `ShareModal.tsx` (was the unused `StartEventRoomModal.tsx`), Share button in the toolbar
+- [x] Full e2e suite: no new failure (33 pre-existing failures, identical on `main`)
+- [x] Refactoring — none needed beyond the rename; copy control made a real button
+- [x] Demo note — `demos/ShareButton/README.md`
+- [ ] UoR to validate specs and demo in the browser
 
 ## Open Question
 How new users get an account is undecided. Pocket ID's `ALLOW_USER_SIGNUPS` is
