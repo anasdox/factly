@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { faEdit, faFileDownload, faPlus, faUpload, faSave, faMoon, faSun, faRoute, faRocket, faSpinner, faUser, faSignOutAlt, faLightbulb } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faFileDownload, faPlus, faUpload, faSave, faMoon, faSun, faRoute, faRocket, faSpinner, faUser, faSignOutAlt, faLightbulb, faShareNodes } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./Toolbar.css";
 
@@ -7,6 +7,7 @@ import DiscoveryModal from "./DiscoveryModal";
 import FullAutoConfigModal from './FullAutoConfigModal';
 import FullAutoSummaryModal, { FullAutoStats } from './FullAutoSummaryModal';
 import Modal from './Modal';
+import ShareModal from './ShareModal';
 
 import { useLocalStorage } from 'usehooks-ts'
 import { isObjectEmpty } from "../lib";
@@ -31,6 +32,7 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
   const { user, token, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isShareVisible, setIsShareVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [documentId, setDocumentId] = useState<string | null>(documentIdProp);
   const [uuid, setUuid] = useLocalStorage('uuid', null);
@@ -536,6 +538,11 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
           <FontAwesomeIcon icon={isSaving ? faSpinner : faSave} size='lg' spin={isSaving} />
         </div>
       )}
+      {documentId && (
+        <div title="Share" onClick={() => setIsShareVisible(true)}>
+          <FontAwesomeIcon icon={faShareNodes} size='lg' />
+        </div>
+      )}
       <div
         title={!backendAvailable ? "Backend unavailable" : isRunningFullAuto ? "Pipeline running..." : data.inputs.length === 0 ? "Add inputs first" : "Full Auto Pipeline"}
         onClick={backendAvailable && !isRunningFullAuto && data.inputs.length > 0 ? () => setIsFullAutoConfigVisible(true) : undefined}
@@ -605,6 +612,13 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
         closeDialog={() => setIsModalVisible(false)}
         backendAvailable={backendAvailable}
       />
+      {documentId && (
+        <ShareModal
+          isDialogVisible={isShareVisible}
+          closeDialog={() => setIsShareVisible(false)}
+          documentId={documentId}
+        />
+      )}
       <FullAutoConfigModal
         isVisible={isFullAutoConfigVisible}
         onClose={() => setIsFullAutoConfigVisible(false)}
