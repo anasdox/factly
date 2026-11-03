@@ -1,6 +1,7 @@
 Feature: AI-Assisted Reformulation Suggestions
   As an Analyst
-  I want to get alternative reformulations when creating or editing a fact, insight, or recommendation
+  I want to get alternative reformulations when creating or editing a fact, insight, or recommendation,
+  including one the AI has just suggested
   So that I can improve the clarity, precision, or actionability of my items
 
   Non-goals:
@@ -10,6 +11,7 @@ Feature: AI-Assisted Reformulation Suggestions
   - Replacing the analyst's text automatically (analyst must choose)
   - Reformulation of relationship fields (only the text field)
   - Batch reformulation of multiple items at once
+  - Reformulation of suggested outputs or of internet research results
 
   # --- Reformulate Button Visibility ---
 
@@ -127,3 +129,41 @@ Feature: AI-Assisted Reformulation Suggestions
     Given the LLM service is not configured on the backend
     When the analyst opens a fact, insight, or recommendation modal
     Then the "Reformulate" button is not visible
+
+  # --- Reformulating an AI Suggestion ---
+
+  @fsid:FS-ReformulateButtonOnSuggestedItem
+  Scenario: A suggested fact, insight, or recommendation can be reformulated
+    Given the AI has suggested facts, insights, or recommendations
+    When the suggestions are displayed
+    Then each suggestion offers a "Reformulate" action next to Accept, Edit and Reject
+
+  @fsid:FS-ReformulateSuggestedItemShowsAlternatives
+  Scenario: Reformulating a suggestion shows alternative wordings
+    Given the AI has suggested a fact
+    When the analyst clicks "Reformulate" on that suggestion
+    Then the suggestion opens for editing with its text
+    And alternative wordings with their justification are displayed under it
+
+  @fsid:FS-SelectAlternativeThenConfirmSuggestion
+  Scenario: Choosing an alternative and confirming adds the reformulated item
+    Given alternative wordings are displayed for a suggested fact
+    When the analyst chooses one alternative
+    Then the editing text is replaced by that alternative
+    And the analyst can still change it
+    When the analyst confirms
+    Then the fact is added to the pipeline with the chosen wording
+    And the suggestion leaves the list
+
+  @fsid:FS-ReformulateSuggestionUsesItsContext
+  Scenario: Reformulating a suggestion considers its context
+    Given the AI has suggested an insight derived from some facts
+    When the analyst clicks "Reformulate" on that suggestion
+    Then the reformulation receives the discovery goal and the text of those facts
+
+  @fsid:FS-ReformulateSuggestionErrorKeepsText
+  Scenario: A reformulation error on a suggestion keeps its text
+    Given the analyst clicked "Reformulate" on a suggestion
+    When the reformulation fails
+    Then a message says the reformulation failed
+    And the suggestion's text is kept for editing

@@ -18,6 +18,11 @@
   - FS-ReformulationErrorShowsMessage
   - FS-ReformulationTimeoutShowsMessage
   - FS-ReformulateButtonHiddenWhenNoLLM
+  - FS-ReformulateButtonOnSuggestedItem
+  - FS-ReformulateSuggestedItemShowsAlternatives
+  - FS-SelectAlternativeThenConfirmSuggestion
+  - FS-ReformulateSuggestionUsesItsContext
+  - FS-ReformulateSuggestionErrorKeepsText
 
 ## Overview
 
@@ -250,3 +255,31 @@ No new environment variables. Reuses existing `LLM_PROVIDER`, `LLM_API_KEY`, `LL
 ## Dependencies
 
 No new npm packages. Reuses existing LLM SDKs and UI patterns.
+
+
+## Reformulating an AI suggestion
+
+Frontend only; reuses `POST /reformulate` unchanged.
+
+`SuggestionsPanel.tsx` takes an optional `reformulation` prop
+`{ entityType: 'fact' | 'insight' | 'recommendation', goal: string, relatedItems: (suggestion) => { text, type }[] }`.
+When it is set, each card shows a `Reformulate` button (`.suggestion-reformulate`)
+next to Accept / Edit / Reject. The panels for suggested outputs and research
+results do not pass it.
+
+| Step | Behavior |
+| --- | --- |
+| Click `Reformulate` | The card enters edit mode with the suggestion text, then `POST /reformulate` is sent with `{ text, entity_type, goal, related_items }`. A `Reformulate` button inside edit mode sends it again with the current edit text. |
+| Alternatives | Rendered with the existing `ReformulationSuggestions` component under the textarea. Choosing one replaces the edit text and hides the list; dismissing hides it. |
+| Confirm | Unchanged edit-mode behavior: `onAccept({ ...suggestion, text })` and the card leaves the list. |
+| Error | Non-2xx or network error: inline message `Reformulation failed. Try again.` under the textarea; the edit text is kept. |
+
+Context per panel:
+
+| Panel | `entity_type` | `related_items` |
+| --- | --- | --- |
+| Suggested Facts (`InputList`) | `fact` | `[{ text: source_excerpt, type: 'input' }]` when the suggestion has one |
+| Suggested Insights (`FactList`) | `insight` | text of each fact in `related_fact_ids`, type `fact` |
+| Suggested Recommendations (`InsightList`) | `recommendation` | text of each insight in `related_insight_ids`, type `insight` |
+
+Tests: `tests/e2e/reformulate-suggestions.spec.ts` (Playwright, backend stubbed).
