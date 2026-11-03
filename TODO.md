@@ -73,6 +73,14 @@ First delivered 2026-11-02 as a dialog; simplified 2026-11-03 to copy in one cli
 - [x] Demo note — `demos/ShareButton/README.md`
 - UoR: no human validation gate required (2026-11-03)
 
+## Completed: Chat on reasoning models (bug fix, 2026-11-03)
+Chat failed with "400 Function tools with reasoning_effort are not supported for
+gpt-5.6-luna ... set reasoning_effort to 'none'".
+
+- [x] Regression test — `tests/blackbox/chat-reasoning-model.test.ts` (6; 4 red before the fix), both OpenAI-style providers
+- [x] Fix — `apps/backend/src/llm/request-fallbacks.ts`: retry with `reasoning_effort: 'none'`; chat stream also gets the temperature and token-parameter fallbacks
+- [x] Full suite: 84 failures, all pre-existing (shared-backend / rate-limit gap); `bulk-review-workflow` fails the same 5 with or without the fix
+
 ## Open Question
 How new users get an account is undecided. Pocket ID's `ALLOW_USER_SIGNUPS` is
 `disabled`, so today an admin must create each user and send a login code.
