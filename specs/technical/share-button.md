@@ -4,8 +4,8 @@
 - **x-fsid-links:**
   - FS-ShareButtonShownForSavedDiscovery
   - FS-ShareButtonHiddenForUnsavedDiscovery
-  - FS-ShareDialogShowsDiscoveryLink
-  - FS-ShareDialogCopiesLink
+  - FS-ShareButtonCopiesLink
+  - FS-ShareLinkShownWhenCopyFails
   - FS-ShareButtonAppearsAfterFirstSave
 
 ## Overview
@@ -18,21 +18,21 @@ is built from the document id the toolbar already holds.
 | Element | Rule |
 | --- | --- |
 | Share button | In `Toolbar.tsx`, rendered when `documentId` is set (a saved discovery), for anonymous and signed-in Analysts alike. Icon `faShareNodes`, `title="Share"`. |
-| Share dialog | `ShareModal.tsx` (the existing, unused `StartEventRoomModal.tsx`, renamed). Heading `Share Discovery`; read-only field labelled `Discovery link` holding `${window.location.origin}/documents/<documentId>`. |
-| Copy | Copy control (`title="Copy link"`) writes the link with `navigator.clipboard.writeText`; the control turns into a check mark with `title="Copied!"` for 2 s. |
+| Link | `${window.location.origin}/documents/<documentId>` — the UI route, which opens the application since the `/api/` prefix fix (`decisions/20261102-PrefixBackendApiPath.md`). |
+| Copy | A click writes the link with `navigator.clipboard.writeText`, then shows the info toast `Link copied to clipboard` (the app's existing `Toast`, 5 s). |
 | After first save | `handleSave` already sets `documentId` from the `POST /documents` response, so the button appears without a reload. |
 
-The link is the UI route `/documents/<id>`, which opens the application since
-the `/api/` prefix fix (`decisions/20261102-PrefixBackendApiPath.md`).
+No dialog: the former `ShareModal.tsx` is removed.
 
 ## Error handling
 
-If the clipboard is unavailable (insecure context, permission denied) the copy
-control stays as it was and the field remains selectable for a manual copy; no
-error toast.
+If the clipboard is unavailable (insecure context, permission denied, no
+`navigator.clipboard`), the error toast `Could not copy the link: <link>` is
+shown instead, so the link can still be copied by hand.
 
 ## Tests
 
 `tests/e2e/share-button.spec.ts` (Playwright): the backend is stubbed with
-`page.route`, the clipboard is read back with `navigator.clipboard.readText`
-under granted clipboard permissions.
+`page.route`; the clipboard is read back with `navigator.clipboard.readText`
+under granted clipboard permissions; the failure case replaces
+`navigator.clipboard.writeText` with a rejecting stub.
