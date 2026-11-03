@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { LLMProvider, OutputTraceabilityContext, ChatStreamCallbacks } from './provider';
 import { ChatToolDefinition } from './chat-prompts';
+import { sendWithFallbacks } from './request-fallbacks';
 import { withLanguage, EXTRACTION_SYSTEM_PROMPT, INSIGHTS_SYSTEM_PROMPT, RECOMMENDATIONS_SYSTEM_PROMPT, DEDUP_CHECK_SYSTEM_PROMPT, DEDUP_SCAN_SYSTEM_PROMPT, UPDATE_PROPOSAL_SYSTEM_PROMPT, UPDATE_PROPOSAL_OUTPUT_SYSTEM_PROMPT, IMPACT_CHECK_SYSTEM_PROMPT, REFORMULATION_SYSTEM_PROMPT, RESEARCH_SYSTEM_PROMPT, SEARCH_QUERY_SYSTEM_PROMPT, buildOutputsPrompt, buildOutputsUserContent, buildDedupCheckUserContent, buildDedupScanUserContent, buildUpdateProposalUserContent, buildImpactCheckUserContent, buildReformulationUserContent, buildResearchUserContent, parseStringArray, parseFactArray, parseInsightArray, parseRecommendationArray, parseDedupCheckResult, parseDedupScanResult, parseUpdateProposal, parseOutputUpdateProposal, parseImpactCheckResult, parseReformulationSuggestions, parseResearchSuggestions, ExtractedFact, ExtractedInsight, ExtractedRecommendation, DedupResult, DedupGroup, UpdateProposal, ImpactCheckResult, ReformulationSuggestion, ResearchSuggestion } from './prompts';
 
 export class OpenAICompatibleProvider implements LLMProvider {
@@ -31,91 +32,24 @@ export class OpenAICompatibleProvider implements LLMProvider {
     return content;
   }
 
-  private isUnsupportedParamError(err: any, param: string): boolean {
-    const message = typeof err?.message === 'string' ? err.message : '';
-    return message.includes(`Unsupported parameter: '${param}'`);
-  }
-
-  /**
-   * Reasoning models accept only the default temperature and reject any
-   * explicit value outright, so a whole pipeline fails on a parameter that was
-   * only ever a preference. Detected from the provider's own message and
-   * retried without it, the same way an unsupported token parameter already is.
-   */
-  private isUnsupportedTemperatureError(err: any): boolean {
-    const message = typeof err?.message === 'string' ? err.message : '';
-    return message.includes("'temperature' does not support")
-      || message.includes('Unsupported parameter: \'temperature\'');
-  }
-
   private async createChatCompletion(
     params: Omit<OpenAI.Chat.ChatCompletionCreateParamsNonStreaming, 'max_tokens' | 'max_completion_tokens'>,
     maxTokens?: number,
   ): Promise<OpenAI.Chat.ChatCompletion> {
-    const tokens = maxTokens ?? this.maxCompletionTokens;
-    const withMaxTokens = {
-      ...params,
-      stream: false,
-      max_tokens: tokens,
-    };
-
-    const send = (body: any) =>
-      this.client.chat.completions.create(body as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming);
-
-    const withoutTemperature = (body: any) => {
-      const { temperature, ...rest } = body;
-      return rest;
-    };
-
-    try {
-      return await send(withMaxTokens);
-    } catch (err: any) {
-      if (this.isUnsupportedParamError(err, 'max_tokens')) {
-        const withMaxCompletionTokens = { ...params, stream: false, max_completion_tokens: tokens };
-        try {
-          return await send(withMaxCompletionTokens);
-        } catch (retryErr: any) {
-          if (this.isUnsupportedTemperatureError(retryErr)) {
-            return await send(withoutTemperature(withMaxCompletionTokens));
-          }
-          throw retryErr;
-        }
-      }
-      if (this.isUnsupportedTemperatureError(err)) {
-        return await send(withoutTemperature(withMaxTokens));
-      }
-      throw err;
-    }
+    return sendWithFallbacks(
+      { ...params, stream: false, max_tokens: maxTokens ?? this.maxCompletionTokens },
+      (body) => this.client.chat.completions.create(body as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming),
+    );
   }
 
   private async createChatCompletionStream(
     params: Omit<OpenAI.Chat.ChatCompletionCreateParamsStreaming, 'max_tokens' | 'max_completion_tokens' | 'stream'>,
     maxTokens?: number,
   ): Promise<any> {
-    const tokens = maxTokens ?? this.maxCompletionTokens;
-    const withMaxTokens = {
-      ...params,
-      stream: true,
-      max_tokens: tokens,
-    };
-
-    try {
-      return await this.client.chat.completions.create(
-        withMaxTokens as OpenAI.Chat.ChatCompletionCreateParamsStreaming,
-      );
-    } catch (err: any) {
-      if (this.isUnsupportedParamError(err, 'max_tokens')) {
-        const withMaxCompletionTokens = {
-          ...params,
-          stream: true,
-          max_completion_tokens: tokens,
-        };
-        return await this.client.chat.completions.create(
-          withMaxCompletionTokens as OpenAI.Chat.ChatCompletionCreateParamsStreaming,
-        );
-      }
-      throw err;
-    }
+    return sendWithFallbacks(
+      { ...params, stream: true, max_tokens: maxTokens ?? this.maxCompletionTokens },
+      (body) => this.client.chat.completions.create(body as OpenAI.Chat.ChatCompletionCreateParamsStreaming),
+    );
   }
 
   async extractFacts(text: string, goal: string, language?: string): Promise<ExtractedFact[]> {
