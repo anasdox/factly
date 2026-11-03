@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { markdownRenderer } from '../renderers/MarkdownRenderer';
 import Modal from './Modal';
+import ReformulationSuggestions, { ReformulationSuggestion } from './ReformulationSuggestions';
+import { API_URL } from '../config';
 import './SuggestionsPanel.css';
 
 export type Suggestion = {
@@ -16,6 +18,15 @@ export type Suggestion = {
   justification?: string;
 };
 
+export type RelatedItem = { text: string; type: 'input' | 'fact' | 'insight' };
+
+/** Lets each suggestion be reformulated before it is accepted. */
+export type SuggestionReformulation = {
+  entityType: 'fact' | 'insight' | 'recommendation';
+  goal: string;
+  relatedItems: (suggestion: Suggestion) => RelatedItem[];
+};
+
 type Props = {
   suggestions: Suggestion[];
   inputId: string;
@@ -26,12 +37,52 @@ type Props = {
   renderCard?: (suggestion: Suggestion, index: number, actions: { onAccept: () => void; onReject: () => void; onEdit: () => void }) => React.ReactNode;
   notice?: string;
   wide?: boolean;
+  reformulation?: SuggestionReformulation;
 };
 
-const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, inputId, onAccept, onClose, title = 'Suggested Facts', renderMarkdown = false, renderCard, notice, wide = false }) => {
+const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, inputId, onAccept, onClose, title = 'Suggested Facts', renderMarkdown = false, renderCard, notice, wide = false, reformulation }) => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>(initialSuggestions);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editText, setEditText] = useState('');
+  const [alternatives, setAlternatives] = useState<ReformulationSuggestion[]>([]);
+  const [isReformulating, setIsReformulating] = useState(false);
+  const [reformulationFailed, setReformulationFailed] = useState(false);
+
+  const clearReformulation = () => {
+    setAlternatives([]);
+    setReformulationFailed(false);
+  };
+
+  const reformulate = async (suggestion: Suggestion, text: string) => {
+    if (!reformulation) return;
+    clearReformulation();
+    setIsReformulating(true);
+    try {
+      const response = await fetch(`${API_URL}/reformulate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          entity_type: reformulation.entityType,
+          goal: reformulation.goal,
+          related_items: reformulation.relatedItems(suggestion),
+        }),
+      });
+      if (!response.ok) throw new Error('Reformulation failed');
+      const data = await response.json();
+      setAlternatives(data.suggestions || []);
+    } catch {
+      setReformulationFailed(true);
+    } finally {
+      setIsReformulating(false);
+    }
+  };
+
+  const handleStartReformulate = (index: number) => {
+    setEditingIndex(index);
+    setEditText(suggestions[index].text);
+    reformulate(suggestions[index], suggestions[index].text);
+  };
 
   const handleAccept = (index: number) => {
     onAccept(suggestions[index], inputId);
@@ -44,6 +95,7 @@ const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, in
   };
 
   const handleStartEdit = (index: number) => {
+    clearReformulation();
     setEditingIndex(index);
     setEditText(suggestions[index].text);
   };
@@ -55,12 +107,14 @@ const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, in
       setSuggestions(prev => prev.filter((_, i) => i !== editingIndex));
       setEditingIndex(null);
       setEditText('');
+      clearReformulation();
     }
   };
 
   const handleCancelEdit = () => {
     setEditingIndex(null);
     setEditText('');
+    clearReformulation();
   };
 
   const handleAcceptAll = () => {
@@ -108,8 +162,25 @@ const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, in
                   onChange={e => setEditText(e.target.value)}
                   rows={3}
                 />
+                {reformulationFailed && (
+                  <p className="suggestion-reformulation-error">Reformulation failed. Try again.</p>
+                )}
+                <ReformulationSuggestions
+                  suggestions={alternatives}
+                  onSelect={(text) => { setEditText(text); setAlternatives([]); }}
+                  onDismiss={() => setAlternatives([])}
+                />
                 <div className="suggestion-edit-actions">
                   <button onClick={handleConfirmEdit}>Confirm</button>
+                  {reformulation && (
+                    <button
+                      className="suggestion-reformulate"
+                      disabled={!editText.trim() || isReformulating}
+                      onClick={() => reformulate(suggestion, editText)}
+                    >
+                      {isReformulating ? 'Reformulating…' : 'Reformulate'}
+                    </button>
+                  )}
                   <button onClick={handleCancelEdit}>Cancel</button>
                 </div>
               </div>
@@ -126,6 +197,9 @@ const SuggestionsPanel: React.FC<Props> = ({ suggestions: initialSuggestions, in
                 <div className="suggestion-actions">
                   <button className="suggestion-accept" onClick={() => handleAccept(index)}>Accept</button>
                   <button className="suggestion-edit-btn" onClick={() => handleStartEdit(index)}>Edit</button>
+                  {reformulation && (
+                    <button className="suggestion-reformulate" onClick={() => handleStartReformulate(index)}>Reformulate</button>
+                  )}
                   <button className="suggestion-reject" onClick={() => handleReject(index)}>Reject</button>
                 </div>
               </>

@@ -533,6 +533,13 @@ const InsightList: React.FC<Props> = ({ insightRefs, data, setData, handleMouseE
           inputId="recommendations"
           title="Suggested Recommendations"
           onAccept={(suggestion) => handleAcceptRecommendation(suggestion)}
+          reformulation={{
+            entityType: 'recommendation',
+            goal: data.goal || '',
+            relatedItems: (s) => data.insights
+              .filter((n) => s.related_insight_ids?.includes(n.insight_id))
+              .map((n) => ({ text: n.text, type: 'insight' })),
+          }}
           onClose={handleCloseSuggestions}
         />
       )}

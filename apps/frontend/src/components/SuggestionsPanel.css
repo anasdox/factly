@@ -260,3 +260,9 @@
 .bulk-review-error {
   color: var(--color-suggestion-reject, #e53935);
 }
+
+.suggestion-reformulation-error {
+  margin: 6px 0 0;
+  font-size: 0.85em;
+  color: var(--color-error);
+}

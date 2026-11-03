@@ -545,6 +545,11 @@ const InputList: React.FC<Props> = ({ inputRefs, data, setData, handleMouseEnter
           inputId="facts"
           title="Suggested Facts"
           onAccept={(suggestion) => handleAcceptSuggestion(suggestion)}
+          reformulation={{
+            entityType: 'fact',
+            goal: data.goal || '',
+            relatedItems: (s) => (s.source_excerpt ? [{ text: s.source_excerpt, type: 'input' }] : []),
+          }}
           onClose={handleCloseSuggestions}
         />
       )}

@@ -573,6 +573,13 @@ const FactList: React.FC<Props> = ({ factRefs, data, setData, handleMouseEnter, 
           inputId="insights"
           title="Suggested Insights"
           onAccept={(suggestion) => handleAcceptInsight(suggestion)}
+          reformulation={{
+            entityType: 'insight',
+            goal: data.goal || '',
+            relatedItems: (s) => data.facts
+              .filter((f) => s.related_fact_ids?.includes(f.fact_id))
+              .map((f) => ({ text: f.text, type: 'fact' })),
+          }}
           onClose={handleCloseSuggestions}
         />
       )}
