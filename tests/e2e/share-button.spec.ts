@@ -63,7 +63,11 @@ async function signIn(page: Page): Promise<void> {
 }
 
 const shareButton = (page: Page) => page.locator('.toolbar [title="Share"]');
-const shareDialog = (page: Page) => page.locator('.modal-panel').filter({ hasText: 'Share Discovery' });
+const toast = (page: Page) => page.locator('.toast');
+
+async function readClipboard(page: Page): Promise<string> {
+  return page.evaluate(() => navigator.clipboard.readText());
+}
 
 test.describe('Share Button (E2E)', () => {
   // @fsid:FS-ShareButtonShownForSavedDiscovery
@@ -94,37 +98,42 @@ test.describe('Share Button (E2E)', () => {
     });
   });
 
-  // @fsid:FS-ShareDialogShowsDiscoveryLink
-  test.describe('FS-ShareDialogShowsDiscoveryLink', () => {
-    test('the Share dialog shows the link that opens this discovery', async ({ page }) => {
+  // @fsid:FS-ShareButtonCopiesLink
+  test.describe('FS-ShareButtonCopiesLink', () => {
+    test('clicking Share puts the link in the clipboard and confirms it', async ({ page, context }) => {
+      await context.grantPermissions(['clipboard-read', 'clipboard-write']);
       await openSavedDiscovery(page);
 
       await shareButton(page).click();
 
-      await expect(shareDialog(page)).toBeVisible();
       const origin = new URL(page.url()).origin;
-      await expect(shareDialog(page).getByLabel('Discovery link')).toHaveValue(`${origin}/documents/${DOC_ID}`);
+      expect(await readClipboard(page)).toBe(`${origin}/documents/${DOC_ID}`);
+      await expect(toast(page)).toHaveText('Link copied to clipboard');
+      await expect(page.locator('.modal-panel')).toHaveCount(0);
     });
   });
 
-  // @fsid:FS-ShareDialogCopiesLink
-  test.describe('FS-ShareDialogCopiesLink', () => {
-    test('the copy control puts the link in the clipboard and confirms it', async ({ page, context }) => {
-      await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  // @fsid:FS-ShareLinkShownWhenCopyFails
+  test.describe('FS-ShareLinkShownWhenCopyFails', () => {
+    test('when the clipboard refuses, the message shows the link instead', async ({ page }) => {
+      await page.addInitScript(() => {
+        Object.defineProperty(navigator, 'clipboard', {
+          value: { writeText: () => Promise.reject(new Error('denied')) },
+        });
+      });
       await openSavedDiscovery(page);
+
       await shareButton(page).click();
 
-      await shareDialog(page).locator('[title="Copy link"]').click();
-
       const origin = new URL(page.url()).origin;
-      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(`${origin}/documents/${DOC_ID}`);
-      await expect(shareDialog(page).locator('[title="Copied!"]')).toBeVisible();
+      await expect(toast(page)).toHaveText(`Could not copy the link: ${origin}/documents/${DOC_ID}`);
     });
   });
 
   // @fsid:FS-ShareButtonAppearsAfterFirstSave
   test.describe('FS-ShareButtonAppearsAfterFirstSave', () => {
-    test('saving a new discovery makes the Share button appear with the new link', async ({ page }) => {
+    test('saving a new discovery makes the Share button appear and copy the new link', async ({ page, context }) => {
+      await context.grantPermissions(['clipboard-read', 'clipboard-write']);
       await silenceEventSource(page);
       await signIn(page);
       await stubBackendStatus(page);
@@ -144,7 +153,8 @@ test.describe('Share Button (E2E)', () => {
       await expect(shareButton(page)).toBeVisible();
       await shareButton(page).click();
       const origin = new URL(page.url()).origin;
-      await expect(shareDialog(page).getByLabel('Discovery link')).toHaveValue(`${origin}/documents/${NEW_DOC_ID}`);
+      await expect(toast(page)).toHaveText('Link copied to clipboard');
+      expect(await readClipboard(page)).toBe(`${origin}/documents/${NEW_DOC_ID}`);
     });
   });
 });
