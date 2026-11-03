@@ -81,6 +81,15 @@ gpt-5.6-luna ... set reasoning_effort to 'none'".
 - [x] Fix — `apps/backend/src/llm/request-fallbacks.ts`: retry with `reasoning_effort: 'none'`; chat stream also gets the temperature and token-parameter fallbacks
 - [x] Full suite: 84 failures, all pre-existing (shared-backend / rate-limit gap); `bulk-review-workflow` fails the same 5 with or without the fix
 
+## Completed: Reformulate an AI suggestion (M20 extension, 2026-11-03)
+- [x] Functional spec — 5 FSIDs added to `specs/functional/ai-reformulation-suggestions.feature`
+- [x] Technical spec — section in `specs/technical/ai-reformulation-suggestions.md` (frontend only, `/reformulate` unchanged)
+- [x] Acceptance tests — `tests/e2e/reformulate-suggestions.spec.ts` (7, green; red before)
+- [x] Implementation — `SuggestionsPanel` `reformulation` prop, wired in the facts, insights and recommendations panels
+- [x] Full e2e: 88 passed, the same 33 pre-existing failures as `main`
+- [x] Demo note — `demos/ReformulateSuggestions/README.md`
+- Gap: `/reformulate` ignores the discovery language
+
 ## Open Question
 How new users get an account is undecided. Pocket ID's `ALLOW_USER_SIGNUPS` is
 `disabled`, so today an admin must create each user and send a login code.
