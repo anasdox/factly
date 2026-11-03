@@ -7,7 +7,6 @@ import DiscoveryModal from "./DiscoveryModal";
 import FullAutoConfigModal from './FullAutoConfigModal';
 import FullAutoSummaryModal, { FullAutoStats } from './FullAutoSummaryModal';
 import Modal from './Modal';
-import ShareModal from './ShareModal';
 
 import { useLocalStorage } from 'usehooks-ts'
 import { isObjectEmpty } from "../lib";
@@ -32,7 +31,6 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
   const { user, token, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isShareVisible, setIsShareVisible] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [documentId, setDocumentId] = useState<string | null>(documentIdProp);
   const [uuid, setUuid] = useLocalStorage('uuid', null);
@@ -316,6 +314,18 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
     event.target.value = '';
   };
 
+  // No clipboard (insecure context, permission denied): the link goes in the
+  // message instead, so it can still be copied by hand.
+  const handleShare = () => {
+    if (!documentId) return;
+    const link = `${window.location.origin}/documents/${documentId}`;
+    const copied = navigator.clipboard?.writeText(link) ?? Promise.reject();
+    copied.then(
+      () => onInfo('Link copied to clipboard'),
+      () => onError(`Could not copy the link: ${link}`),
+    );
+  };
+
   const handleExport = () => {
     if (!data) return;
 
@@ -539,7 +549,7 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
         </div>
       )}
       {documentId && (
-        <div title="Share" onClick={() => setIsShareVisible(true)}>
+        <div title="Share" onClick={handleShare}>
           <FontAwesomeIcon icon={faShareNodes} size='lg' />
         </div>
       )}
@@ -612,13 +622,6 @@ const Toolbar = ({ data, setData, documentId: documentIdProp, onError, onInfo, o
         closeDialog={() => setIsModalVisible(false)}
         backendAvailable={backendAvailable}
       />
-      {documentId && (
-        <ShareModal
-          isDialogVisible={isShareVisible}
-          closeDialog={() => setIsShareVisible(false)}
-          documentId={documentId}
-        />
-      )}
       <FullAutoConfigModal
         isVisible={isFullAutoConfigVisible}
         onClose={() => setIsFullAutoConfigVisible(false)}
