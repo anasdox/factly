@@ -63,16 +63,15 @@ document link shows raw JSON").
 - Note: public `/health` and `/status` are now `/api/health` and `/api/status`
 
 ## Completed: Share Button (M26)
-Merged to `main` and deployed 2026-11-02.
+First delivered 2026-11-02 as a dialog; simplified 2026-11-03 to copy in one click.
 
-- [x] Functional spec — `specs/functional/share-button.feature` (5 FSIDs)
+- [x] Functional spec — `specs/functional/share-button.feature` (5 FSIDs; dialog scenarios replaced by copy + copy-failure)
 - [x] Technical spec — `specs/technical/share-button.md` (frontend only)
-- [x] Acceptance tests — `tests/e2e/share-button.spec.ts` (6, green; red before the change)
-- [x] Implementation — `ShareModal.tsx` (was the unused `StartEventRoomModal.tsx`), Share button in the toolbar
+- [x] Acceptance tests — `tests/e2e/share-button.spec.ts` (6, green; 3 red before the change)
+- [x] Implementation — Share click writes the link to the clipboard, info toast "Link copied to clipboard"; error toast with the link when the clipboard refuses; `ShareModal.tsx` removed
 - [x] Full e2e suite: no new failure (33 pre-existing failures, identical on `main`)
-- [x] Refactoring — none needed beyond the rename; copy control made a real button
 - [x] Demo note — `demos/ShareButton/README.md`
-- [ ] UoR to validate specs and demo in the browser
+- UoR: no human validation gate required (2026-11-03)
 
 ## Open Question
 How new users get an account is undecided. Pocket ID's `ALLOW_USER_SIGNUPS` is

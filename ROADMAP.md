@@ -267,11 +267,11 @@
 - No self-registration via password (unchanged)
 
 ### M26: Share Button
-**Status:** Delivered (2026-11-02)
+**Status:** Delivered (2026-11-02; simplified to one-click copy 2026-11-03)
 **Depends on:** the shared-document-link fix (`feature/api-path-prefix`) — sharing a link that opens raw JSON would spread a broken link
 **Outcome:** An analyst can copy a saved document's link at any time, from a Share button that is always visible on a saved document. Today the link is shown only once, in the dialog that follows a save, and cannot be reopened.
 - Share button in the toolbar, shown only when the document has been saved
-- Reuses the existing link dialog (`StartEventRoomModal.tsx`): document URL + copy to clipboard
+- One click copies the document URL to the clipboard and a message confirms it (no dialog)
 - Non-goals: per-person access rights, link expiry, sharing by email or chat integration
 
 ## Risks and Dependencies
